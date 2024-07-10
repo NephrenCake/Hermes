@@ -38,6 +38,7 @@ from vllm.transformers_utils.tokenizer_group import (BaseTokenizerGroup,
 from vllm.usage.usage_lib import (UsageContext, is_usage_stats_enabled,
                                   usage_message)
 from vllm.utils import Counter
+from vllm.coinference.coinference_scheduler import CoInferenceScheduler
 
 logger = init_logger(__name__)
 _LOCAL_LOGGING_INTERVAL_SEC = 5
@@ -277,7 +278,10 @@ class LLMEngine:
         # Create the scheduler.
         # NOTE: the cache_config here have been updated with the numbers of
         # GPU and CPU blocks, which are profiled in the distributed executor.
-        self.scheduler = Scheduler(scheduler_config, cache_config, lora_config)
+        if self.scheduler_config.coinference_scheduler:
+            self.scheduler = CoInferenceScheduler(scheduler_config, cache_config)
+        else:
+            self.scheduler = Scheduler(scheduler_config, cache_config, lora_config)
 
         # Metric Logging.
         if self.log_stats:
@@ -758,7 +762,10 @@ class LLMEngine:
             >>>     if not (engine.has_unfinished_requests() or example_inputs):
             >>>         break
         """
+        step_start_time = time.time()
         seq_group_metadata_list, scheduler_outputs = self.scheduler.schedule()
+        schedule_finish_time = time.time()
+        logger.info(f"schedule cost {(schedule_finish_time-step_start_time)*1000:.2f} ms")
 
         if not scheduler_outputs.is_empty():
             execute_model_req = ExecuteModelRequest(
@@ -789,6 +796,12 @@ class LLMEngine:
             # queued control plane messages, such as add/remove lora adapters.
             self.model_executor.stop_remote_worker_execution_loop()
 
+        # step_end_time = time.time()
+        # logger.info("num_prefill_groups: %d, running_queue_size: %d, cost %.2f ms", 
+        #             scheduler_outputs.num_prefill_groups,
+        #             scheduler_outputs.running_queue_size,
+        #             (step_end_time-step_start_time)*1000)
+        
         return request_outputs
 
     def do_log_stats(
@@ -816,9 +829,14 @@ class LLMEngine:
 
         # System State
         #   Scheduler State
-        num_running_sys = len(self.scheduler.running)
-        num_swapped_sys = len(self.scheduler.swapped)
-        num_waiting_sys = len(self.scheduler.waiting)
+        if self.scheduler_config.coinference_scheduler:
+            num_running_sys = self.scheduler.num_running_seq_groups
+            num_swapped_sys = self.scheduler.num_swapped_seq_groups
+            num_waiting_sys = self.scheduler.num_waiting_seq_groups
+        else:
+            num_running_sys = len(self.scheduler.running)
+            num_swapped_sys = len(self.scheduler.swapped)
+            num_waiting_sys = len(self.scheduler.waiting)
 
         # KV Cache Usage in %
         num_total_gpu = self.cache_config.num_gpu_blocks
@@ -974,3 +992,18 @@ class LLMEngine:
 
     def check_health(self) -> None:
         self.model_executor.check_health()
+        
+    def test_swap_out(self, num_blocks: int) -> None:
+        blocks_to_swap_out = [(i, i) for i in range(num_blocks)]
+        execute_model_req = ExecuteModelRequest(
+            seq_group_metadata_list=[],
+            blocks_to_swap_in=[],
+            blocks_to_swap_out=blocks_to_swap_out,
+            blocks_to_copy=[],
+        )
+        t1 = time.time()
+        output = self.model_executor.execute_model(
+            execute_model_req=execute_model_req)
+        t2 = time.time()
+        logger.info(f"swap cost {(t2-t1)*1000} ms")
+        

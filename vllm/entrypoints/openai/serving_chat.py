@@ -158,7 +158,10 @@ class OpenAIServingChat(OpenAIServing):
             logger.error("Error in applying chat template from request: %s", e)
             return self.create_error_response(str(e))
 
-        request_id = f"cmpl-{random_uuid()}"
+        if request.request_id:
+            request_id = request.request_id
+        else:
+            request_id = f"cmpl-{random_uuid()}"
         try:
             # Tokenize/detokenize depending on prompt format (string/token list)
             prompt_ids, prompt_text = self._validate_prompt_and_tokenize(

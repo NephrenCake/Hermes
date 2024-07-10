@@ -550,11 +550,11 @@ class AsyncLLMEngine:
                 if shortened_token_ids is not None:
                     shortened_token_ids = shortened_token_ids[:max_log_len]
 
-            logger.info(
-                "Received request %s: prompt: %r, "
-                "params: %s, prompt_token_ids: %s, "
-                "lora_request: %s.", request_id, shortened_prompt, params,
-                shortened_token_ids, lora_request)
+            # logger.info(
+            #     "Received request %s: prompt: %r, "
+            #     "params: %s, prompt_token_ids: %s, "
+            #     "lora_request: %s.", request_id, shortened_prompt, params,
+            #     shortened_token_ids, lora_request)
 
         if not self.is_running:
             if self.start_engine_loop:

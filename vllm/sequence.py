@@ -97,6 +97,7 @@ class RequestMetrics:
     first_token_time: Optional[float]
     time_in_queue: Optional[float]
     finished_time: Optional[float] = None
+    coinf_arrival_time: Optional[float] = None
 
 
 class SequenceData:
@@ -445,7 +446,14 @@ class SequenceGroup:
         pooling_params: Optional[PoolingParams] = None,
         encoder_seq: Optional[Sequence] = None,
     ) -> None:
-        self.request_id = request_id
+        self.request_id = request_id # app_name--coinf_id--req_id
+        if '--' in request_id:
+            splited_id = request_id.split('--')
+            self.app_name = splited_id[0]
+            self.coinf_id = f"{splited_id[0]}--{splited_id[1]}"
+        else:
+            self.app_name = None
+            self.coinf_id = request_id
         self.seqs_dict = {seq.seq_id: seq for seq in seqs}
         self.sampling_params = sampling_params
         self.metrics = RequestMetrics(arrival_time=arrival_time,
@@ -604,6 +612,12 @@ class SequenceGroup:
     def is_prefill(self) -> bool:
         # Every sequence should be in the same stage.
         return self.get_seqs()[0].is_prefill()
+    
+    def is_swapped(self) -> bool:
+        return self.get_unfinished_seqs()[0].status == SequenceStatus.SWAPPED
+    
+    def is_running(self) -> bool:
+        return self.get_unfinished_seqs()[0].status == SequenceStatus.RUNNING
 
     def __repr__(self) -> str:
         return (f"SequenceGroup(request_id={self.request_id}, "

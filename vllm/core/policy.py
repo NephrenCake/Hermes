@@ -1,7 +1,8 @@
 from collections import deque
-from typing import Deque
+from typing import Deque, List, Union
 
 from vllm.sequence import SequenceGroup
+from vllm.coinference.coinference import CoInference
 
 
 class Policy:
@@ -34,12 +35,41 @@ class FCFS(Policy):
         seq_group: SequenceGroup,
     ) -> float:
         return now - seq_group.metrics.arrival_time
+    
+    
+class CoInferencePolicy:
+    def get_priority(
+        self,
+        now: float,
+        coinference: CoInference,
+    ) -> float:
+        raise NotImplementedError
+
+    def sort_by_priority(
+        self,
+        now: float,
+        coinferences: List[CoInference],
+    ) -> List[CoInference]:
+        return sorted(
+                coinferences,
+                key=lambda coinference: self.get_priority(now, coinference),
+                reverse=True,
+            )
+    
+class CoInferenceFCFS(CoInferencePolicy):
+    def get_priority(
+        self,
+        now: float,
+        coinference: CoInference,
+    ) -> float:
+        return now - coinference.arrival_time
 
 
 class PolicyFactory:
 
-    _POLICY_REGISTRY = {'fcfs': FCFS}
+    _POLICY_REGISTRY = {'fcfs': FCFS,
+                        'coinf_fcfs': CoInferenceFCFS}
 
     @classmethod
-    def get_policy(cls, policy_name: str, **kwargs) -> Policy:
+    def get_policy(cls, policy_name: str, **kwargs) -> Union[Policy, CoInferencePolicy]:
         return cls._POLICY_REGISTRY[policy_name](**kwargs)

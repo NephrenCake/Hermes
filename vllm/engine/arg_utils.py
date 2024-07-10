@@ -91,6 +91,9 @@ class EngineArgs:
     speculative_disable_by_batch_size: Optional[int] = None
     ngram_prompt_lookup_max: Optional[int] = None
     ngram_prompt_lookup_min: Optional[int] = None
+    
+    # coinference
+    coinference_scheduler: bool = False
 
     def __post_init__(self):
         if self.tokenizer is None:
@@ -543,6 +546,12 @@ class EngineArgs:
             "will also be used in `model_name` tag content of "
             "prometheus metrics, if multiple names provided, metrics"
             "tag will take the first one.")
+        
+        # coinference
+        parser.add_argument(
+            "--coinference-scheduler",
+            action='store_true',
+            help="if use coinference scheduler")
 
         return parser
 
@@ -611,6 +620,7 @@ class EngineArgs:
             delay_factor=self.scheduler_delay_factor,
             enable_chunked_prefill=self.enable_chunked_prefill,
             embedding_mode=model_config.embedding_mode,
+            coinference_scheduler=self.coinference_scheduler,
         )
         lora_config = LoRAConfig(
             max_lora_rank=self.max_lora_rank,

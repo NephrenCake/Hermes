@@ -656,6 +656,7 @@ class SchedulerConfig:
         delay_factor: float = 0.0,
         enable_chunked_prefill: bool = False,
         embedding_mode: Optional[bool] = False,
+        coinference_scheduler: bool = False
     ) -> None:
         if max_num_batched_tokens is not None:
             self.max_num_batched_tokens = max_num_batched_tokens
@@ -682,6 +683,8 @@ class SchedulerConfig:
         self.delay_factor = delay_factor
         self.chunked_prefill_enabled = enable_chunked_prefill
         self.embedding_mode = embedding_mode
+        
+        self.coinference_scheduler = coinference_scheduler
 
         self._verify_args()
 

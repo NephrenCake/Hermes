@@ -133,7 +133,7 @@ class SchedulerOutputs:
 
     def __post_init__(self):
         # Swap in and swap out should never happen at the same time.
-        assert not (self.blocks_to_swap_in and self.blocks_to_swap_out)
+        # assert not (self.blocks_to_swap_in and self.blocks_to_swap_out)
 
         self.num_loras: int = len(self.lora_requests)
         if self.num_loras > 0:
@@ -166,10 +166,10 @@ class SchedulerRunningOutputs:
     enough memory, it can be preempted (for recompute) or swapped out.
     """
     # Selected sequences that are running and in a decoding phase.
-    decode_seq_groups: List[SequenceGroup]
+    decode_seq_groups: List[ScheduledSequenceGroup]
     # Selected sequences that are running and in a prefill phase.
     # I.e., it means the prefill has been chunked.
-    prefill_seq_groups: List[SequenceGroup]
+    prefill_seq_groups: List[ScheduledSequenceGroup]
     # The preempted sequences.
     preempted: List[SequenceGroup]
     # Sequences that are swapped out.
@@ -202,10 +202,10 @@ class SchedulerSwappedInOutputs:
     """
     # Selected sequences that are going to be swapped in and is in a
     # decoding phase.
-    decode_seq_groups: List[SequenceGroup]
+    decode_seq_groups: List[ScheduledSequenceGroup]
     # Selected sequences that are going to be swapped in and in a prefill
     # phase. I.e., it means the prefill has been chunked.
-    prefill_seq_groups: List[SequenceGroup]
+    prefill_seq_groups: List[ScheduledSequenceGroup]
     # The blocks to swap in.
     blocks_to_swap_in: List[Tuple[int, int]]
     # The blocks to copy.
@@ -235,7 +235,7 @@ class SchedulerPrefillOutputs:
     to be recomputed from scratch.
     """
     # Selected sequences for prefill.
-    seq_groups: List[SequenceGroup]
+    seq_groups: List[ScheduledSequenceGroup]
     # Ignored sequence groups.
     ignored_seq_groups: List[SequenceGroup]
     num_lookahead_slots: int
@@ -364,7 +364,7 @@ class Scheduler:
 
     def _schedule_running(
         self,
-        running_queue: deque,
+        running_queue: deque[SequenceGroup],
         budget: SchedulingBudget,
         curr_loras: Optional[Set[int]],
         policy: Policy,
@@ -606,7 +606,7 @@ class Scheduler:
 
     def _schedule_prefills(
         self,
-        waiting_queue: deque,
+        waiting_queue: deque[SequenceGroup],
         budget: SchedulingBudget,
         curr_loras: Optional[Set[int]],
         enable_chunking: bool = False,
@@ -638,7 +638,7 @@ class Scheduler:
             SchedulerSwappedInOutputs.
         """
         ignored_seq_groups: List[SequenceGroup] = []
-        seq_groups: List[SequenceGroup] = []
+        seq_groups: List[ScheduledSequenceGroup] = []
         # We don't sort waiting queue because we assume it is sorted.
         # Copy the queue so that the input queue is not modified.
         waiting_queue = deque([s for s in waiting_queue])

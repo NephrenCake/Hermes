@@ -190,6 +190,11 @@ class ChatCompletionRequest(OpenAIBaseModel):
             "for guided json decoding."))
 
     # doc: end-chat-completion-extra-params
+    
+    # doc: begin-hermes-extra-params
+    request_id: Optional[str] = None
+    # doc: end-hermes-extra-params
+    
 
     def to_sampling_params(self) -> SamplingParams:
         # We now allow logprobs being true without top_logrobs.
