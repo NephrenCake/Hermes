@@ -94,6 +94,7 @@ class EngineArgs:
     
     # coinference
     coinference_scheduler: bool = False
+    proactive_reservation: bool = False
 
     def __post_init__(self):
         if self.tokenizer is None:
@@ -552,6 +553,10 @@ class EngineArgs:
             "--coinference-scheduler",
             action='store_true',
             help="if use coinference scheduler")
+        parser.add_argument(
+            "--proactive-reservation",
+            action='store_true',
+            help="if use proactive reservation")
 
         return parser
 
@@ -621,6 +626,7 @@ class EngineArgs:
             enable_chunked_prefill=self.enable_chunked_prefill,
             embedding_mode=model_config.embedding_mode,
             coinference_scheduler=self.coinference_scheduler,
+            proactive_reservation=self.proactive_reservation,
         )
         lora_config = LoRAConfig(
             max_lora_rank=self.max_lora_rank,

@@ -656,7 +656,8 @@ class SchedulerConfig:
         delay_factor: float = 0.0,
         enable_chunked_prefill: bool = False,
         embedding_mode: Optional[bool] = False,
-        coinference_scheduler: bool = False
+        coinference_scheduler: bool = False, 
+        proactive_reservation: bool = False,
     ) -> None:
         if max_num_batched_tokens is not None:
             self.max_num_batched_tokens = max_num_batched_tokens
@@ -684,7 +685,9 @@ class SchedulerConfig:
         self.chunked_prefill_enabled = enable_chunked_prefill
         self.embedding_mode = embedding_mode
         
+        # coinference
         self.coinference_scheduler = coinference_scheduler
+        self.proactive_reservation = proactive_reservation
 
         self._verify_args()
 

@@ -135,163 +135,9 @@ class CoInferenceScheduler:
         self.num_waiting_seq_groups = 0
         self.num_swapped_seq_groups = 0
         
-    def add_seq_group(self, seq_group: SequenceGroup) -> int:
-        if seq_group.coinf_id not in self.coinferences:
-            new_coinf = CoInference(seq_group.app_name,
-                                    seq_group.coinf_id,
-                                    seq_group.metrics.arrival_time)
-            new_coinf.add_req(seq_group)
-            self.coinferences[seq_group.coinf_id] = new_coinf
-        else:
-            self.coinferences[seq_group.coinf_id].add_req(seq_group)
-            
-            
-    def abort_seq_group(self, request_id: Union[str, Iterable[str]]):
-        # TODO: implement
-        if isinstance(request_id, str):
-            request_id = (request_id, )
-        request_ids = set(request_id)
-        aborted_groups: List[SequenceGroup] = []
-        for request_id in request_ids:
-            if '--' in request_id:
-                splited_id = request_id.split('--')
-                coinf_id = f"{splited_id[0]}--{splited_id[1]}"
-            else:
-                coinf_id = request_id
-            if coinf_id not in self.coinferences:
-                continue
-            coinf = self.coinferences.pop(coinf_id)
-            aborted_groups += coinf.current_stage.seq_groups
-        for aborted_group in aborted_groups:
-            for seq in aborted_group.get_seqs():
-                if seq.is_finished():
-                    continue
-                seq.status = SequenceStatus.FINISHED_ABORTED
-                self.free_seq(seq)
-    
-    def get_num_unfinished_seq_groups(self) -> int:
-        return sum([coinf.get_num_unfinished_seq_groups() for coinf in self.coinferences.values()])
-    
-    def has_unfinished_seqs(self) -> bool:
-        return self.get_num_unfinished_seq_groups() != 0
-    
-    def fork_seq(self, parent_seq: Sequence, child_seq: Sequence) -> None:
-        self.block_manager.fork(parent_seq, child_seq)
-        
-    def free_seq(self, seq: Sequence) -> None:
-        """Free a sequence from a block table."""
-        self.block_manager.free(seq)
-        
-    def free_finished_seq_groups(self) -> None:
-        # NOTE: this function actually free finished coinferences
-        finished_coinf = []
-        for coinf_id, coinf in self.coinferences.items():
-            if coinf.is_finished():
-                finished_coinf.append(coinf_id)
-                
-        for coinf_id in finished_coinf:
-            self.coinferences.pop(coinf_id)
-            
-    def _allocate_and_set_running(self, seq_group: SequenceGroup) -> None:
-        self.block_manager.allocate(seq_group)
-        for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
-            seq.status = SequenceStatus.RUNNING
-            
-    def _append_slots(
-        self,
-        seq_group: SequenceGroup,
-        blocks_to_copy: List[Tuple[int, int]],
-    ) -> None:
-        """Appends new slots to the sequences in the given sequence group.
-
-        Args:
-            seq_group (SequenceGroup): The sequence group containing the
-                sequences to append slots to.
-            blocks_to_copy (List[Tuple[int, int]]): A list of tuple of two
-                ints, the first int is the source block index, and the second
-                int is the destination block index. This list is updated with
-                the new source and destination block indices for the appended
-                slots.
-        """
-        for seq in seq_group.get_seqs(status=SequenceStatus.RUNNING):
-            cows = self.block_manager.append_slots(seq, 0)
-            blocks_to_copy.extend(cows)
-            
-    def _preempt(
-        self,
-        seq_group: SequenceGroup,
-        blocks_to_swap_out: List[Tuple[int, int]],
-        preemption_mode: Optional[PreemptionMode] = None,
-    ) -> PreemptionMode:
-        # If preemption mode is not specified, we determine the mode as follows:
-        # We use recomputation by default since it incurs lower overhead than
-        # swapping. However, when the sequence group has multiple sequences
-        # (e.g., beam search), recomputation is not currently supported. In
-        # such a case, we use swapping instead.
-        # FIXME(woosuk): This makes our scheduling policy a bit bizarre.
-        # As swapped sequences are prioritized over waiting sequences,
-        # sequence groups with multiple sequences are implicitly prioritized
-        # over sequence groups with a single sequence.
-        # TODO(woosuk): Support recomputation for sequence groups with multiple
-        # sequences. This may require a more sophisticated CUDA kernel.
-        if preemption_mode is None:
-            if seq_group.get_max_num_running_seqs() == 1:
-                preemption_mode = PreemptionMode.RECOMPUTE
-            else:
-                preemption_mode = PreemptionMode.SWAP
-
-        if preemption_mode == PreemptionMode.RECOMPUTE:
-            self._preempt_by_recompute(seq_group)
-        elif preemption_mode == PreemptionMode.SWAP:
-            self._preempt_by_swap(seq_group, blocks_to_swap_out)
-        else:
-            raise AssertionError("Invalid preemption mode.")
-        return preemption_mode
-            
-    def _preempt_by_recompute(
-        self,
-        seq_group: SequenceGroup,
-    ) -> None:
-        seqs = seq_group.get_seqs(status=SequenceStatus.RUNNING)
-        assert len(seqs) == 1
-        for seq in seqs:
-            seq.status = SequenceStatus.WAITING
-            self.free_seq(seq)
-            seq.reset_state_for_recompute()
-
-    def _preempt_by_swap(
-        self,
-        seq_group: SequenceGroup,
-        blocks_to_swap_out: List[Tuple[int, int]],
-    ) -> None:
-        self._swap_out(seq_group, blocks_to_swap_out)
-            
-    def _swap_in(
-        self,
-        seq_group: SequenceGroup,
-        blocks_to_swap_in: List[Tuple[int, int]],
-    ) -> None:
-        mapping = self.block_manager.swap_in(seq_group)
-        blocks_to_swap_in.extend(mapping)
-        for seq in seq_group.get_seqs(status=SequenceStatus.SWAPPED):
-            seq.status = SequenceStatus.RUNNING
-
-    def _swap_out(
-        self,
-        seq_group: SequenceGroup,
-        blocks_to_swap_out: List[Tuple[int, int]],
-    ) -> None:
-        if not self.block_manager.can_swap_out(seq_group):
-            # FIXME(woosuk): Abort the sequence group instead of aborting the
-            # entire engine.
-            raise RuntimeError(
-                "Aborted due to the lack of CPU swap space. Please increase "
-                "the swap space to avoid this error.")
-        mapping = self.block_manager.swap_out(seq_group)
-        blocks_to_swap_out.extend(mapping)
-        for seq in seq_group.get_seqs(status=SequenceStatus.RUNNING):
-            seq.status = SequenceStatus.SWAPPED
-            
+        self.proactive_reservation = scheduler_config.proactive_reservation
+          
+    # schedule main function
     def schedule(self) -> Tuple[List[SequenceGroupMetadata], SchedulerOutputs]:
         # Schedule sequence groups.
         # This function call changes the internal states of the scheduler
@@ -439,9 +285,11 @@ class CoInferenceScheduler:
         waiting_queue: List[SequenceGroup] = []
         
         budget_full = False
+        now = time.time()
         
         for coinf in coinference_queue:
-            seq_groups = [seq_group for seq_group in coinf.current_stage.seq_groups if not seq_group.is_finished()]
+            stage = coinf.current_stage
+            seq_groups = [seq_group for seq_group in stage.seq_groups if not seq_group.is_finished()]
             for seq_group in seq_groups:
                 if budget_full:
                     if seq_group.is_running():
@@ -470,6 +318,7 @@ class CoInferenceScheduler:
                     
                     num_new_seqs = seq_group.get_max_num_running_seqs()
                     num_new_blocks = len(seq_group.get_seqs(status=SequenceStatus.WAITING)[0].logical_token_blocks)
+                    num_watermark_blocks = self.block_manager.watermark_blocks
                 
                     # never can allocate
                     if self.block_manager.num_total_gpu_blocks - num_new_blocks < self.block_manager.watermark_blocks:
@@ -487,7 +336,8 @@ class CoInferenceScheduler:
                     num_new_blocks = len(self.block_manager._get_physical_blocks(seq_group))
                     num_new_blocks += seq_group.num_seqs(status=SequenceStatus.RUNNING)
                     num_new_blocks += seq_group.num_seqs(status=SequenceStatus.SWAPPED)
-                if logicalbudget.can_schedule(num_new_seqs, num_new_blocks):
+                    num_watermark_blocks = 0
+                if logicalbudget.can_schedule(num_new_seqs, num_new_blocks+num_watermark_blocks):
                     logicalbudget.add_num_seqs(num_new_seqs)
                     logicalbudget.add_num_used_blocks(num_new_blocks)
                     if seq_group.is_prefill():
@@ -504,6 +354,24 @@ class CoInferenceScheduler:
                         swapped_queue.append(seq_group)
                     else:
                         waiting_queue.append(seq_group)
+        
+            # proactive_reservation
+            if self.proactive_reservation and not budget_full:
+                logger.info(f"{coinf.coinf_id} next stage will arrival after {(stage.predicted_stage_arrival_time - now)*1000:.2f} ms")
+                if not stage.all_arrival() and stage.should_reserve(now):
+                    for reserve_seq_group in stage.reserve_seq_groups[len(stage.seq_groups):]:
+                        num_new_seqs = reserve_seq_group.num_new_seqs
+                        # NOTE (zgan): there will reserve one block less as rounding down.
+                        # But I think it doesn't matter.
+                        num_new_blocks = reserve_seq_group.num_prompt_tokens//self.block_manager.block_size
+                        num_watermark_blocks = self.block_manager.watermark_blocks
+                        if logicalbudget.can_schedule(num_new_seqs, num_new_blocks+num_watermark_blocks):
+                            logicalbudget.add_num_seqs(num_new_seqs)
+                            logicalbudget.add_num_used_blocks(num_new_blocks)
+                        else:
+                            budget_full = True
+                            break
+                        
         
         return SplitSeqGroupOutputs(ignored_seq_groups=ignored_seq_groups,
                                     prefill_queue=prefill_queue,
@@ -576,6 +444,162 @@ class CoInferenceScheduler:
                                       blocks_to_copy=blocks_to_copy,
                                       num_batched_tokens=tokenbudget.num_batched_tokens)
         
+    # other function
+    def add_seq_group(self, seq_group: SequenceGroup) -> int:
+        if seq_group.coinf_id not in self.coinferences:
+            new_coinf = CoInference(seq_group.app_name,
+                                    seq_group.coinf_id,
+                                    seq_group.metrics.arrival_time)
+            new_coinf.add_req(seq_group)
+            self.coinferences[seq_group.coinf_id] = new_coinf
+        else:
+            self.coinferences[seq_group.coinf_id].add_req(seq_group)
+            
+    def abort_seq_group(self, request_id: Union[str, Iterable[str]]):
+        # TODO: implement
+        if isinstance(request_id, str):
+            request_id = (request_id, )
+        request_ids = set(request_id)
+        aborted_groups: List[SequenceGroup] = []
+        for request_id in request_ids:
+            if '--' in request_id:
+                splited_id = request_id.split('--')
+                coinf_id = f"{splited_id[0]}--{splited_id[1]}"
+            else:
+                coinf_id = request_id
+            if coinf_id not in self.coinferences:
+                continue
+            coinf = self.coinferences.pop(coinf_id)
+            aborted_groups += coinf.current_stage.seq_groups
+        for aborted_group in aborted_groups:
+            for seq in aborted_group.get_seqs():
+                if seq.is_finished():
+                    continue
+                seq.status = SequenceStatus.FINISHED_ABORTED
+                self.free_seq(seq)
+    
+    def get_num_unfinished_seq_groups(self) -> int:
+        return sum([coinf.get_num_unfinished_seq_groups() for coinf in self.coinferences.values()])
+    
+    def has_unfinished_seqs(self) -> bool:
+        return self.get_num_unfinished_seq_groups() != 0
+    
+    def fork_seq(self, parent_seq: Sequence, child_seq: Sequence) -> None:
+        self.block_manager.fork(parent_seq, child_seq)
+        
+    def free_seq(self, seq: Sequence) -> None:
+        """Free a sequence from a block table."""
+        self.block_manager.free(seq)
+        
+    def free_finished_seq_groups(self) -> None:
+        # NOTE: this function actually free finished coinferences
+        finished_coinf = []
+        for coinf_id, coinf in self.coinferences.items():
+            if coinf.is_finished():
+                finished_coinf.append(coinf_id)
+                
+        for coinf_id in finished_coinf:
+            self.coinferences.pop(coinf_id)
+            
+    def _allocate_and_set_running(self, seq_group: SequenceGroup) -> None:
+        self.block_manager.allocate(seq_group)
+        for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
+            seq.status = SequenceStatus.RUNNING
+            
+    def _append_slots(
+        self,
+        seq_group: SequenceGroup,
+        blocks_to_copy: List[Tuple[int, int]],
+    ) -> None:
+        """Appends new slots to the sequences in the given sequence group.
 
+        Args:
+            seq_group (SequenceGroup): The sequence group containing the
+                sequences to append slots to.
+            blocks_to_copy (List[Tuple[int, int]]): A list of tuple of two
+                ints, the first int is the source block index, and the second
+                int is the destination block index. This list is updated with
+                the new source and destination block indices for the appended
+                slots.
+        """
+        for seq in seq_group.get_seqs(status=SequenceStatus.RUNNING):
+            cows = self.block_manager.append_slots(seq, 0)
+            blocks_to_copy.extend(cows)
+            
+    def _preempt(
+        self,
+        seq_group: SequenceGroup,
+        blocks_to_swap_out: List[Tuple[int, int]],
+        preemption_mode: Optional[PreemptionMode] = None,
+    ) -> PreemptionMode:
+        # If preemption mode is not specified, we determine the mode as follows:
+        # We use recomputation by default since it incurs lower overhead than
+        # swapping. However, when the sequence group has multiple sequences
+        # (e.g., beam search), recomputation is not currently supported. In
+        # such a case, we use swapping instead.
+        # FIXME(woosuk): This makes our scheduling policy a bit bizarre.
+        # As swapped sequences are prioritized over waiting sequences,
+        # sequence groups with multiple sequences are implicitly prioritized
+        # over sequence groups with a single sequence.
+        # TODO(woosuk): Support recomputation for sequence groups with multiple
+        # sequences. This may require a more sophisticated CUDA kernel.
+        if preemption_mode is None:
+            if seq_group.get_max_num_running_seqs() == 1:
+                preemption_mode = PreemptionMode.RECOMPUTE
+            else:
+                preemption_mode = PreemptionMode.SWAP
+
+        if preemption_mode == PreemptionMode.RECOMPUTE:
+            self._preempt_by_recompute(seq_group)
+        elif preemption_mode == PreemptionMode.SWAP:
+            self._preempt_by_swap(seq_group, blocks_to_swap_out)
+        else:
+            raise AssertionError("Invalid preemption mode.")
+        return preemption_mode
+            
+    def _preempt_by_recompute(
+        self,
+        seq_group: SequenceGroup,
+    ) -> None:
+        seqs = seq_group.get_seqs(status=SequenceStatus.RUNNING)
+        assert len(seqs) == 1
+        for seq in seqs:
+            seq.status = SequenceStatus.WAITING
+            self.free_seq(seq)
+            seq.reset_state_for_recompute()
+
+    def _preempt_by_swap(
+        self,
+        seq_group: SequenceGroup,
+        blocks_to_swap_out: List[Tuple[int, int]],
+    ) -> None:
+        self._swap_out(seq_group, blocks_to_swap_out)
+            
+    def _swap_in(
+        self,
+        seq_group: SequenceGroup,
+        blocks_to_swap_in: List[Tuple[int, int]],
+    ) -> None:
+        mapping = self.block_manager.swap_in(seq_group)
+        blocks_to_swap_in.extend(mapping)
+        for seq in seq_group.get_seqs(status=SequenceStatus.SWAPPED):
+            seq.status = SequenceStatus.RUNNING
+
+    def _swap_out(
+        self,
+        seq_group: SequenceGroup,
+        blocks_to_swap_out: List[Tuple[int, int]],
+    ) -> None:
+        if not self.block_manager.can_swap_out(seq_group):
+            # FIXME(woosuk): Abort the sequence group instead of aborting the
+            # entire engine.
+            raise RuntimeError(
+                "Aborted due to the lack of CPU swap space. Please increase "
+                "the swap space to avoid this error.")
+        mapping = self.block_manager.swap_out(seq_group)
+        blocks_to_swap_out.extend(mapping)
+        for seq in seq_group.get_seqs(status=SequenceStatus.RUNNING):
+            seq.status = SequenceStatus.SWAPPED
+          
         
         
