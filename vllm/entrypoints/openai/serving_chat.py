@@ -162,6 +162,8 @@ class OpenAIServingChat(OpenAIServing):
             request_id = request.request_id
         else:
             request_id = f"cmpl-{random_uuid()}"
+        coinference_info_dict = request.coinference_info_dict
+            
         try:
             # Tokenize/detokenize depending on prompt format (string/token list)
             prompt_ids, prompt_text = self._validate_prompt_and_tokenize(
@@ -183,6 +185,10 @@ class OpenAIServingChat(OpenAIServing):
         except ValueError as e:
             return self.create_error_response(str(e))
 
+        # prompt_text = prompt
+        # prompt_ids = [42]*500
+        # sampling_params.max_tokens = 200
+
         result_generator = self.engine.generate(
             {
                 "prompt": prompt_text,
@@ -191,6 +197,7 @@ class OpenAIServingChat(OpenAIServing):
             sampling_params,
             request_id,
             lora_request,
+            coinference_info_dict,
         )
         # Streaming response
         if request.stream:

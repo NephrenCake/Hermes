@@ -798,6 +798,10 @@ class Scheduler:
         preempted = (len(running_scheduled.preempted) +
                      len(running_scheduled.swapped_out))
 
+        # logger.info(f"waiting_queue: {len(self.waiting)}, {self.waiting}")
+        # logger.info(f"running_queue: {len(self.running)}, {self.running}")
+        # logger.info(f"swapped_queue: {len(self.swapped)}, {self.swapped}")
+
         # There should be no prefill from running queue because this policy
         # doesn't allow chunked prefills.
         assert len(running_scheduled.prefill_seq_groups) == 0

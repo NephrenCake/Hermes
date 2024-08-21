@@ -15,7 +15,8 @@ from vllm.logger import init_logger
 from vllm.lora.request import LoRARequest
 from vllm.sequence import (Sequence, SequenceData, SequenceGroup,
                            SequenceGroupMetadata, SequenceStatus)
-from vllm.coinference.coinference import (CoInference, CoInferenceStage)
+from vllm.coinference.coinference import CoInference
+from vllm.coinference.coinference_creator import create_coinference
 from vllm.utils import Counter
 
 logger = init_logger(__name__)
@@ -108,6 +109,31 @@ class TokenBudget:
         return self._num_batched_tokens
     
 
+class TimeRecorder:
+    def __init__(
+        self, 
+        record_window_size: int
+    ) -> None:
+        ''' ms '''
+        self.time_per_token = 0
+        self.time_recorder = []
+        self.num_tokens_recorder = []
+        self.record_window_size = record_window_size
+        
+    def update(
+        self,
+        num_tokens: int,
+        time: float
+    ):
+        self.time_recorder.append(time)
+        self.num_tokens_recorder.append(num_tokens)
+        if len(self.num_tokens_recorder) >= self.record_window_size:
+            self.time_per_token = sum(self.time_recorder)/sum(self.num_tokens_recorder)
+            self.time_recorder = []
+            self.num_tokens_recorder = []
+            
+        
+
 class CoInferenceScheduler:
     def __init__(
         self,
@@ -129,13 +155,17 @@ class CoInferenceScheduler:
             sliding_window=self.cache_config.sliding_window,
             enable_caching=self.cache_config.enable_prefix_caching)
         
-        self.coinferences: Dict[str, CoInference] = {}
+        self.coinferences_dict: Dict[str, CoInference] = {}
+        self.coinferences_queue: List[CoInference] = []
         
         self.num_running_seq_groups = 0
         self.num_waiting_seq_groups = 0
         self.num_swapped_seq_groups = 0
         
         self.proactive_reservation = scheduler_config.proactive_reservation
+        
+        self.prefill_recorder = TimeRecorder(record_window_size=10)
+        self.decode_recorder = TimeRecorder(record_window_size=50)
           
     # schedule main function
     def schedule(self) -> Tuple[List[SequenceGroupMetadata], SchedulerOutputs]:
@@ -222,11 +252,16 @@ class CoInferenceScheduler:
     def _schedule_default(self) -> SchedulerOutputs:        
         # sort coinference by priority
         now = time.time()
+        for coinf in self.coinferences_dict.values():
+            coinf.estimate_remaining_time(self.prefill_recorder.time_per_token,
+                                          self.decode_recorder.time_per_token)
         policy: CoInferencePolicy = PolicyFactory.get_policy(policy_name="coinf_fcfs")
-        coinference_queue = policy.sort_by_priority(now, self.coinferences.values())
+        # policy: CoInferencePolicy = PolicyFactory.get_policy(policy_name="coinf_srcf")
+        self.coinferences_queue = policy.sort_by_priority(now, self.coinferences_queue)
+        # logger.info(f"{self.coinferences_queue}")
         
         # split coinference to running_queue and waiting_queue
-        split_outputs = self.split_seq_groups(coinference_queue)
+        split_outputs = self.split_seq_groups(self.coinferences_queue)
                         
         # swap out all seq_group in waiting_queue
         schedule_swapout_outputs = self.schedule_swapout(split_outputs.swapout_queue)
@@ -247,13 +282,13 @@ class CoInferenceScheduler:
             self.num_running_seq_groups += len(split_outputs.swapin_queue)
         self.num_swapped_seq_groups = len(split_outputs.swapped_queue) + len(split_outputs.swapout_queue)
         
-        logger.info(f"coinferences: {self.coinferences}")
-        logger.info(f"prefill_queue: {split_outputs.prefill_queue}")
-        logger.info(f"decode_queue: {split_outputs.decode_queue}")
-        logger.info(f"swapin_queue: {split_outputs.swapin_queue}")
-        logger.info(f"swapout_queue: {split_outputs.swapout_queue}")
-        logger.info(f"swapped_queue: {split_outputs.swapped_queue}")
-        logger.info(f"waiting_queue: {split_outputs.waiting_queue}")
+        # logger.info(f"coinferences: {self.coinferences_dict}")
+        # logger.info(f"prefill_queue: {split_outputs.prefill_queue}")
+        # logger.info(f"decode_queue: {split_outputs.decode_queue}")
+        # logger.info(f"swapin_queue: {split_outputs.swapin_queue}")
+        # logger.info(f"swapout_queue: {split_outputs.swapout_queue}")
+        # logger.info(f"swapped_queue: {split_outputs.swapped_queue}")
+        # logger.info(f"waiting_queue: {split_outputs.waiting_queue}")
         
         return SchedulerOutputs(
             scheduled_seq_groups=(schedule_prefill_outputs.seq_groups + 
@@ -270,7 +305,7 @@ class CoInferenceScheduler:
             preempted=len(split_outputs.swapout_queue),
         )
     
-    def split_seq_groups(self, coinference_queue: List[CoInference]) -> SplitSeqGroupOutputs:
+    def split_seq_groups(self, coinferences_queue: List[CoInference]) -> SplitSeqGroupOutputs:
         logicalbudget = LogicalBudget(
             max_num_seqs=self.scheduler_config.max_num_seqs,
             max_num_blocks=self.cache_config.num_gpu_blocks,
@@ -287,7 +322,9 @@ class CoInferenceScheduler:
         budget_full = False
         now = time.time()
         
-        for coinf in coinference_queue:
+        for coinf in coinferences_queue:
+            if coinf.current_stage_id == len(coinf.stages):
+                continue
             stage = coinf.current_stage
             seq_groups = [seq_group for seq_group in stage.seq_groups if not seq_group.is_finished()]
             for seq_group in seq_groups:
@@ -354,23 +391,23 @@ class CoInferenceScheduler:
                         swapped_queue.append(seq_group)
                     else:
                         waiting_queue.append(seq_group)
-        
-            # proactive_reservation
-            if self.proactive_reservation and not budget_full:
-                logger.info(f"{coinf.coinf_id} next stage will arrival after {(stage.predicted_stage_arrival_time - now)*1000:.2f} ms")
-                if not stage.all_arrival() and stage.should_reserve(now):
-                    for reserve_seq_group in stage.reserve_seq_groups[len(stage.seq_groups):]:
-                        num_new_seqs = reserve_seq_group.num_new_seqs
-                        # NOTE (zgan): there will reserve one block less as rounding down.
-                        # But I think it doesn't matter.
-                        num_new_blocks = reserve_seq_group.num_prompt_tokens//self.block_manager.block_size
-                        num_watermark_blocks = self.block_manager.watermark_blocks
-                        if logicalbudget.can_schedule(num_new_seqs, num_new_blocks+num_watermark_blocks):
-                            logicalbudget.add_num_seqs(num_new_seqs)
-                            logicalbudget.add_num_used_blocks(num_new_blocks)
-                        else:
-                            budget_full = True
-                            break
+
+            # # proactive_reservation
+            # if self.proactive_reservation and not budget_full:
+            #     # logger.info(f"{coinf.coinf_id} next stage will arrival after {(stage.predicted_stage_arrival_time - now)*1000:.2f} ms")
+            #     if not stage.all_arrival and stage.should_reserve(now):
+            #         for reserve_seq_group in stage.reserve_seq_groups:
+            #             num_new_seqs = reserve_seq_group.num_new_seqs
+            #             # NOTE (zgan): there will reserve one block less as rounding down.
+            #             # But I think it doesn't matter.
+            #             num_new_blocks = reserve_seq_group.num_prompt_tokens//self.block_manager.block_size
+            #             num_watermark_blocks = self.block_manager.watermark_blocks
+            #             if logicalbudget.can_schedule(num_new_seqs, num_new_blocks+num_watermark_blocks):
+            #                 logicalbudget.add_num_seqs(num_new_seqs)
+            #                 logicalbudget.add_num_used_blocks(num_new_blocks)
+            #             else:
+            #                 budget_full = True
+            #                 break
                         
         
         return SplitSeqGroupOutputs(ignored_seq_groups=ignored_seq_groups,
@@ -445,15 +482,21 @@ class CoInferenceScheduler:
                                       num_batched_tokens=tokenbudget.num_batched_tokens)
         
     # other function
-    def add_seq_group(self, seq_group: SequenceGroup) -> int:
-        if seq_group.coinf_id not in self.coinferences:
-            new_coinf = CoInference(seq_group.app_name,
-                                    seq_group.coinf_id,
-                                    seq_group.metrics.arrival_time)
+    def add_seq_group(
+        self,
+        seq_group: SequenceGroup,
+        coinference_info_dict: Optional[Dict],
+    ) -> int:
+        if seq_group.coinf_id not in self.coinferences_dict:
+            new_coinf = create_coinference(seq_group.app_name,
+                                           seq_group.coinf_id,
+                                           seq_group.metrics.arrival_time,
+                                           coinference_info_dict)
             new_coinf.add_req(seq_group)
-            self.coinferences[seq_group.coinf_id] = new_coinf
+            self.coinferences_dict[seq_group.coinf_id] = new_coinf
+            self.coinferences_queue.append(new_coinf)
         else:
-            self.coinferences[seq_group.coinf_id].add_req(seq_group)
+            self.coinferences_dict[seq_group.coinf_id].add_req(seq_group)
             
     def abort_seq_group(self, request_id: Union[str, Iterable[str]]):
         # TODO: implement
@@ -467,9 +510,10 @@ class CoInferenceScheduler:
                 coinf_id = f"{splited_id[0]}--{splited_id[1]}"
             else:
                 coinf_id = request_id
-            if coinf_id not in self.coinferences:
+            if coinf_id not in self.coinferences_dict:
                 continue
-            coinf = self.coinferences.pop(coinf_id)
+            coinf = self.coinferences_dict.pop(coinf_id)
+            self.coinferences_queue.remove(coinf)
             aborted_groups += coinf.current_stage.seq_groups
         for aborted_group in aborted_groups:
             for seq in aborted_group.get_seqs():
@@ -479,7 +523,7 @@ class CoInferenceScheduler:
                 self.free_seq(seq)
     
     def get_num_unfinished_seq_groups(self) -> int:
-        return sum([coinf.get_num_unfinished_seq_groups() for coinf in self.coinferences.values()])
+        return sum([coinf.get_num_unfinished_seq_groups() for coinf in self.coinferences_dict.values()])
     
     def has_unfinished_seqs(self) -> bool:
         return self.get_num_unfinished_seq_groups() != 0
@@ -493,13 +537,15 @@ class CoInferenceScheduler:
         
     def free_finished_seq_groups(self) -> None:
         # NOTE: this function actually free finished coinferences
+        now = time.time()
         finished_coinf = []
-        for coinf_id, coinf in self.coinferences.items():
-            if coinf.is_finished():
+        for coinf_id, coinf in self.coinferences_dict.items():
+            if coinf.is_finished(now):
                 finished_coinf.append(coinf_id)
                 
         for coinf_id in finished_coinf:
-            self.coinferences.pop(coinf_id)
+            coinf = self.coinferences_dict.pop(coinf_id)
+            self.coinferences_queue.remove(coinf)
             
     def _allocate_and_set_running(self, seq_group: SequenceGroup) -> None:
         self.block_manager.allocate(seq_group)
@@ -601,5 +647,9 @@ class CoInferenceScheduler:
         for seq in seq_group.get_seqs(status=SequenceStatus.RUNNING):
             seq.status = SequenceStatus.SWAPPED
           
-        
+    def record_step_time(self, num_tokens: int, time: float, is_prefill: bool):
+        if is_prefill:
+            self.prefill_recorder.update(num_tokens, time)
+        else:
+            self.decode_recorder.update(num_tokens, time)
         

@@ -1,6 +1,9 @@
 python -m vllm.entrypoints.openai.api_server \
   --model /home/zgan/Models/Llama-2-7b-chat-hf \
   --served-model-name gpt-3.5-turbo \
+  --gpu-memory-utilization 0.9 \
   --tensor-parallel-size 2 \
-  --max-num-seqs 10 \
+  --swap-space 32 \
+  --coinference-scheduler \
   --chat-template ./examples/template_alpaca.jinja
+

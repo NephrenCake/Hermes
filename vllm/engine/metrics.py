@@ -186,6 +186,7 @@ class Stats:
     time_to_first_tokens_iter: List[float]
     time_per_output_tokens_iter: List[float]
     num_preemption_iter: int
+    schedule_time: float
 
     # Request stats (should have _requests suffix)
     #   Latency
@@ -198,6 +199,9 @@ class Stats:
     finished_reason_requests: List[str]
 
     spec_decode_metrics: Optional["SpecDecodeWorkerMetrics"] = None
+    
+    # CoInference
+    num_coinferences: int = 0
 
 
 class SupportsMetricsInfo(Protocol):
@@ -218,6 +222,7 @@ class StatLogger:
         # Tracked stats over current local logging interval.
         self.num_prompt_tokens: List[int] = []
         self.num_generation_tokens: List[int] = []
+        self.schedule_time_list: List[float] = []
 
         # Prometheus metrics
         self.labels = labels
@@ -230,6 +235,12 @@ class StatLogger:
 
     def _get_throughput(self, tracked_stats: List[int], now: float) -> float:
         return float(np.sum(tracked_stats) / (now - self.last_local_log))
+
+    def _get_average_schedule_time(self) -> float:
+        if not self.schedule_time_list:
+            return 0
+        avg_schedule_time = np.mean(self.schedule_time_list)
+        return float(avg_schedule_time)
 
     def _local_interval_elapsed(self, now: float) -> bool:
         elapsed_time = now - self.last_local_log
@@ -324,6 +335,7 @@ class StatLogger:
         # Save tracked stats for token counters.
         self.num_prompt_tokens.append(stats.num_prompt_tokens_iter)
         self.num_generation_tokens.append(stats.num_generation_tokens_iter)
+        self.schedule_time_list.append(stats.schedule_time)
 
         # Log locally every local_interval seconds.
         if self._local_interval_elapsed(stats.now):
@@ -336,26 +348,32 @@ class StatLogger:
             self._log_prometheus_interval(
                 prompt_throughput=prompt_throughput,
                 generation_throughput=generation_throughput)
+            avg_schedule_time = self._get_average_schedule_time()
 
             # Log to stdout.
             logger.info(
                 "Avg prompt throughput: %.1f tokens/s, "
                 "Avg generation throughput: %.1f tokens/s, "
                 "Running: %d reqs, Swapped: %d reqs, "
-                "Pending: %d reqs, GPU KV cache usage: %.1f%%, "
-                "CPU KV cache usage: %.1f%%.",
+                "Pending: %d reqs, Num CoInferences: %d, "
+                "GPU KV cache usage: %.1f%%, "
+                "CPU KV cache usage: %.1f%%, "
+                "Avg Schedule Time: %.2f ms.",
                 prompt_throughput,
                 generation_throughput,
                 stats.num_running_sys,
                 stats.num_swapped_sys,
                 stats.num_waiting_sys,
+                stats.num_coinferences,
                 stats.gpu_cache_usage_sys * 100,
                 stats.cpu_cache_usage_sys * 100,
+                avg_schedule_time * 1000,
             )
 
             # Reset tracked stats for next interval.
             self.num_prompt_tokens = []
             self.num_generation_tokens = []
+            self.schedule_time_list = []
             self.last_local_log = stats.now
 
             if stats.spec_decode_metrics is not None:

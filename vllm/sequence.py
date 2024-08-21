@@ -447,13 +447,13 @@ class SequenceGroup:
         encoder_seq: Optional[Sequence] = None,
     ) -> None:
         self.request_id = request_id # app_name--coinf_id--req_id
+        self.app_name = None
+        self.coinf_id = request_id
         if '--' in request_id:
             splited_id = request_id.split('--')
-            self.app_name = splited_id[0]
-            self.coinf_id = f"{splited_id[0]}--{splited_id[1]}"
-        else:
-            self.app_name = None
-            self.coinf_id = request_id
+            if len(splited_id) == 3:
+                self.app_name = splited_id[0]
+                self.coinf_id = f"{splited_id[0]}--{splited_id[1]}"
         self.seqs_dict = {seq.seq_id: seq for seq in seqs}
         self.sampling_params = sampling_params
         self.metrics = RequestMetrics(arrival_time=arrival_time,
@@ -620,9 +620,10 @@ class SequenceGroup:
         return self.get_unfinished_seqs()[0].status == SequenceStatus.RUNNING
 
     def __repr__(self) -> str:
-        return (f"SequenceGroup(request_id={self.request_id}, "
-                f"sampling_params={self.sampling_params}, "
-                f"num_seqs={len(self.seqs_dict)})")
+        # return (f"SequenceGroup(request_id={self.request_id}, "
+        #         f"sampling_params={self.sampling_params}, "
+        #         f"num_seqs={len(self.seqs_dict)})")
+        return f"{self.request_id}"
 
 
 class SequenceGroupMetadata:

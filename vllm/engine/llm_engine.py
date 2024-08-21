@@ -1,6 +1,6 @@
 import time
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, ClassVar, Iterable, List, Optional
+from typing import TYPE_CHECKING, ClassVar, Iterable, List, Optional, Dict
 from typing import Sequence as GenericSequence
 from typing import Type, TypeVar, Union
 
@@ -208,6 +208,7 @@ class LLMEngine:
         self.load_config = load_config
         self.decoding_config = decoding_config or DecodingConfig()
         self.log_stats = log_stats
+        self.schedule_time_list = []
 
         if not self.model_config.skip_tokenizer_init:
             self.tokenizer = self._init_tokenizer()
@@ -436,6 +437,7 @@ class LLMEngine:
         params: Union[SamplingParams, PoolingParams],
         arrival_time: float,
         lora_request: Optional[LoRARequest],
+        coinference_info_dict: Optional[Dict],
     ) -> None:
         # Create the sequences.
         block_size = self.cache_config.block_size
@@ -467,7 +469,10 @@ class LLMEngine:
                 "Either SamplingParams or PoolingParams must be provided.")
 
         # Add the sequence group to the scheduler.
-        self.scheduler.add_seq_group(seq_group)
+        if self.scheduler_config.coinference_scheduler:
+            self.scheduler.add_seq_group(seq_group, coinference_info_dict)
+        else:
+            self.scheduler.add_seq_group(seq_group)
 
     def process_model_inputs(
         self,
@@ -499,6 +504,7 @@ class LLMEngine:
         params: Union[SamplingParams, PoolingParams],
         arrival_time: Optional[float] = None,
         lora_request: Optional[LoRARequest] = None,
+        coinference_info_dict: Optional[Dict] = None,
     ) -> None:
         """Add a request to the engine's request pool.
 
@@ -557,6 +563,7 @@ class LLMEngine:
             params=params,
             arrival_time=arrival_time,
             lora_request=lora_request,
+            coinference_info_dict=coinference_info_dict,
         )
 
     def _create_sequence_group_with_sampling(
@@ -764,8 +771,7 @@ class LLMEngine:
         """
         step_start_time = time.time()
         seq_group_metadata_list, scheduler_outputs = self.scheduler.schedule()
-        schedule_finish_time = time.time()
-        logger.info(f"schedule cost {(schedule_finish_time-step_start_time)*1000:.2f} ms")
+        schedule_time = time.time() - step_start_time
 
         if not scheduler_outputs.is_empty():
             execute_model_req = ExecuteModelRequest(
@@ -786,7 +792,7 @@ class LLMEngine:
             scheduler_outputs.ignored_seq_groups, seq_group_metadata_list)
 
         # Log stats.
-        self.do_log_stats(scheduler_outputs, output)
+        self.do_log_stats(scheduler_outputs, output, schedule_time)
 
         if not request_outputs:
             # Stop the execute model loop in parallel workers until there are
@@ -796,27 +802,35 @@ class LLMEngine:
             # queued control plane messages, such as add/remove lora adapters.
             self.model_executor.stop_remote_worker_execution_loop()
 
-        # step_end_time = time.time()
-        # logger.info("num_prefill_groups: %d, running_queue_size: %d, cost %.2f ms", 
-        #             scheduler_outputs.num_prefill_groups,
-        #             scheduler_outputs.running_queue_size,
-        #             (step_end_time-step_start_time)*1000)
+        step_time = (time.time() - step_start_time)*1000
+        is_prefill = scheduler_outputs.num_prefill_groups > 0
+        num_tokens = scheduler_outputs.num_batched_tokens
+        if self.scheduler_config.coinference_scheduler:
+            self.scheduler.record_step_time(num_tokens, step_time, is_prefill)
+        logger.info("num_prefill_groups: %d, running_queue_size: %d, cost %.2f ms", 
+                    scheduler_outputs.num_prefill_groups,
+                    scheduler_outputs.running_queue_size,
+                    step_time)
         
         return request_outputs
 
     def do_log_stats(
             self,
             scheduler_outputs: Optional[SchedulerOutputs] = None,
-            model_output: Optional[List[SamplerOutput]] = None) -> None:
+            model_output: Optional[List[SamplerOutput]] = None,
+            schedule_time: float = 0) -> None:
         """Forced log when no requests active."""
         if self.log_stats:
             self.stat_logger.log(
-                self._get_stats(scheduler_outputs, model_output))
+                self._get_stats(scheduler_outputs, model_output, schedule_time))
+        if not scheduler_outputs and not model_output:
+            self.scheduler.free_finished_seq_groups()
 
     def _get_stats(
             self,
             scheduler_outputs: Optional[SchedulerOutputs],
-            model_output: Optional[List[SamplerOutput]] = None) -> Stats:
+            model_output: Optional[List[SamplerOutput]] = None,
+            schedule_time: float = 0) -> Stats:
         """Get Stats to be Logged to Prometheus.
 
         Args:
@@ -833,10 +847,12 @@ class LLMEngine:
             num_running_sys = self.scheduler.num_running_seq_groups
             num_swapped_sys = self.scheduler.num_swapped_seq_groups
             num_waiting_sys = self.scheduler.num_waiting_seq_groups
+            num_coinferences = len(self.scheduler.coinferences_dict)
         else:
             num_running_sys = len(self.scheduler.running)
             num_swapped_sys = len(self.scheduler.swapped)
             num_waiting_sys = len(self.scheduler.waiting)
+            num_coinferences = 0
 
         # KV Cache Usage in %
         num_total_gpu = self.cache_config.num_gpu_blocks
@@ -969,6 +985,7 @@ class LLMEngine:
             time_per_output_tokens_iter=time_per_output_tokens_iter,
             spec_decode_metrics=spec_decode_metrics,
             num_preemption_iter=num_preemption_iter,
+            schedule_time=schedule_time,
 
             # Request stats
             #   Latency
@@ -979,6 +996,9 @@ class LLMEngine:
             best_of_requests=best_of_requests,
             n_requests=n_requests,
             finished_reason_requests=finished_reason_requests,
+            
+            # CoInference
+            num_coinferences=num_coinferences
         )
 
     def add_lora(self, lora_request: LoRARequest) -> bool:

@@ -63,12 +63,26 @@ class CoInferenceFCFS(CoInferencePolicy):
         coinference: CoInference,
     ) -> float:
         return now - coinference.arrival_time
-
+    
+class CoInferenceSRCF(CoInferencePolicy):
+    def __init__(
+        self,
+    ) -> None:
+        super().__init__()
+    
+    def sort_by_priority(
+        self,
+        now: float,
+        coinferences: List[CoInference],
+    ) -> List[CoInference]:
+        return sorted(coinferences)
+    
 
 class PolicyFactory:
 
     _POLICY_REGISTRY = {'fcfs': FCFS,
-                        'coinf_fcfs': CoInferenceFCFS}
+                        'coinf_fcfs': CoInferenceFCFS,
+                        'coinf_srcf': CoInferenceSRCF}
 
     @classmethod
     def get_policy(cls, policy_name: str, **kwargs) -> Union[Policy, CoInferencePolicy]:

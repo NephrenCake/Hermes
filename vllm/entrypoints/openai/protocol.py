@@ -193,6 +193,7 @@ class ChatCompletionRequest(OpenAIBaseModel):
     
     # doc: begin-hermes-extra-params
     request_id: Optional[str] = None
+    coinference_info_dict: Optional[Dict] = None
     # doc: end-hermes-extra-params
     
 

@@ -122,7 +122,8 @@ class RequestTracker:
         if request_output.finished:
             if verbose:
                 logger.info("Finished request %s.", request_id)
-            self.abort_request(request_id)
+            # self.abort_request(request_id)
+            self.finish_request(request_id)
 
     def process_exception(self,
                           request_id: str,
@@ -165,6 +166,16 @@ class RequestTracker:
             return
 
         self._request_streams[request_id].finish()
+
+    def finish_request(self, request_id: str) -> None:
+        if request_id not in self._request_streams or self._request_streams[
+                request_id].finished:
+            # The request has already finished or been aborted.
+            return
+
+        self._request_streams[request_id].finish()
+        self._request_streams.pop(request_id, None)
+        
 
     def get_new_and_finished_requests(self) -> Tuple[List[Dict], Set[str]]:
         """Get the new requests and finished requests to be
@@ -211,7 +222,9 @@ class _AsyncLLMEngine(LLMEngine):
         and updates the scheduler with the model outputs. Finally, it decodes
         the sequences and returns the newly generated results.
         """
+        step_start_time = time.time()
         seq_group_metadata_list, scheduler_outputs = self.scheduler.schedule()
+        schedule_time = time.time() - step_start_time
 
         if not scheduler_outputs.is_empty():
             # Execute the model.
@@ -233,7 +246,7 @@ class _AsyncLLMEngine(LLMEngine):
             scheduler_outputs.ignored_seq_groups, seq_group_metadata_list)
 
         # Log stats.
-        self.do_log_stats(scheduler_outputs, output)
+        self.do_log_stats(scheduler_outputs, output, schedule_time)
 
         if not request_outputs:
             # Stop the execute model loop in parallel workers until there are
@@ -243,6 +256,15 @@ class _AsyncLLMEngine(LLMEngine):
             # queued control plane messages, such as add/remove lora adapters.
             await self.model_executor.stop_remote_worker_execution_loop_async()
 
+        step_time = (time.time() - step_start_time)*1000
+        is_prefill = scheduler_outputs.num_prefill_groups > 0
+        num_tokens = scheduler_outputs.num_batched_tokens
+        if self.scheduler_config.coinference_scheduler:
+            self.scheduler.record_step_time(num_tokens, step_time, is_prefill)
+        logger.debug("num_prefill_groups: %d, num_decode_groups: %d, cost %.2f ms", 
+                    scheduler_outputs.num_prefill_groups,
+                    len(scheduler_outputs.scheduled_seq_groups) - scheduler_outputs.num_prefill_groups,
+                    step_time)
         return request_outputs
 
     async def process_model_inputs_async(
@@ -276,6 +298,7 @@ class _AsyncLLMEngine(LLMEngine):
         params: Union[SamplingParams, PoolingParams],
         arrival_time: Optional[float] = None,
         lora_request: Optional[LoRARequest] = None,
+        coinference_info_dict: Optional[Dict] = None,
     ) -> None:
         if lora_request is not None and not self.lora_config:
             raise ValueError(f"Got lora_request {lora_request} but LoRA is "
@@ -292,6 +315,7 @@ class _AsyncLLMEngine(LLMEngine):
             params=params,
             arrival_time=arrival_time,
             lora_request=lora_request,
+            coinference_info_dict=coinference_info_dict
         )
 
     async def check_health_async(self) -> None:
@@ -534,6 +558,7 @@ class AsyncLLMEngine:
         params: Union[SamplingParams, PoolingParams],
         arrival_time: Optional[float] = None,
         lora_request: Optional[LoRARequest] = None,
+        coinference_info_dict: Optional[Dict] = None,
     ) -> AsyncStream:
         if self.log_requests:
             if isinstance(inputs, str):
@@ -587,6 +612,7 @@ class AsyncLLMEngine:
             params=params,
             arrival_time=arrival_time,
             lora_request=lora_request,
+            coinference_info_dict=coinference_info_dict,
         )
 
         return stream
@@ -597,6 +623,7 @@ class AsyncLLMEngine:
         sampling_params: SamplingParams,
         request_id: str,
         lora_request: Optional[LoRARequest] = None,
+        coinference_info_dict: Optional[Dict] = None,
     ) -> AsyncIterator[RequestOutput]:
         """Generate outputs for a request.
 
@@ -664,6 +691,7 @@ class AsyncLLMEngine:
                 inputs,
                 sampling_params,
                 lora_request=lora_request,
+                coinference_info_dict=coinference_info_dict,
         ):
             yield LLMEngine.validate_output(output, RequestOutput)
 
@@ -748,6 +776,7 @@ class AsyncLLMEngine:
         params: Union[SamplingParams, PoolingParams],
         *,
         lora_request: Optional[LoRARequest] = None,
+        coinference_info_dict: Optional[Dict] = None,
     ) -> AsyncIterator[Union[RequestOutput, EmbeddingRequestOutput]]:
         """Common logic to process requests with SamplingParams or
         PoolingParams."""
@@ -759,6 +788,7 @@ class AsyncLLMEngine:
             params,
             arrival_time=arrival_time,
             lora_request=lora_request,
+            coinference_info_dict=coinference_info_dict,
         )
 
         try:
