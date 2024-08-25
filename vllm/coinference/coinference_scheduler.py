@@ -255,8 +255,8 @@ class CoInferenceScheduler:
         for coinf in self.coinferences_dict.values():
             coinf.estimate_remaining_time(self.prefill_recorder.time_per_token,
                                           self.decode_recorder.time_per_token)
-        policy: CoInferencePolicy = PolicyFactory.get_policy(policy_name="coinf_fcfs")
-        # policy: CoInferencePolicy = PolicyFactory.get_policy(policy_name="coinf_srcf")
+        # policy: CoInferencePolicy = PolicyFactory.get_policy(policy_name="coinf_fcfs")
+        policy: CoInferencePolicy = PolicyFactory.get_policy(policy_name="coinf_srcf")
         self.coinferences_queue = policy.sort_by_priority(now, self.coinferences_queue)
         # logger.info(f"{self.coinferences_queue}")
         

@@ -35,14 +35,14 @@ class CoInferenceStage:
         parallelism: int = 1,
         interval_time: float = 0, # ms
         max_interval_time: float = 10, # s
-        predicted_seq_groups: PredictedSequenceGroup = PredictedSequenceGroup(),
+        predicted_seq_groups: PredictedSequenceGroup = None,
     ) -> None:
         self.stage_name = stage_name
 
         self.parallelism = parallelism
         self.interval_time = interval_time
         self.max_interval_time = max_interval_time
-        self.predicted_seq_groups = predicted_seq_groups
+        self.predicted_seq_groups = predicted_seq_groups if predicted_seq_groups else PredictedSequenceGroup()
 
         self.seq_groups: List[SequenceGroup] = []
 
@@ -173,7 +173,7 @@ class CoInference:
         prompt_tokens = self.remaining_total_prompt_tokens - finished_tokens[0]
         output_tokens = self.remaining_total_output_tokens - finished_tokens[1]
         self.remaining_time = (prefill_time_per_token * prompt_tokens + 
-                               decode_time_per_token * output_tokens)
+                               decode_time_per_token * output_tokens)  # todo
         
     
     @property
