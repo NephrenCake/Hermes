@@ -818,11 +818,13 @@ class LLMEngine:
             self,
             scheduler_outputs: Optional[SchedulerOutputs] = None,
             model_output: Optional[List[SamplerOutput]] = None,
-            schedule_time: float = 0) -> None:
+            runtime_inspect: Dict = None) -> None:
+        if runtime_inspect is None:
+            runtime_inspect = {}
         """Forced log when no requests active."""
         if self.log_stats:
             self.stat_logger.log(
-                self._get_stats(scheduler_outputs, model_output, schedule_time))
+                self._get_stats(scheduler_outputs, model_output, runtime_inspect))
         if not scheduler_outputs and not model_output:
             self.scheduler.free_finished_seq_groups()
 
@@ -830,7 +832,7 @@ class LLMEngine:
             self,
             scheduler_outputs: Optional[SchedulerOutputs],
             model_output: Optional[List[SamplerOutput]] = None,
-            schedule_time: float = 0) -> Stats:
+            runtime_inspect: Dict = None) -> Stats:
         """Get Stats to be Logged to Prometheus.
 
         Args:
@@ -985,7 +987,12 @@ class LLMEngine:
             time_per_output_tokens_iter=time_per_output_tokens_iter,
             spec_decode_metrics=spec_decode_metrics,
             num_preemption_iter=num_preemption_iter,
-            schedule_time=schedule_time,
+
+            schedule_time=runtime_inspect["schedule_time"],
+            comm_time=runtime_inspect["comm_time"],
+            swap_time=runtime_inspect["swap_time"],
+            execute_time=runtime_inspect["execute_time"],
+            cur_step_time=runtime_inspect["cur_step_time"],
 
             # Request stats
             #   Latency

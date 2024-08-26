@@ -259,7 +259,7 @@ class CoInferenceScheduler:
         policy: CoInferencePolicy = PolicyFactory.get_policy(policy_name="coinf_srcf")
         self.coinferences_queue = policy.sort_by_priority(now, self.coinferences_queue)
         # logger.info(f"{self.coinferences_queue}")
-        
+
         # split coinference to running_queue and waiting_queue
         split_outputs = self.split_seq_groups(self.coinferences_queue)
                         
@@ -282,13 +282,13 @@ class CoInferenceScheduler:
             self.num_running_seq_groups += len(split_outputs.swapin_queue)
         self.num_swapped_seq_groups = len(split_outputs.swapped_queue) + len(split_outputs.swapout_queue)
         
-        # logger.info(f"coinferences: {self.coinferences_dict}")
-        # logger.info(f"prefill_queue: {split_outputs.prefill_queue}")
-        # logger.info(f"decode_queue: {split_outputs.decode_queue}")
-        # logger.info(f"swapin_queue: {split_outputs.swapin_queue}")
-        # logger.info(f"swapout_queue: {split_outputs.swapout_queue}")
-        # logger.info(f"swapped_queue: {split_outputs.swapped_queue}")
-        # logger.info(f"waiting_queue: {split_outputs.waiting_queue}")
+        # logger.info(f"\tcoinferences: {self.coinferences_dict}")
+        # logger.info(f"\tprefill_queue: {split_outputs.prefill_queue}")
+        # logger.info(f"\tdecode_queue: {split_outputs.decode_queue}")
+        # logger.info(f"\tswapin_queue: {split_outputs.swapin_queue}")
+        # logger.info(f"\tswapout_queue: {split_outputs.swapout_queue}")
+        # logger.info(f"\tswapped_queue: {split_outputs.swapped_queue}")
+        # logger.info(f"\twaiting_queue: {split_outputs.waiting_queue}")
         
         return SchedulerOutputs(
             scheduled_seq_groups=(schedule_prefill_outputs.seq_groups + 

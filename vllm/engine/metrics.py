@@ -186,7 +186,12 @@ class Stats:
     time_to_first_tokens_iter: List[float]
     time_per_output_tokens_iter: List[float]
     num_preemption_iter: int
+
     schedule_time: float
+    comm_time: float
+    swap_time: float
+    execute_time: float
+    cur_step_time: float
 
     # Request stats (should have _requests suffix)
     #   Latency
@@ -222,7 +227,12 @@ class StatLogger:
         # Tracked stats over current local logging interval.
         self.num_prompt_tokens: List[int] = []
         self.num_generation_tokens: List[int] = []
+
         self.schedule_time_list: List[float] = []
+        self.comm_time_list: List[float] = []
+        self.swap_time_list: List[float] = []
+        self.execute_time_list: List[float] = []
+        self.cur_step_time_list: List[float] = []
 
         # Prometheus metrics
         self.labels = labels
@@ -236,11 +246,36 @@ class StatLogger:
     def _get_throughput(self, tracked_stats: List[int], now: float) -> float:
         return float(np.sum(tracked_stats) / (now - self.last_local_log))
 
-    def _get_average_schedule_time(self) -> float:
-        if not self.schedule_time_list:
-            return 0
-        avg_schedule_time = np.mean(self.schedule_time_list)
-        return float(avg_schedule_time)
+    def _get_runtime_inspection(self):
+        avg_val = {
+            "schedule_time": np.mean(self.schedule_time_list) if self.schedule_time_list else 0,
+            "comm_time": np.mean(self.comm_time_list) if self.comm_time_list else 0,
+            "swap_time": np.mean(self.swap_time_list) if self.swap_time_list else 0,
+            "execute_time": np.mean(self.execute_time_list) if self.execute_time_list else 0,
+            "cur_step_time": np.mean(self.cur_step_time_list) if self.cur_step_time_list else 0,
+        }
+        avg_proportion = {
+            "schedule_time": avg_val["schedule_time"] / avg_val["cur_step_time"] * 100 if avg_val["cur_step_time"] else 0,
+            "comm_time": avg_val["comm_time"] / avg_val["cur_step_time"] * 100 if avg_val["cur_step_time"] else 0,
+            "swap_time": avg_val["swap_time"] / avg_val["cur_step_time"] * 100 if avg_val["cur_step_time"] else 0,
+            "execute_time": avg_val["execute_time"] / avg_val["cur_step_time"] * 100 if avg_val["cur_step_time"] else 0,
+        }
+        p95_proportion = {
+            "schedule_time": np.percentile([
+                a / b * 100 for a, b in zip(self.schedule_time_list, self.cur_step_time_list)
+            ], 95) if self.cur_step_time_list else 0,
+            "comm_time": np.percentile([
+                a / b * 100 for a, b in zip(self.comm_time_list, self.cur_step_time_list)
+            ], 95) if self.cur_step_time_list else 0,
+            "swap_time": np.percentile([
+                a / b * 100 for a, b in zip(self.swap_time_list, self.cur_step_time_list)
+            ], 95) if self.cur_step_time_list else 0,
+            "execute_time": np.percentile([
+                a / b * 100 for a, b in zip(self.execute_time_list, self.cur_step_time_list)
+            ], 95) if self.cur_step_time_list else 0,
+        }
+
+        return avg_val, avg_proportion, p95_proportion
 
     def _local_interval_elapsed(self, now: float) -> bool:
         elapsed_time = now - self.last_local_log
@@ -335,7 +370,12 @@ class StatLogger:
         # Save tracked stats for token counters.
         self.num_prompt_tokens.append(stats.num_prompt_tokens_iter)
         self.num_generation_tokens.append(stats.num_generation_tokens_iter)
+
         self.schedule_time_list.append(stats.schedule_time)
+        self.comm_time_list.append(stats.comm_time)
+        self.swap_time_list.append(stats.swap_time)
+        self.execute_time_list.append(stats.execute_time)
+        self.cur_step_time_list.append(stats.cur_step_time)
 
         # Log locally every local_interval seconds.
         if self._local_interval_elapsed(stats.now):
@@ -348,7 +388,7 @@ class StatLogger:
             self._log_prometheus_interval(
                 prompt_throughput=prompt_throughput,
                 generation_throughput=generation_throughput)
-            avg_schedule_time = self._get_average_schedule_time()
+            avg_val, avg_proportion, p95_proportion = self._get_runtime_inspection()
 
             # Log to stdout.
             logger.info(
@@ -357,8 +397,7 @@ class StatLogger:
                 "Running: %d reqs, Swapped: %d reqs, "
                 "Pending: %d reqs, Num CoInferences: %d, "
                 "GPU KV cache usage: %.1f%%, "
-                "CPU KV cache usage: %.1f%%, "
-                "Avg Schedule Time: %.2f ms.",
+                "CPU KV cache usage: %.1f%%, ",
                 prompt_throughput,
                 generation_throughput,
                 stats.num_running_sys,
@@ -367,7 +406,13 @@ class StatLogger:
                 stats.num_coinferences,
                 stats.gpu_cache_usage_sys * 100,
                 stats.cpu_cache_usage_sys * 100,
-                avg_schedule_time * 1000,
+            )
+            logger.info(
+                f"schedule: {avg_val['schedule_time']:.2f}ms (avg {avg_proportion['schedule_time']:.2f}% p95 {p95_proportion['schedule_time']:.2f}%), "
+                f"comm: {avg_val['comm_time']:.2f}ms (avg {avg_proportion['comm_time']:.2f}% p95 {p95_proportion['comm_time']:.2f}%), "
+                f"swap: {avg_val['swap_time']:.2f}ms (avg {avg_proportion['swap_time']:.2f}% p95 {p95_proportion['swap_time']:.2f}%), "
+                f"execute: {avg_val['execute_time']:.2f}ms (avg {avg_proportion['execute_time']:.2f}% p95 {p95_proportion['execute_time']:.2f}%), "
+                f"cur_step: {avg_val['cur_step_time']:.2f}ms."
             )
 
             # Reset tracked stats for next interval.
@@ -375,6 +420,12 @@ class StatLogger:
             self.num_generation_tokens = []
             self.schedule_time_list = []
             self.last_local_log = stats.now
+
+            self.schedule_time_list: List[float] = []
+            self.comm_time_list: List[float] = []
+            self.swap_time_list: List[float] = []
+            self.execute_time_list: List[float] = []
+            self.cur_step_time_list: List[float] = []
 
             if stats.spec_decode_metrics is not None:
                 logger.info(

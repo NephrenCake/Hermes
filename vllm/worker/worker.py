@@ -1,6 +1,7 @@
 """A GPU worker class."""
 import gc
 import os
+import time
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import torch
@@ -263,18 +264,22 @@ class Worker(WorkerBase):
         }
         broadcast_tensor_dict(data, src=0)
 
-        # self.cache_swap(blocks_to_swap_in, blocks_to_swap_out, blocks_to_copy)
+        timer = time.time()
+        self.cache_swap(blocks_to_swap_in, blocks_to_swap_out, blocks_to_copy)
+        swap_time = time.time() - timer
 
         # If there is no input, we don't need to execute the model.
         if num_seq_groups == 0:
             return []
 
+        timer = time.time()
         output = self.model_runner.execute_model(seq_group_metadata_list,
                                                  self.gpu_cache)
+        execute_time = time.time() - timer
 
         # Worker only supports single-step execution. Wrap the output in a list
         # to conform to interface.
-        return [output]
+        return [output], swap_time, execute_time
 
     @torch.inference_mode()
     def start_worker_execution_loop(self) -> None:
