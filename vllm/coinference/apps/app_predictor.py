@@ -98,6 +98,8 @@ class AppPredictor:
     @staticmethod
     def get_trunked_dist_mean(distribution: List, trunked_value: float) -> float:
         return np.mean([max(i, trunked_value) for i in distribution])
+        # trunked_dist = [i for i in distribution if i > trunked_value]
+        # return np.mean(trunked_dist) if trunked_dist else trunked_value
 
 
 APPLICATION = {
