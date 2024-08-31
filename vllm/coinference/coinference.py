@@ -3,10 +3,9 @@ import time
 import enum
 import numpy as np
 
-from vllm.coinference.apps.app_predictor import APPLICATION
+from vllm.coinference.apps.app_predictor import APPLICATION, AppPredictor
 from vllm.sequence import SequenceGroup
 from vllm.logger import init_logger
-
 
 logger = init_logger(__name__)
 
@@ -19,10 +18,10 @@ class FinishType(enum.Enum):
 
 class PredictedSequenceGroup:
     def __init__(
-        self,
-        num_new_seqs: int = 1,
-        num_prompt_tokens: int = 0,
-        num_output_tokens: int = 0,
+            self,
+            num_new_seqs: int = 1,
+            num_prompt_tokens: int = 0,
+            num_output_tokens: int = 0,
     ) -> None:
         self.num_new_seqs = num_new_seqs
         self.num_prompt_tokens = num_prompt_tokens
@@ -31,12 +30,12 @@ class PredictedSequenceGroup:
 
 class CoInferenceStage:
     def __init__(
-        self,
-        stage_name: Optional[str] = None, 
-        parallelism: int = 1,
-        interval_time: float = 0, # ms
-        max_interval_time: float = 10, # s
-        predicted_seq_groups: PredictedSequenceGroup = None,
+            self,
+            stage_name: Optional[str] = None,
+            parallelism: int = 1,
+            interval_time: float = 0,  # ms
+            max_interval_time: float = 10,  # s
+            predicted_seq_groups: PredictedSequenceGroup = None,
     ) -> None:
         self.stage_name = stage_name
 
@@ -45,64 +44,79 @@ class CoInferenceStage:
         self.max_interval_time = max_interval_time
         self.predicted_seq_groups = predicted_seq_groups if predicted_seq_groups else PredictedSequenceGroup()
 
-        self.seq_groups: List[SequenceGroup] = []
+        self.parallel_requests: List[SequenceGroup] = []
 
         self.waitting_time = None
         self.timeout_time = None
-    
+
     def add_req(self, seq_group: SequenceGroup):
-        if not self.seq_groups:
-            self.waitting_time = time.time() + 0.5
-        self.seq_groups.append(seq_group)
+        if not self.parallel_requests:
+            self.waitting_time = time.time() + 0.5  # todo？
+        self.parallel_requests.append(seq_group)
 
     def is_finished(self, now: float) -> FinishType:
-        if self.seq_groups:
+        if self.parallel_requests:
             if now > self.waitting_time:
-                if len([seq_group for seq_group in self.seq_groups if 
-                    seq_group.is_finished()]) == len(self.seq_groups):
+                if len([seq_group for seq_group in self.parallel_requests if
+                        seq_group.is_finished()]) == len(self.parallel_requests):
                     return FinishType.StageFinished
         else:
             if now > self.timeout_time:
                 return FinishType.CoInfFinished
         return FinishType.UnFinished
-    
+
     def get_num_unfinished_seqs(self) -> int:
-        return sum([len(seq_group.get_unfinished_seqs()) for seq_group in self.seq_groups])   
-    
+        return sum([len(seq_group.get_unfinished_seqs()) for seq_group in self.parallel_requests])
+
     def get_num_unfinished_seq_groups(self) -> int:
-        return len([seq_group for seq_group in self.seq_groups if not seq_group.is_finished()])  
-    
+        return len([seq_group for seq_group in self.parallel_requests if not seq_group.is_finished()])
+
     def update_timeout_time(self, now: float):
         self.timeout_time = now + self.max_interval_time
-        
-    def get_total_tokens(self) -> Tuple[int, int]:
-        total_prompt_tokens = self.parallelism * self.predicted_seq_groups.num_prompt_tokens
-        total_output_tokens = (self.parallelism * self.predicted_seq_groups.num_new_seqs * 
-                               self.predicted_seq_groups.num_output_tokens)
-        return total_prompt_tokens, total_output_tokens
-    
-    def get_finished_tokens(self):
-        num_prefilled_seqs = 0
-        num_decoded_tokens = 0
-        for seq_group in self.seq_groups:
-            if seq_group.is_prefill():
-                continue
-            num_prefilled_seqs += 1
-            for seq in seq_group.get_seqs():
-                num_decoded_tokens += seq.get_output_len()
-        return self.predicted_seq_groups.num_prompt_tokens * num_prefilled_seqs, num_decoded_tokens
-        
 
-    
+    def get_remaining_tokens(self, predictor: AppPredictor) -> Tuple[float, float]:
+        parallelism_distribution: List = predictor.get_parallelism_distribution(self.stage_name)
+        prompt_distribution: List = predictor.get_prompt_distribution(self.stage_name)
+        decode_distribution: List = predictor.get_decode_distribution(self.stage_name)
+
+        # Case 1. This stage has not started.
+        if len(self.parallel_requests) == 0:
+            avg_parallelism = predictor.get_parallelism_mean(self.stage_name)
+            avg_prompt_tokens = predictor.get_prompt_mean(self.stage_name)
+            avg_decode_tokens = predictor.get_decode_mean(self.stage_name)
+            return avg_parallelism * avg_prompt_tokens, avg_parallelism * avg_decode_tokens
+
+        # Case 2. This stage has started.
+        predict_additional_parallelism = AppPredictor.get_trunked_dist_mean(
+            parallelism_distribution, len(self.parallel_requests)
+        ) - len(self.parallel_requests)
+        predict_prompt_tokens = predict_additional_parallelism * predictor.get_prompt_mean(self.stage_name)
+        predict_decode_tokens = predict_additional_parallelism * predictor.get_decode_mean(self.stage_name)
+        for seq_group in self.parallel_requests:
+            # 2.1 Prompt is dedicated.
+            fin_prompt_tokens = min(len(seq_group.prompt_token_ids),
+                                    next(iter(seq_group.seqs_dict.values())).data.get_num_computed_tokens())
+            predict_prompt_tokens += len(seq_group.prompt_token_ids) - fin_prompt_tokens
+            # 2.2 Decode is unknown. Use trunked distribution.
+            fin_decode_tokens = sum(seq.get_output_len() for seq in seq_group.get_seqs())
+            predict_decode_tokens += AppPredictor.get_trunked_dist_mean(
+                decode_distribution, fin_decode_tokens) - fin_decode_tokens
+
+        return predict_prompt_tokens, predict_decode_tokens
+
+    def __str__(self):
+        return f"{self.parallel_requests}"
+
+
 class CoInference:
     def __init__(
-        self,
-        app_name: Union[None, str],
-        coinf_id: str, 
-        arrival_time: float,
-        coinference_info_dict: Optional[Dict],
+            self,
+            app_name: Union[None, str],
+            coinf_id: str,
+            arrival_time: float,
+            coinference_info_dict: Optional[Dict],
     ) -> None:
-        self.predictor = APPLICATION[app_name]
+        self.predictor = APPLICATION[app_name] if app_name else None
         self.app_name = app_name
         self.coinf_id = coinf_id
         self.arrival_time = arrival_time
@@ -111,27 +125,22 @@ class CoInference:
         self.create(coinference_info_dict)
         self.finish_time = None
 
-        self.remaining_total_prompt_tokens: int = 0
-        self.remaining_total_output_tokens: int = 0
         self.remaining_time: float = 0
-        
-        self.update_remaining_tokens()
-        
+
     def create(
-        self, 
-        coinference_info_dict: Optional[Dict]):
+            self,
+            coinference_info_dict: Optional[Dict]):
         raise NotImplementedError
-    
+
     def add_new_stage(self):
         self.stages.append(CoInferenceStage())
-            
+
     def add_req(self, seq_group: SequenceGroup):
         if self.current_stage_id == len(self.stages):
             # stage predict failed
             logger.warning(f"Stage predict failed. This would not happen.")
             self.add_new_stage()
             self.finish_time = None
-            self.update_remaining_tokens()
         self.stages[self.current_stage_id].add_req(seq_group)
         seq_group.metrics.coinf_arrival_time = self.arrival_time
 
@@ -149,48 +158,51 @@ class CoInference:
                 self.finish_time = now + 1
             else:
                 self.current_stage.update_timeout_time(now)
-                self.update_remaining_tokens()
         elif stage_finishtype == FinishType.CoInfFinished:
             return True
         return False
-    
-    def update_remaining_tokens(self):
-        cur_stage_tokens = self.current_stage.get_total_tokens()
-        self.remaining_total_prompt_tokens = cur_stage_tokens[0]
-        self.remaining_total_output_tokens = cur_stage_tokens[1]
-        for stage in self.stages[self.current_stage_id+1:]:
-            stage_tokens = stage.get_total_tokens()
-            self.remaining_total_prompt_tokens += stage_tokens[0]
-            self.remaining_total_output_tokens += stage_tokens[1]
 
     def estimate_remaining_time(
-        self,
-        prefill_time_per_token: float,
-        decode_time_per_token: float,
+            self,
+            prefill_time_per_token: float,
+            decode_time_per_token: float,
     ):
-        ''' ms '''
+        """
+        Estimate the avg number of remaining tokens in the condition of the finished tokens
+        1. use known information (parallelism, trunked distribution for each seq_group) to predict current stage's time
+        2. use online profiling distribution to predict later stages' time
+        """
         if self.current_stage_id == len(self.stages):
-            self.remaining_time = 0
+            self.remaining_time = 0  # ms
             return
-        finished_tokens = self.current_stage.get_finished_tokens()
-        prompt_tokens = self.remaining_total_prompt_tokens - finished_tokens[0]
-        output_tokens = self.remaining_total_output_tokens - finished_tokens[1]
-        self.remaining_time = (prefill_time_per_token * prompt_tokens + 
-                               decode_time_per_token * output_tokens)  # todo
-        
-    
+
+        prompt_tokens, decode_tokens = 0, 0
+        for stage in self.stages[self.current_stage_id:]:
+            stage_prompt_tokens, stage_decode_tokens = stage.get_remaining_tokens(self.predictor)
+            prompt_tokens += stage_prompt_tokens
+            decode_tokens += stage_decode_tokens
+
+        self.remaining_time = prefill_time_per_token * prompt_tokens + decode_time_per_token * decode_tokens
+
+        # logger.info(f"coinf_id: {self.coinf_id}, stages {self.current_stage_id + 1}/{len(self.stages)}, "
+        #             f"prefill_token {prompt_tokens}, decode_token {decode_tokens}.")
+
+    def update_online_profiling(self):
+        logger.info("co-infer finishes and update the online profiling distribution.")
+        pass
+
     @property
     def current_stage(self) -> CoInferenceStage:
         if self.current_stage_id == len(self.stages):
             raise IndexError("current CoInference is finished")
         return self.stages[self.current_stage_id]
-    
+
     def get_num_unfinished_seqs(self) -> int:
         return self.current_stage.get_num_unfinished_seqs()
-    
+
     def get_num_unfinished_seq_groups(self) -> int:
         return self.current_stage.get_num_unfinished_seq_groups()
-    
+
     def __lt__(self, other) -> bool:
         return self.remaining_time < other.remaining_time
 
@@ -199,5 +211,3 @@ class CoInference:
         #         f"coinf_id={self.coinf_id}, "
         #         f"cur_stage={self.current_stage_id})")
         return (f"CoInference(coinf_id={self.coinf_id})")
-        
-        

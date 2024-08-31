@@ -11,4 +11,4 @@ class SingleRequest(CoInference):
         self.stages.append(CoInferenceStage())
         
     def is_current_stage_finished(self) -> bool:
-        return self.stages[0].seq_groups[0].is_finished()
+        return self.stages[0].parallel_requests[0].is_finished()

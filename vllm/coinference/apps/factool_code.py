@@ -1,6 +1,9 @@
 from typing import Optional, Dict
 
 from vllm.coinference.coinference import CoInference, CoInferenceStage, PredictedSequenceGroup
+from vllm.logger import init_logger
+
+logger = init_logger(__name__)
 
 
 class FactoolCode(CoInference):
@@ -14,6 +17,7 @@ class FactoolCode(CoInference):
     ):
         if coinference_info_dict:
             # generate_testcase
+            logger.info(f"coinference_info_dict: {coinference_info_dict}")
             gt_input_len, gt_output_len = coinference_info_dict["generate_testcase"]["length"][0]
             self.stages.append(
                 CoInferenceStage(stage_name="generate_testcase",

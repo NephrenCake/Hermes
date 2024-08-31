@@ -279,16 +279,17 @@ class _AsyncLLMEngine(LLMEngine):
         num_tokens = scheduler_outputs.num_batched_tokens
         if self.scheduler_config.coinference_scheduler:
             self.scheduler.record_step_time(num_tokens, cur_step_time * 1000, is_prefill)
-        logger.info(
-            f"num_prefill: {scheduler_outputs.num_prefill_groups}, "
-            f"num_decode: {len(scheduler_outputs.scheduled_seq_groups) - scheduler_outputs.num_prefill_groups}. "
-            # f"inter_step: {(inter_step_time * 1000):.2f}ms, "
-            f"schedule: {(schedule_time * 1000):.2f}ms({(schedule_time / cur_step_time * 100):.2f}%), "
-            f"comm: {(comm_time * 1000):.2f}ms({(comm_time / cur_step_time * 100):.2f}%), "
-            f"swap: {(swap_time * 1000):.2f}ms({(swap_time / cur_step_time * 100):.2f}%), "
-            f"execute: {(execute_time * 1000):.2f}ms({(execute_time / cur_step_time * 100):.2f}%), "
-            f"cur_step: {(cur_step_time * 1000):.2f}ms"
-        )
+        # logger.info(
+        #     f"num_prefill: {scheduler_outputs.num_prefill_groups}, "
+        #     f"num_decode: {len(scheduler_outputs.scheduled_seq_groups) - scheduler_outputs.num_prefill_groups}, "
+        #     f"num_tokens: {num_tokens}. "
+        #     # f"inter_step: {(inter_step_time * 1000):.2f}ms, "
+        #     f"schedule: {(schedule_time * 1000):.2f}ms({(schedule_time / cur_step_time * 100):.2f}%), "
+        #     f"comm: {(comm_time * 1000):.2f}ms({(comm_time / cur_step_time * 100):.2f}%), "
+        #     f"swap: {(swap_time * 1000):.2f}ms({(swap_time / cur_step_time * 100):.2f}%), "
+        #     f"execute: {(execute_time * 1000):.2f}ms({(execute_time / cur_step_time * 100):.2f}%), "
+        #     f"cur_step: {(cur_step_time * 1000):.2f}ms"
+        # )
         return request_outputs
 
     async def process_model_inputs_async(

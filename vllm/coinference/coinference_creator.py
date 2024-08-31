@@ -8,6 +8,7 @@ from vllm.coinference.apps.factool_math import FactoolMath
 from vllm.coinference.apps.react_fever import ReActFever
 from vllm.coinference.apps.react_alfw import ReActAlfw
 from vllm.coinference.apps.multiturn_conversations import MultiturnConversations
+from vllm.coinference.apps.got_docmerge import GotDocMerge
 
 
 AppLib: Dict[str, CoInference] = {
@@ -18,6 +19,7 @@ AppLib: Dict[str, CoInference] = {
     "react_fever": ReActFever,
     "react_alfw": ReActAlfw,
     "multiturn_conversations": MultiturnConversations,
+    "got_docmerge": GotDocMerge,
 }
 
 def create_coinference(

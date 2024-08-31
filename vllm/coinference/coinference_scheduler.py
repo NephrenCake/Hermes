@@ -256,11 +256,14 @@ class CoInferenceScheduler:
     def _schedule_default(self) -> SchedulerOutputs:
         # sort coinference by priority
         now = time.time()
-        for coinf in self.coinferences_dict.values():
-            coinf.estimate_remaining_time(self.prefill_recorder.time_per_token,
-                                          self.decode_recorder.time_per_token)
-        # policy: CoInferencePolicy = PolicyFactory.get_policy(policy_name="coinf_fcfs")
-        policy: CoInferencePolicy = PolicyFactory.get_policy(policy_name="coinf_srcf")
+
+        policy_name = "coinf_fcfs"
+        policy_name = "coinf_srcf"
+        policy: CoInferencePolicy = PolicyFactory.get_policy(policy_name=policy_name)
+        if policy_name == "coinf_srcf":
+            for coinf in self.coinferences_dict.values():
+                coinf.estimate_remaining_time(self.prefill_recorder.time_per_token,
+                                              self.decode_recorder.time_per_token)
         self.coinferences_queue = policy.sort_by_priority(now, self.coinferences_queue)
         # logger.info(f"{self.coinferences_queue}")
 
@@ -330,7 +333,7 @@ class CoInferenceScheduler:
             if coinf.current_stage_id == len(coinf.stages):
                 continue
             stage = coinf.current_stage
-            seq_groups = [seq_group for seq_group in stage.seq_groups if not seq_group.is_finished()]
+            seq_groups = [seq_group for seq_group in stage.parallel_requests if not seq_group.is_finished()]
             for seq_group in seq_groups:
                 if budget_full:
                     if seq_group.is_running():
@@ -518,7 +521,7 @@ class CoInferenceScheduler:
                 continue
             coinf = self.coinferences_dict.pop(coinf_id)
             self.coinferences_queue.remove(coinf)
-            aborted_groups += coinf.current_stage.seq_groups
+            aborted_groups += coinf.current_stage.parallel_requests
         for aborted_group in aborted_groups:
             for seq in aborted_group.get_seqs():
                 if seq.is_finished():
@@ -549,6 +552,7 @@ class CoInferenceScheduler:
 
         for coinf_id in finished_coinf:
             coinf = self.coinferences_dict.pop(coinf_id)
+            coinf.update_online_profiling()
             self.coinferences_queue.remove(coinf)
 
     def _allocate_and_set_running(self, seq_group: SequenceGroup) -> None:
