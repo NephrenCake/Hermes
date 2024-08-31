@@ -138,7 +138,9 @@ class CoInference:
     def add_req(self, seq_group: SequenceGroup):
         if self.current_stage_id == len(self.stages):
             # stage predict failed
-            logger.warning(f"Stage predict failed. This would not happen.")
+            # TODO: consider dynamic stages cases like react_alfw
+            logger.warning(f"Stage predict failed. This would not happen. "
+                           f"self.coinf_id: {self.coinf_id}, request_id: {seq_group.request_id}.")
             self.add_new_stage()
             self.finish_time = None
         self.stages[self.current_stage_id].add_req(seq_group)
