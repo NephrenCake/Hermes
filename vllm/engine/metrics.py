@@ -418,7 +418,6 @@ class StatLogger:
             # Reset tracked stats for next interval.
             self.num_prompt_tokens = []
             self.num_generation_tokens = []
-            self.schedule_time_list = []
             self.last_local_log = stats.now
 
             self.schedule_time_list: List[float] = []

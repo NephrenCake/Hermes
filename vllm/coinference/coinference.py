@@ -126,6 +126,7 @@ class CoInference:
     def add_req(self, seq_group: SequenceGroup):
         if self.current_stage_id == len(self.stages):
             # stage predict failed
+            logger.warning(f"Stage predict failed. This would not happen.")
             self.add_new_stage()
             self.finish_time = None
             self.update_remaining_tokens()

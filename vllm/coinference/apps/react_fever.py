@@ -10,13 +10,14 @@ from vllm.coinference.apps.app_predictor import AppPredictor
 
 
 class ReActFever(CoInference):
-    def __init__(self, app_name: None | str, coinf_id: str, arrival_time: float, coinference_info_dict: Dict | None) -> None:        
+    def __init__(self, app_name: None | str, coinf_id: str, arrival_time: float,
+                 coinference_info_dict: Dict | None) -> None:
         self.predictor = AppPredictor(app_name)
         super().__init__(app_name, coinf_id, arrival_time, coinference_info_dict)
 
     def create(
-        self, 
-        coinference_info_dict: Optional[Dict]
+            self,
+            coinference_info_dict: Optional[Dict]
     ):
         if coinference_info_dict:
             stage_id = 0
@@ -33,7 +34,7 @@ class ReActFever(CoInference):
                     )
                 )
                 stage_id += 1
-        else:  
+        else:
             stage_name = self.predictor.get_first_stage()
             interval_time = 0
             while stage_name:
@@ -46,9 +47,9 @@ class ReActFever(CoInference):
                                      parallelism=parallelism,
                                      interval_time=interval_time,
                                      predicted_seq_groups=predicted_seq_groups)
-                    )
+                )
                 stage_name, interval_time = self.predictor.predict_next_stage(stage_name)
-    
+
     def add_new_stage(self):
         stage_name = "thought"
         interval_time = 0
@@ -61,4 +62,4 @@ class ReActFever(CoInference):
                              parallelism=parallelism,
                              interval_time=interval_time,
                              predicted_seq_groups=predicted_seq_groups)
-            )
+        )

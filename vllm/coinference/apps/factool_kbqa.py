@@ -5,13 +5,14 @@ from vllm.coinference.apps.app_predictor import AppPredictor
 
 
 class FactoolKBQA(CoInference):
-    def __init__(self, app_name: None | str, coinf_id: str, arrival_time: float, coinference_info_dict: Dict | None) -> None:
+    def __init__(self, app_name: None | str, coinf_id: str, arrival_time: float,
+                 coinference_info_dict: Dict | None) -> None:
         self.predictor = AppPredictor(app_name)
         super().__init__(app_name, coinf_id, arrival_time, coinference_info_dict)
-        
+
     def create(
-        self, 
-        coinference_info_dict: Optional[Dict]
+            self,
+            coinference_info_dict: Optional[Dict]
     ):
         if coinference_info_dict:
             # claim_extraction
@@ -24,9 +25,10 @@ class FactoolKBQA(CoInference):
             )
             # query_generation
             qg_input_lens = [input_len for input_len, output_len in coinference_info_dict["query_generation"]["length"]]
-            qg_output_lens = [output_len for input_len, output_len in coinference_info_dict["query_generation"]["length"]]
-            qg_avg_input_len = sum(qg_input_lens)/len(qg_input_lens)
-            qg_avg_output_len = sum(qg_output_lens)/len(qg_output_lens)
+            qg_output_lens = [output_len for input_len, output_len in
+                              coinference_info_dict["query_generation"]["length"]]
+            qg_avg_input_len = sum(qg_input_lens) / len(qg_input_lens)
+            qg_avg_output_len = sum(qg_output_lens) / len(qg_output_lens)
             self.stages.append(
                 CoInferenceStage(stage_name="query_generation",
                                  parallelism=coinference_info_dict["query_generation"]["parallelism"],
@@ -36,13 +38,13 @@ class FactoolKBQA(CoInference):
             # verification
             v_input_lens = [input_len for input_len, output_len in coinference_info_dict["verification"]["length"]]
             v_output_lens = [output_len for input_len, output_len in coinference_info_dict["verification"]["length"]]
-            v_avg_input_len = sum(v_input_lens)/len(v_input_lens)
-            v_avg_output_len = sum(v_output_lens)/len(v_output_lens)
+            v_avg_input_len = sum(v_input_lens) / len(v_input_lens)
+            v_avg_output_len = sum(v_output_lens) / len(v_output_lens)
             self.stages.append(
                 CoInferenceStage(stage_name="verification",
                                  parallelism=coinference_info_dict["verification"]["parallelism"],
-                                 interval_time=coinference_info_dict["search_time"]*1000,
-                                 predicted_seq_groups=PredictedSequenceGroup(1, v_avg_input_len, v_avg_output_len),)
+                                 interval_time=coinference_info_dict["search_time"] * 1000,
+                                 predicted_seq_groups=PredictedSequenceGroup(1, v_avg_input_len, v_avg_output_len), )
             )
         else:
             stage_name = self.predictor.get_first_stage()
@@ -59,5 +61,5 @@ class FactoolKBQA(CoInference):
                                      parallelism=parallelism,
                                      interval_time=interval_time,
                                      predicted_seq_groups=predicted_seq_groups)
-                    )
+                )
                 stage_name, interval_time = self.predictor.predict_next_stage(stage_name)
