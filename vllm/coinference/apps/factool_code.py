@@ -55,8 +55,3 @@ class FactoolCode(CoInference):
                                      predicted_seq_groups=predicted_seq_groups)
                 )
                 stage_name, interval_time = self.predictor.predict_next_stage(stage_name)
-
-
-if __name__ == "__main__":
-    coinference = FactoolCode("factool_code", "1", arrival_time=0, coinference_info_dict=None)
-    print(coinference)

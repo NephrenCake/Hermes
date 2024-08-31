@@ -260,7 +260,7 @@ class CoInferenceScheduler:
         policy_name = "coinf_fcfs"
         policy_name = "coinf_srcf"
         policy: CoInferencePolicy = PolicyFactory.get_policy(policy_name=policy_name)
-        if policy_name == "coinf_srcf":
+        if policy_name == "coinf_srcf" and self.coinferences_queue[0].predictor is not None:
             for coinf in self.coinferences_dict.values():
                 coinf.estimate_remaining_time(self.prefill_recorder.time_per_token,
                                               self.decode_recorder.time_per_token)

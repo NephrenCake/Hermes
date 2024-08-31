@@ -75,6 +75,12 @@ class CoInferenceSRCF(CoInferencePolicy):
         now: float,
         coinferences: List[CoInference],
     ) -> List[CoInference]:
+        if coinferences[0].predictor is None:
+            return sorted(
+                coinferences,
+                key=lambda coinference: now - coinference.arrival_time,
+                reverse=True,
+            )
         return sorted(coinferences)
     
 
