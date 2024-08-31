@@ -1,18 +1,11 @@
-from typing import Optional, Dict, Tuple
-import json
-import os
-import numpy as np
-import random
-from scipy import stats
+from typing import Optional, Dict
 
 from vllm.coinference.coinference import CoInference, CoInferenceStage, PredictedSequenceGroup
-from vllm.coinference.apps.app_predictor import AppPredictor
 
 
 class ReActFever(CoInference):
     def __init__(self, app_name: None | str, coinf_id: str, arrival_time: float,
                  coinference_info_dict: Dict | None) -> None:
-        self.predictor = AppPredictor(app_name)
         super().__init__(app_name, coinf_id, arrival_time, coinference_info_dict)
 
     def create(

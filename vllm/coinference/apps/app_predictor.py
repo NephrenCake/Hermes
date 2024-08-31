@@ -4,10 +4,6 @@ from typing import Tuple
 import random
 import numpy as np
 
-current_work_dir = os.path.dirname(__file__)
-with open(os.path.join(current_work_dir, "task_models_skewnorm.json"), 'r') as f:
-    all_app_model_dict = json.load(f)
-
 
 def skew_normal_mean(alpha: float, loc: float, scale: float):
     return loc + scale * (alpha / np.sqrt(1 + alpha ** 2)) * np.sqrt(2 / np.pi)
@@ -19,6 +15,8 @@ class AppPredictor:
             app_name: str,
             sample_size: int = 10,
     ) -> None:
+        with open(os.path.join(os.path.dirname(__file__), "task_models_skewnorm.json"), 'r') as f:
+            all_app_model_dict = json.load(f)
         self.model_dict = all_app_model_dict[app_name]
         self.sample_size = sample_size
 
@@ -52,3 +50,13 @@ class AppPredictor:
             args = next_stages[next_stage]["gap_time"]
             gap_time = int(skew_normal_mean(args[2], args[3], args[4])) * 1000
         return next_stage, gap_time
+
+
+APPLICATION = {
+    "factool_code": AppPredictor("factool_code"),
+    "factool_kbqa": AppPredictor("factool_kbqa"),
+    "factool_math": AppPredictor("factool_math"),
+    "react_fever": AppPredictor("react_fever"),
+    "react_alfw": AppPredictor("react_alfw"),
+    # "got_docmerge": AppPredictor("got_docmerge"),
+}

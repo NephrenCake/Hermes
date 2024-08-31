@@ -3,6 +3,7 @@ import time
 import enum
 import numpy as np
 
+from vllm.coinference.apps.app_predictor import APPLICATION
 from vllm.sequence import SequenceGroup
 from vllm.logger import init_logger
 
@@ -101,6 +102,7 @@ class CoInference:
         arrival_time: float,
         coinference_info_dict: Optional[Dict],
     ) -> None:
+        self.predictor = APPLICATION[app_name]
         self.app_name = app_name
         self.coinf_id = coinf_id
         self.arrival_time = arrival_time
