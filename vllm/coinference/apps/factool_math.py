@@ -18,7 +18,7 @@ class FactoolMath(CoInference):
             coinference_info_dict: Optional[Dict]
     ):
         if coinference_info_dict:
-            logger.info(f"coinference_info_dict: {coinference_info_dict}")
+            # logger.info(f"coinference_info_dict: {coinference_info_dict}")
 
             ce_input_len, ce_output_len = coinference_info_dict["claim_extraction"]["length"][0]
             self.stages.append(

@@ -18,7 +18,7 @@ class FactoolCode(CoInference):
             coinference_info_dict: Optional[Dict]
     ):
         if coinference_info_dict:
-            logger.info(f"coinference_info_dict: {coinference_info_dict}")
+            # logger.info(f"coinference_info_dict: {coinference_info_dict}")
 
             # generate_testcase
             gt_input_len, gt_output_len = coinference_info_dict["generate_testcase"]["length"][0]

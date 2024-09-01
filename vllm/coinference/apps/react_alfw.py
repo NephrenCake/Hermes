@@ -16,7 +16,7 @@ class ReActAlfw(CoInference):
             coinference_info_dict: Optional[Dict]
     ):
         if coinference_info_dict:
-            logger.info(f"coinference_info_dict: {coinference_info_dict}")
+            # logger.info(f"coinference_info_dict: {coinference_info_dict}")
 
             stage_id = 0
             while f"stage_{stage_id}" in coinference_info_dict:
