@@ -1,7 +1,6 @@
 from typing import List, Optional, Union, Dict, Tuple
 import time
 import enum
-import numpy as np
 
 from vllm.coinference.apps.app_predictor import APPLICATION, AppPredictor
 from vllm.sequence import SequenceGroup
@@ -16,38 +15,40 @@ class FinishType(enum.Enum):
     CoInfFinished = enum.auto()
 
 
-class PredictedSequenceGroup:
+class Hint:
     def __init__(
             self,
             num_new_seqs: int = 1,
             num_prompt_tokens: int = 0,
             num_output_tokens: int = 0,
+            parallelism: int = 1,
+            interval: int = 0,
     ) -> None:
+        assert parallelism >= 1
         self.num_new_seqs = num_new_seqs
         self.num_prompt_tokens = num_prompt_tokens
         self.num_output_tokens = num_output_tokens
+        self.parallelism = parallelism
+        self.interval = interval
 
 
 class CoInferenceStage:
     def __init__(
             self,
             stage_name: Optional[str] = None,
-            parallelism: int = 1,
-            interval_time: float = 0,  # ms
             max_interval_time: float = 10,  # s
-            predicted_seq_groups: PredictedSequenceGroup = None,
+            hint: Hint = None,
     ) -> None:
         self.stage_name = stage_name
-
-        self.parallelism = parallelism
-        self.interval_time = interval_time
         self.max_interval_time = max_interval_time
-        self.predicted_seq_groups = predicted_seq_groups if predicted_seq_groups else PredictedSequenceGroup()
+        self.hint = hint
 
         self.parallel_requests: List[SequenceGroup] = []
 
         self.waitting_time = None
         self.timeout_time = None
+
+        self.only_use_mean = False  # set True to use trunked distribution mean
 
     def add_req(self, seq_group: SequenceGroup):
         if not self.parallel_requests:
@@ -75,12 +76,29 @@ class CoInferenceStage:
         self.timeout_time = now + self.max_interval_time
 
     def get_remaining_tokens(self, predictor: AppPredictor) -> Tuple[float, float]:
+        if self.hint is not None:
+            fin_prompt_tokens, fin_decode_tokens = 0, 0
+            for seq_group in self.parallel_requests:
+                fin_prompt_tokens += min(len(seq_group.prompt_token_ids),
+                                         next(iter(seq_group.seqs_dict.values())).data.get_num_computed_tokens())
+                fin_decode_tokens += sum(seq.get_output_len() for seq in seq_group.get_seqs())
+
+            prompt_tokens = self.hint.parallelism * self.hint.num_prompt_tokens - fin_prompt_tokens
+            decode_tokens = self.hint.parallelism * self.hint.num_output_tokens - fin_decode_tokens
+            # logger.info(f"stage_name: {self.stage_name}, "
+            #             f"prompt_tokens: {self.hint.parallelism * self.hint.num_prompt_tokens}"
+            #             f" - {fin_prompt_tokens} = {prompt_tokens}, "
+            #             f"decode_tokens: {self.hint.parallelism * self.hint.num_output_tokens}"
+            #             f" - {fin_decode_tokens} = {decode_tokens}.")
+            return prompt_tokens, decode_tokens
+
+        # TODO: predict stages_num and interval_time dynamically
         parallelism_distribution: List = predictor.get_parallelism_distribution(self.stage_name)
         prompt_distribution: List = predictor.get_prompt_distribution(self.stage_name)
         decode_distribution: List = predictor.get_decode_distribution(self.stage_name)
 
         # Case 1. This stage has not started.
-        if len(self.parallel_requests) == 0:
+        if len(self.parallel_requests) == 0 or self.only_use_mean:
             avg_parallelism = predictor.get_parallelism_mean(self.stage_name)
             avg_prompt_tokens = predictor.get_prompt_mean(self.stage_name)
             avg_decode_tokens = predictor.get_decode_mean(self.stage_name)
@@ -127,9 +145,7 @@ class CoInference:
 
         self.remaining_time: float = 0
 
-    def create(
-            self,
-            coinference_info_dict: Optional[Dict]):
+    def create(self, coinference_info_dict: Optional[Dict]):
         raise NotImplementedError
 
     def add_new_stage(self):
@@ -186,11 +202,11 @@ class CoInference:
 
         self.remaining_time = prefill_time_per_token * prompt_tokens + decode_time_per_token * decode_tokens
 
-        # logger.info(f"coinf_id: {self.coinf_id}, stages {self.current_stage_id + 1}/{len(self.stages)}, "
-        #             f"prefill_token {prompt_tokens}, decode_token {decode_tokens}.")
+        logger.info(f"coinf_id: {self.coinf_id}, stages {self.current_stage_id + 1}/{len(self.stages)}, "
+                    f"prefill_token {prompt_tokens}, decode_token {decode_tokens}.")
 
     def update_online_profiling(self):
-        logger.info("co-infer finishes and update the online profiling distribution.")
+        # logger.info("co-infer finishes and update the online profiling distribution.")
         pass
 
     @property

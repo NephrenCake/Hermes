@@ -1,11 +1,11 @@
-from typing import Optional, Dict, Tuple
-import json
-import os
-import numpy as np
-import random
-from scipy import stats
+from typing import Optional, Dict
 
-from vllm.coinference.coinference import CoInference, CoInferenceStage, PredictedSequenceGroup
+import numpy as np
+
+from vllm.coinference.coinference import CoInference, CoInferenceStage, Hint
+from vllm.logger import init_logger
+
+logger = init_logger(__name__)
 
 
 class GotDocMerge(CoInference):
@@ -18,33 +18,11 @@ class GotDocMerge(CoInference):
             coinference_info_dict: Optional[Dict]
     ):
         if coinference_info_dict:
+            logger.info(f"coinference_info_dict: {coinference_info_dict}")
+
             raise NotImplementedError()
         else:
             stage_name = self.predictor.get_first_stage()
-            interval_time = 0
             while stage_name:
-                parallelism = self.predictor.predict_parallelism(stage_name)
-                input_len = self.predictor.predict_input_len(stage_name)
-                output_len = self.predictor.predict_output_len(stage_name)
-                predicted_seq_groups = PredictedSequenceGroup(1, input_len, output_len)
-                self.stages.append(
-                    CoInferenceStage(stage_name=stage_name,
-                                     parallelism=parallelism,
-                                     interval_time=interval_time,
-                                     predicted_seq_groups=predicted_seq_groups)
-                )
+                self.stages.append(CoInferenceStage(stage_name=stage_name))
                 stage_name, interval_time = self.predictor.predict_next_stage(stage_name)
-
-    # def add_new_stage(self):
-    #     stage_name = "thought"
-    #     interval_time = 0
-    #     parallelism = self.predictor.predict_parallelism(stage_name)
-    #     input_len = self.predictor.predict_input_len(stage_name)
-    #     output_len = self.predictor.predict_output_len(stage_name)
-    #     predicted_seq_groups = PredictedSequenceGroup(1, input_len, output_len)
-    #     self.stages.append(
-    #         CoInferenceStage(stage_name=stage_name,
-    #                          parallelism=parallelism,
-    #                          interval_time=interval_time,
-    #                          predicted_seq_groups=predicted_seq_groups)
-    #     )

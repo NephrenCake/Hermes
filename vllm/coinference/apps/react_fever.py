@@ -1,6 +1,9 @@
 from typing import Optional, Dict
 
-from vllm.coinference.coinference import CoInference, CoInferenceStage, PredictedSequenceGroup
+from vllm.coinference.coinference import CoInference, CoInferenceStage, Hint
+from vllm.logger import init_logger
+
+logger = init_logger(__name__)
 
 
 class ReActFever(CoInference):
@@ -13,46 +16,23 @@ class ReActFever(CoInference):
             coinference_info_dict: Optional[Dict]
     ):
         if coinference_info_dict:
+            logger.info(f"coinference_info_dict: {coinference_info_dict}")
+
             stage_id = 0
             while f"stage_{stage_id}" in coinference_info_dict:
                 stage_info = coinference_info_dict[f"stage_{stage_id}"]
                 self.stages.append(
                     CoInferenceStage(
                         stage_name=f"stage_{stage_id}",
-                        parallelism=stage_info["parallelism"],
-                        interval_time=stage_info["act_time"],
-                        predicted_seq_groups=PredictedSequenceGroup(1,
-                                                                    stage_info["length"][0][0],
-                                                                    stage_info["length"][0][1])
+                        hint=Hint(num_prompt_tokens=stage_info["length"][0][0],
+                                  num_output_tokens=stage_info["length"][0][1],
+                                  parallelism=stage_info["parallelism"],
+                                  interval=stage_info["act_time"])
                     )
                 )
                 stage_id += 1
         else:
             stage_name = self.predictor.get_first_stage()
-            interval_time = 0
             while stage_name:
-                parallelism = self.predictor.predict_parallelism(stage_name)
-                input_len = self.predictor.predict_input_len(stage_name)
-                output_len = self.predictor.predict_output_len(stage_name)
-                predicted_seq_groups = PredictedSequenceGroup(1, input_len, output_len)
-                self.stages.append(
-                    CoInferenceStage(stage_name=stage_name,
-                                     parallelism=parallelism,
-                                     interval_time=interval_time,
-                                     predicted_seq_groups=predicted_seq_groups)
-                )
+                self.stages.append(CoInferenceStage(stage_name=stage_name))
                 stage_name, interval_time = self.predictor.predict_next_stage(stage_name)
-
-    def add_new_stage(self):
-        stage_name = "thought"
-        interval_time = 0
-        parallelism = self.predictor.predict_parallelism(stage_name)
-        input_len = self.predictor.predict_input_len(stage_name)
-        output_len = self.predictor.predict_output_len(stage_name)
-        predicted_seq_groups = PredictedSequenceGroup(1, input_len, output_len)
-        self.stages.append(
-            CoInferenceStage(stage_name=stage_name,
-                             parallelism=parallelism,
-                             interval_time=interval_time,
-                             predicted_seq_groups=predicted_seq_groups)
-        )

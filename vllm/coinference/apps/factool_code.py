@@ -1,6 +1,8 @@
 from typing import Optional, Dict
 
-from vllm.coinference.coinference import CoInference, CoInferenceStage, PredictedSequenceGroup
+import numpy as np
+
+from vllm.coinference.coinference import CoInference, CoInferenceStage, Hint
 from vllm.logger import init_logger
 
 logger = init_logger(__name__)
@@ -16,42 +18,33 @@ class FactoolCode(CoInference):
             coinference_info_dict: Optional[Dict]
     ):
         if coinference_info_dict:
-            # generate_testcase
             logger.info(f"coinference_info_dict: {coinference_info_dict}")
+
+            # generate_testcase
             gt_input_len, gt_output_len = coinference_info_dict["generate_testcase"]["length"][0]
             self.stages.append(
-                CoInferenceStage(stage_name="generate_testcase",
-                                 parallelism=1,
-                                 predicted_seq_groups=PredictedSequenceGroup(1, gt_input_len, gt_output_len)
-                                 )
+                CoInferenceStage(
+                    stage_name="generate_testcase",
+                    hint=Hint(num_prompt_tokens=gt_input_len,
+                              num_output_tokens=gt_output_len,
+                              parallelism=1)
+                )
             )
-            gs_output_lens = [output_len for input_len, output_len in
-                              coinference_info_dict["generate_solution"]["length"]]
-            gs_input_lens = [input_len for input_len, output_len in
-                             coinference_info_dict["generate_solution"]["length"]]
-            gs_avg_output_len = sum(gs_output_lens) / len(gs_output_lens)
-            gs_avg_input_len = sum(gs_input_lens) / len(gs_input_lens)
+            # generate_solution
+            gs_avg_output_len = np.mean([output_len for input_len, output_len in
+                                         coinference_info_dict["generate_solution"]["length"]])
+            gs_avg_input_len = np.mean([input_len for input_len, output_len in
+                                        coinference_info_dict["generate_solution"]["length"]])
             self.stages.append(
-                CoInferenceStage(stage_name="generate_solution",
-                                 parallelism=coinference_info_dict["generate_solution"]["parallelism"],
-                                 interval_time=0,
-                                 predicted_seq_groups=PredictedSequenceGroup(1,
-                                                                             gs_avg_input_len,
-                                                                             gs_avg_output_len),
-                                 )
+                CoInferenceStage(
+                    stage_name="generate_solution",
+                    hint=Hint(num_prompt_tokens=gs_avg_input_len,
+                              num_output_tokens=gs_avg_output_len,
+                              parallelism=coinference_info_dict["generate_solution"]["parallelism"])
+                )
             )
         else:
             stage_name = self.predictor.get_first_stage()
-            interval_time = 0
             while stage_name:
-                parallelism = self.predictor.predict_parallelism(stage_name)
-                input_len = self.predictor.predict_input_len(stage_name)
-                output_len = self.predictor.predict_output_len(stage_name)
-                predicted_seq_groups = PredictedSequenceGroup(1, input_len, output_len)
-                self.stages.append(
-                    CoInferenceStage(stage_name=stage_name,
-                                     parallelism=parallelism,
-                                     interval_time=interval_time,
-                                     predicted_seq_groups=predicted_seq_groups)
-                )
+                self.stages.append(CoInferenceStage(stage_name=stage_name))
                 stage_name, interval_time = self.predictor.predict_next_stage(stage_name)
