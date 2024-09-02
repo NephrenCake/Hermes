@@ -48,7 +48,7 @@ class CoInferenceStage:
         self.waitting_time = None
         self.timeout_time = None
 
-        self.only_use_mean = False  # set True to use trunked distribution mean
+        self.use_truncated_mean = True  # set True to use truncated distribution mean
 
     def add_req(self, seq_group: SequenceGroup):
         if not self.parallel_requests:
@@ -93,32 +93,25 @@ class CoInferenceStage:
             return prompt_tokens, decode_tokens
 
         # TODO: predict stages_num and interval_time dynamically
-        parallelism_distribution: List = predictor.get_parallelism_distribution(self.stage_name)
-        prompt_distribution: List = predictor.get_prompt_distribution(self.stage_name)
-        decode_distribution: List = predictor.get_decode_distribution(self.stage_name)
-
         # Case 1. This stage has not started.
-        if len(self.parallel_requests) == 0 or self.only_use_mean:
+        if len(self.parallel_requests) == 0:
             avg_parallelism = predictor.get_parallelism_mean(self.stage_name)
             avg_prompt_tokens = predictor.get_prompt_mean(self.stage_name)
             avg_decode_tokens = predictor.get_decode_mean(self.stage_name)
             return avg_parallelism * avg_prompt_tokens, avg_parallelism * avg_decode_tokens
 
         # Case 2. This stage has started.
-        predict_additional_parallelism = AppPredictor.get_trunked_dist_mean(
-            parallelism_distribution, len(self.parallel_requests)
-        ) - len(self.parallel_requests)
-        predict_prompt_tokens = predict_additional_parallelism * predictor.get_prompt_mean(self.stage_name)
-        predict_decode_tokens = predict_additional_parallelism * predictor.get_decode_mean(self.stage_name)
+        predict_prompt_tokens, predict_decode_tokens = 0, 0
         for seq_group in self.parallel_requests:
-            # 2.1 Prompt is dedicated.
+            # 2.1 Prompt is known.
             fin_prompt_tokens = min(len(seq_group.prompt_token_ids),
                                     next(iter(seq_group.seqs_dict.values())).data.get_num_computed_tokens())
-            predict_prompt_tokens += len(seq_group.prompt_token_ids) - fin_prompt_tokens
-            # 2.2 Decode is unknown. Use trunked distribution.
+            predict_prompt_tokens += max(0, len(seq_group.prompt_token_ids) - fin_prompt_tokens)
+            # 2.2 Decode is unknown. Use truncated distribution.
             fin_decode_tokens = sum(seq.get_output_len() for seq in seq_group.get_seqs())
-            predict_decode_tokens += AppPredictor.get_trunked_dist_mean(
-                decode_distribution, fin_decode_tokens) - fin_decode_tokens
+            predict_decode_tokens += (predictor.get_decode_mean(self.stage_name, truncation_value=fin_decode_tokens)
+                                      if self.use_truncated_mean else predictor.get_decode_mean(self.stage_name)
+                                      ) - fin_decode_tokens
 
         return predict_prompt_tokens, predict_decode_tokens
 
@@ -134,7 +127,7 @@ class CoInference:
             arrival_time: float,
             coinference_info_dict: Optional[Dict],
     ) -> None:
-        self.predictor = APPLICATION[app_name] if app_name else None
+        self.predictor: AppPredictor = APPLICATION[app_name] if app_name else None
         self.app_name = app_name
         self.coinf_id = coinf_id
         self.arrival_time = arrival_time
@@ -148,16 +141,14 @@ class CoInference:
     def create(self, coinference_info_dict: Optional[Dict]):
         raise NotImplementedError
 
-    def add_new_stage(self):
-        self.stages.append(CoInferenceStage())
-
     def add_req(self, seq_group: SequenceGroup):
         if self.current_stage_id == len(self.stages):
             # stage predict failed
             # TODO: consider dynamic stages cases like react_alfw
             logger.warning(f"Stage predict failed. This would not happen. "
                            f"self.coinf_id: {self.coinf_id}, request_id: {seq_group.request_id}.")
-            self.add_new_stage()
+            stage_name, _ = self.predictor.predict_next_stage(self.stages[-1].stage_name, set_available_stage=True)
+            self.stages.append(CoInferenceStage(stage_name=stage_name))
             self.finish_time = None
         self.stages[self.current_stage_id].add_req(seq_group)
         seq_group.metrics.coinf_arrival_time = self.arrival_time
@@ -187,7 +178,7 @@ class CoInference:
     ):
         """
         Estimate the avg number of remaining tokens in the condition of the finished tokens
-        1. use known information (parallelism, trunked distribution for each seq_group) to predict current stage's time
+        1. use known information (parallelism, truncated distribution for each seq_group) to predict current stage's time
         2. use online profiling distribution to predict later stages' time
         """
         if self.current_stage_id == len(self.stages):
@@ -202,11 +193,12 @@ class CoInference:
 
         self.remaining_time = prefill_time_per_token * prompt_tokens + decode_time_per_token * decode_tokens
 
-        logger.info(f"coinf_id: {self.coinf_id}, stages {self.current_stage_id + 1}/{len(self.stages)}, "
-                    f"prefill_token {prompt_tokens}, decode_token {decode_tokens}.")
+        # logger.info(f"coinf_id: {self.coinf_id}, stages {self.current_stage_id + 1}/{len(self.stages)}, "
+        #             f"prefill_token {prompt_tokens}, decode_token {decode_tokens}.")
 
     def update_online_profiling(self):
         # logger.info("co-infer finishes and update the online profiling distribution.")
+        # self.predictor.update
         pass
 
     @property
