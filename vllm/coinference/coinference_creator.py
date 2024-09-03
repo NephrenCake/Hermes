@@ -9,6 +9,7 @@ from vllm.coinference.apps.react_fever import ReActFever
 from vllm.coinference.apps.react_alfw import ReActAlfw
 from vllm.coinference.apps.multiturn_conversations import MultiturnConversations
 from vllm.coinference.apps.got_docmerge import GotDocMerge
+from vllm.coinference.apps.langchain_mapreduce import LangchainMapReduce
 
 
 AppLib: Dict[str, CoInference] = {
@@ -20,6 +21,7 @@ AppLib: Dict[str, CoInference] = {
     "react_alfw": ReActAlfw,
     "multiturn_conversations": MultiturnConversations,
     "got_docmerge": GotDocMerge,
+    "langchain_mapreduce": LangchainMapReduce,
 }
 
 def create_coinference(

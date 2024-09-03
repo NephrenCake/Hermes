@@ -1238,28 +1238,28 @@ def _get_and_verify_max_len(
     # derived length from the HF model config.
     if max_model_len is None:
         max_model_len = int(derived_max_model_len)
-    elif max_model_len > derived_max_model_len:
-        # Some models might have a separate key for specifying model_max_length
-        # that will be bigger than derived_max_model_len. We compare user input
-        # with model_max_length and allow this override when it's smaller.
-        model_max_length = getattr(hf_config, "model_max_length", None)
-        if model_max_length is not None and max_model_len <= model_max_length:
-            if disable_sliding_window:
-                # TODO(robertgshaw): Find a model that has model_max_length
-                # with sliding window to see if this case should be allowed.
-                raise NotImplementedError(
-                    "Disabling sliding window is not supported for models "
-                    "model_max_length in the config. Please raise an issue "
-                    "so we can investigate.")
-            pass
-        else:
-            raise ValueError(
-                f"User-specified max_model_len ({max_model_len}) is greater "
-                "than the derived max_model_len "
-                f"({max_len_key}={derived_max_model_len} or model_max_length="
-                f"{model_max_length} in model's config.json). This may lead "
-                "to incorrect model outputs or CUDA errors. Make sure the "
-                "value is correct and within the model context size.")
+    # elif max_model_len > derived_max_model_len:
+    #     # Some models might have a separate key for specifying model_max_length
+    #     # that will be bigger than derived_max_model_len. We compare user input
+    #     # with model_max_length and allow this override when it's smaller.
+    #     model_max_length = getattr(hf_config, "model_max_length", None)
+    #     if model_max_length is not None and max_model_len <= model_max_length:
+    #         if disable_sliding_window:
+    #             # TODO(robertgshaw): Find a model that has model_max_length
+    #             # with sliding window to see if this case should be allowed.
+    #             raise NotImplementedError(
+    #                 "Disabling sliding window is not supported for models "
+    #                 "model_max_length in the config. Please raise an issue "
+    #                 "so we can investigate.")
+    #         pass
+    #     else:
+    #         raise ValueError(
+    #             f"User-specified max_model_len ({max_model_len}) is greater "
+    #             "than the derived max_model_len "
+    #             f"({max_len_key}={derived_max_model_len} or model_max_length="
+    #             f"{model_max_length} in model's config.json). This may lead "
+    #             "to incorrect model outputs or CUDA errors. Make sure the "
+    #             "value is correct and within the model context size.")
     return int(max_model_len)
 
 

@@ -262,17 +262,17 @@ class StatLogger:
         }
         p95_proportion = {
             "schedule_time": np.percentile([
-                a / b * 100 for a, b in zip(self.schedule_time_list, self.cur_step_time_list)
-            ], 95) if self.cur_step_time_list else 0,
+                a / b * 100 if b else 0 for a, b in zip(self.schedule_time_list, self.cur_step_time_list)
+            ], 95) if avg_val["cur_step_time"] else 0,
             "comm_time": np.percentile([
-                a / b * 100 for a, b in zip(self.comm_time_list, self.cur_step_time_list)
-            ], 95) if self.cur_step_time_list else 0,
+                a / b * 100 if b else 0 for a, b in zip(self.comm_time_list, self.cur_step_time_list)
+            ], 95) if avg_val["cur_step_time"] else 0,
             "swap_time": np.percentile([
-                a / b * 100 for a, b in zip(self.swap_time_list, self.cur_step_time_list)
-            ], 95) if self.cur_step_time_list else 0,
+                a / b * 100 if b else 0 for a, b in zip(self.swap_time_list, self.cur_step_time_list)
+            ], 95) if avg_val["cur_step_time"] else 0,
             "execute_time": np.percentile([
-                a / b * 100 for a, b in zip(self.execute_time_list, self.cur_step_time_list)
-            ], 95) if self.cur_step_time_list else 0,
+                a / b * 100 if b else 0 for a, b in zip(self.execute_time_list, self.cur_step_time_list)
+            ], 95) if avg_val["cur_step_time"] else 0,
         }
 
         return avg_val, avg_proportion, p95_proportion

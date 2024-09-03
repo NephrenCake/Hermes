@@ -5,6 +5,7 @@ python -m vllm.entrypoints.openai.api_server \
   --gpu-memory-utilization 0.9 \
   --tensor-parallel-size 2 \
   --swap-space 32 \
+  --max-model-len 16000 \
   --coinference-scheduler \
   --chat-template ./examples/template_alpaca.jinja
 #  --proactive-reservation \

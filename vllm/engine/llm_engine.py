@@ -988,11 +988,11 @@ class LLMEngine:
             spec_decode_metrics=spec_decode_metrics,
             num_preemption_iter=num_preemption_iter,
 
-            schedule_time=runtime_inspect["schedule_time"],
-            comm_time=runtime_inspect["comm_time"],
-            swap_time=runtime_inspect["swap_time"],
-            execute_time=runtime_inspect["execute_time"],
-            cur_step_time=runtime_inspect["cur_step_time"],
+            schedule_time=runtime_inspect.get("schedule_time", 0),
+            comm_time=runtime_inspect.get("comm_time", 0),
+            swap_time=runtime_inspect.get("swap_time", 0),
+            execute_time=runtime_inspect.get("execute_time", 0),
+            cur_step_time=runtime_inspect.get("cur_step_time", 0),
 
             # Request stats
             #   Latency

@@ -108,5 +108,6 @@ APPLICATION = {
     "factool_math": AppPredictor("factool_math"),
     "react_fever": AppPredictor("react_fever"),
     "react_alfw": AppPredictor("react_alfw"),
-    # "got_docmerge": AppPredictor("got_docmerge"),
+    "got_docmerge": AppPredictor("got_docmerge"),
+    "langchain_mapreduce": AppPredictor("langchain_mapreduce"),
 }
