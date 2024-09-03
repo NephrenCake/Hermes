@@ -75,7 +75,16 @@ class CoInferenceStage:
     def update_timeout_time(self, now: float):
         self.timeout_time = now + self.max_interval_time
 
+    def get_all_prompt_tokens(self) -> List:
+        return [len(seq_group.prompt_token_ids) for seq_group in self.parallel_requests]
+
+    def get_all_decode_tokens(self) -> List:
+        return [sum(seq.get_output_len() for seq in seq_group.get_seqs()) for seq_group in self.parallel_requests]
+
     def get_remaining_tokens(self, predictor: AppPredictor) -> Tuple[float, float]:
+        if self.stage_name == "unexpected":
+            return 0, 0
+
         if self.hint is not None:
             fin_prompt_tokens, fin_decode_tokens = 0, 0
             for seq_group in self.parallel_requests:
@@ -147,8 +156,8 @@ class CoInference:
             # TODO: consider dynamic stages cases like react_alfw
             logger.warning(f"Stage predict failed. This would not happen. "
                            f"self.coinf_id: {self.coinf_id}, request_id: {seq_group.request_id}.")
-            stage_name, _ = self.predictor.predict_next_stage(self.stages[-1].stage_name, set_available_stage=True)
-            self.stages.append(CoInferenceStage(stage_name=stage_name))
+            # stage_name, _ = self.predictor.predict_next_stage(self.stages[-1].stage_name, set_available_stage=True)
+            self.stages.append(CoInferenceStage(stage_name="unexpected"))
             self.finish_time = None
         self.stages[self.current_stage_id].add_req(seq_group)
         seq_group.metrics.coinf_arrival_time = self.arrival_time
@@ -197,9 +206,20 @@ class CoInference:
         #             f"prefill_token {prompt_tokens}, decode_token {decode_tokens}.")
 
     def update_online_profiling(self):
-        # logger.info("co-infer finishes and update the online profiling distribution.")
-        # self.predictor.update
-        pass
+        # timer = time.time()
+        for stage in self.stages:
+            if stage.hint is not None or self.predictor is None or stage.stage_name == "unexpected":
+                continue
+            prompt_tokens: List = stage.get_all_prompt_tokens()
+            decode_tokens: List = stage.get_all_decode_tokens()
+            parallelism: List = [len(stage.parallel_requests)]
+            # logger.info(f"CoInfer {self.coinf_id} finishes and update the online profiling distribution: "
+            #             f"stage_name: {stage.stage_name}, "
+            #             f"prompt_tokens: {prompt_tokens}, decode_tokens: {decode_tokens}.")
+            self.predictor.distribution[stage.stage_name]["parallelism"].add_samples(parallelism).update_cache()
+            self.predictor.distribution[stage.stage_name]["prompt"].add_samples(prompt_tokens).update_cache()
+            self.predictor.distribution[stage.stage_name]["decode"].add_samples(decode_tokens).update_cache()
+        # logger.info(f"Update online profiling distribution time {(time.time() - timer) * 1000:.2f} ms.")
 
     @property
     def current_stage(self) -> CoInferenceStage:
