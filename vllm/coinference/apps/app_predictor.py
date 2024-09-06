@@ -37,7 +37,7 @@ class Distribution:
 
     def update_cache(self) -> 'Distribution':
         if len(set(self.samples)) == 1:
-            counts, bin_edges = [len(self.samples)], [self.samples[0], self.samples[0] + 1]
+            counts, bin_edges = [len(self.samples)], [self.samples[0], self.samples[0] + 1e-3]
         else:
             counts, bin_edges = np.histogram(sorted(self.samples), bins=10)
         bin_sum = [(bin_edges[i] + bin_edges[i + 1]) / 2 * counts[i] for i in range(len(bin_edges) - 1)]
@@ -85,8 +85,22 @@ class AppPredictor:
                         *self.model_dict[stage_name]["completion_tokens"][2:],
                         window_size
                     )).update_cache(),
+                "stage_gap": Distribution().add_samples(
+                    generate_skew_normal_samples(
+                        *self.model_dict[stage_name]["gap_time"][2:],
+                        window_size
+                    )).update_cache(),
             } for stage_name in self.model_dict["stage_list"]
         }
+
+        # prior_distribution = {
+        #     stage_name: {
+        #         "parallelism": self.distribution[stage_name]["parallelism"].get_truncated_dist_mean(),
+        #         "prompt": self.distribution[stage_name]["prompt"].get_truncated_dist_mean(),
+        #         "decode": self.distribution[stage_name]["decode"].get_truncated_dist_mean(),
+        #     } for stage_name in self.model_dict["stage_list"]
+        # }
+        # logger.info(f"AppPredictor {app_name} initialized. Prior distribution: {prior_distribution}")
 
     def set_seed(self, seed):
         random.seed(seed)

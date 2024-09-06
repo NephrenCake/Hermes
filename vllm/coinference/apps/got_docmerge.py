@@ -18,7 +18,7 @@ class GotDocMerge(CoInference):
             coinference_info_dict: Optional[Dict]
     ):
         if coinference_info_dict:
-            logger.info(f"coinference_info_dict: {coinference_info_dict}")
+            # logger.info(f"coinference_info_dict: {coinference_info_dict}")
             g1_input_len = np.mean([input_len for input_len, output_len in 
                                     coinference_info_dict["generate1"]["length"]])
             g1_output_len = np.mean([output_len for input_len, output_len in 

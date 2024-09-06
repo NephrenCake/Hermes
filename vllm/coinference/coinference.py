@@ -36,6 +36,7 @@ class CoInferenceStage:
     def __init__(
             self,
             stage_name: Optional[str] = None,
+            stage_gap: float = 0,  # ms
             max_interval_time: float = 10,  # s
             hint: Hint = None,
     ) -> None:
@@ -44,6 +45,7 @@ class CoInferenceStage:
         self.hint = hint
 
         self.parallel_requests: List[SequenceGroup] = []
+        self.stage_gap = stage_gap
 
         self.waitting_time = None
         self.timeout_time = None
@@ -147,17 +149,21 @@ class CoInference:
 
         self.remaining_time: float = 0
 
+        self.stage_gap_timer = time.time()
+
     def create(self, coinference_info_dict: Optional[Dict]):
         raise NotImplementedError
 
-    def add_req(self, seq_group: SequenceGroup):
+    def add_stage(self, stage_name):
+        stage_gap = (time.time() - self.stage_gap_timer) * 1000
+        self.stages.append(CoInferenceStage(stage_name=stage_name, stage_gap=stage_gap))
+
+        # 1. Bayesian update
+        # 2. self.following_stages_time = expected remaining time of the following stages
+
+    def add_req(self, seq_group: SequenceGroup, stage_name: str):
         if self.current_stage_id == len(self.stages):
-            # stage predict failed
-            # TODO: consider dynamic stages cases like react_alfw
-            logger.warning(f"Stage predict failed. This would not happen. "
-                           f"self.coinf_id: {self.coinf_id}, request_id: {seq_group.request_id}.")
-            # stage_name, _ = self.predictor.predict_next_stage(self.stages[-1].stage_name, set_available_stage=True)
-            self.stages.append(CoInferenceStage(stage_name="unexpected"))
+            self.add_stage(stage_name)
             self.finish_time = None
         self.stages[self.current_stage_id].add_req(seq_group)
         seq_group.metrics.coinf_arrival_time = self.arrival_time
@@ -171,6 +177,7 @@ class CoInference:
         stage_finishtype = self.current_stage.is_finished(now)
         if stage_finishtype == FinishType.StageFinished:
             # TODO (zgan): create next stage with state machine
+            self.stage_gap_timer = time.time()
             self.current_stage_id += 1
             if self.current_stage_id == len(self.stages):
                 self.finish_time = now + 1
@@ -213,12 +220,14 @@ class CoInference:
             prompt_tokens: List = stage.get_all_prompt_tokens()
             decode_tokens: List = stage.get_all_decode_tokens()
             parallelism: List = [len(stage.parallel_requests)]
+            stage_gap: List = [stage.stage_gap]
             # logger.info(f"CoInfer {self.coinf_id} finishes and update the online profiling distribution: "
             #             f"stage_name: {stage.stage_name}, "
             #             f"prompt_tokens: {prompt_tokens}, decode_tokens: {decode_tokens}.")
             self.predictor.distribution[stage.stage_name]["parallelism"].add_samples(parallelism).update_cache()
             self.predictor.distribution[stage.stage_name]["prompt"].add_samples(prompt_tokens).update_cache()
             self.predictor.distribution[stage.stage_name]["decode"].add_samples(decode_tokens).update_cache()
+            self.predictor.distribution[stage.stage_name]["stage_gap"].add_samples(stage_gap).update_cache()
         # logger.info(f"Update online profiling distribution time {(time.time() - timer) * 1000:.2f} ms.")
 
     @property
