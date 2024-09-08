@@ -8,7 +8,7 @@ class SingleRequest(CoInference):
         self, 
         coinference_info_dict: Optional[Dict]
     ):
-        self.stages.append(CoInferenceStage())
+        pass
         
     def is_current_stage_finished(self) -> bool:
         return self.stages[0].parallel_requests[0].is_finished()

@@ -8,19 +8,19 @@ logger = init_logger(__name__)
 
 class ReActFever(CoInference):
     def __init__(self, app_name: None | str, coinf_id: str, arrival_time: float,
-                 coinference_info_dict: Dict | None) -> None:
-        super().__init__(app_name, coinf_id, arrival_time, coinference_info_dict)
+                 hint: Dict | None) -> None:
+        super().__init__(app_name, coinf_id, arrival_time, hint)
 
     def create(
             self,
-            coinference_info_dict: Optional[Dict]
+            hint: Optional[Dict]
     ):
-        if coinference_info_dict:
+        if hint:
             # logger.info(f"coinference_info_dict: {coinference_info_dict}")
 
             stage_id = 0
-            while f"stage_{stage_id}" in coinference_info_dict:
-                stage_info = coinference_info_dict[f"stage_{stage_id}"]
+            while f"stage_{stage_id}" in hint:
+                stage_info = hint[f"stage_{stage_id}"]
                 self.stages.append(
                     CoInferenceStage(
                         stage_name=f"stage_{stage_id}",
@@ -31,8 +31,3 @@ class ReActFever(CoInference):
                     )
                 )
                 stage_id += 1
-        else:
-            stage_name = self.predictor.get_first_stage()
-            while stage_name:
-                self.stages.append(CoInferenceStage(stage_name=stage_name))
-                stage_name, interval_time = self.predictor.predict_next_stage(stage_name)

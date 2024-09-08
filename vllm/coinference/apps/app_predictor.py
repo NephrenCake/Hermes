@@ -28,6 +28,7 @@ class Distribution:
         self.samples = []
 
         self.bin_edges = []
+        self.counts = []
         self.suffix_mean = {}
 
     def add_samples(self, samples: List) -> 'Distribution':
@@ -37,13 +38,13 @@ class Distribution:
 
     def update_cache(self) -> 'Distribution':
         if len(set(self.samples)) == 1:
-            counts, bin_edges = [len(self.samples)], [self.samples[0], self.samples[0] + 1e-3]
+            counts, bin_edges = [len(self.samples)], [self.samples[0], self.samples[0] + 1e-6]
         else:
             counts, bin_edges = np.histogram(sorted(self.samples), bins=10)
         bin_sum = [(bin_edges[i] + bin_edges[i + 1]) / 2 * counts[i] for i in range(len(bin_edges) - 1)]
         suffix_sum = np.cumsum(bin_sum[::-1])[::-1]
         suffix_cnt = np.cumsum(counts[::-1])[::-1]
-        self.bin_edges = bin_edges[:-1]
+        self.bin_edges, self.counts = bin_edges, counts
         self.suffix_mean = {
             v: suffix_sum[i] / suffix_cnt[i]
             for i, v in enumerate(bin_edges[:-1])
@@ -51,10 +52,35 @@ class Distribution:
         return self
 
     def get_truncated_dist_mean(self, truncation_value: float = 0) -> float:
-        idx = bisect_right(self.bin_edges, truncation_value)
-        if idx == len(self.bin_edges):
+        idx = bisect_right(self.bin_edges[:-1], truncation_value)
+        if idx == len(self.bin_edges[:-1]):
             return truncation_value
         return self.suffix_mean[self.bin_edges[idx]]
+
+    def get_posterior_mean_with_bayesian(self, new_samples: List[float], weight: float = 1) -> float:
+        likelihoods, weighted_samples = [], []
+
+        # Step 1: Calculate likelihood of the new sample given the current distribution
+        for new_sample in new_samples:
+            # 1. Uniform likelihood
+            # adjusted_likelihood = weight / len(self.samples)
+
+            # 2. Profiling likelihood
+            if new_sample < self.bin_edges[0] or new_sample > self.bin_edges[-1]:
+                likelihood = 0.1
+            else:
+                idx = bisect_right(self.bin_edges[:-1], new_sample) - 1
+                likelihood = self.counts[idx] / len(self.samples)
+            adjusted_likelihood = likelihood * weight
+
+            likelihoods.append(adjusted_likelihood)
+            weighted_samples.append(new_sample * adjusted_likelihood)
+
+        # Step 2: Update the posterior mean
+        prior_mean = self.get_truncated_dist_mean()
+        posterior_mean = (prior_mean + sum(weighted_samples)) / (1 + sum(likelihoods))
+        # logger.info(f"Prior mean: {prior_mean}, Posterior mean: {posterior_mean}, new_samples: {new_samples}")
+        return posterior_mean
 
 
 class AppPredictor:
@@ -64,12 +90,10 @@ class AppPredictor:
             window_size: int = 100,
     ) -> None:
         with open(os.path.join(os.path.dirname(__file__), "task_models_skewnorm.json"), 'r') as f:
-            all_app_model_dict = json.load(f)
-        self.model_dict = all_app_model_dict[app_name]
-        self.window_size = window_size
-
+            self.model_dict = json.load(f)[app_name]
         self.distribution: Dict = {
             stage_name: {
+                "stage_gap": Distribution().add_samples([0]).update_cache(),
                 "parallelism": Distribution().add_samples(
                     generate_skew_normal_samples(
                         *self.model_dict[stage_name]["parallelism"][2:],
@@ -85,22 +109,30 @@ class AppPredictor:
                         *self.model_dict[stage_name]["completion_tokens"][2:],
                         window_size
                     )).update_cache(),
-                "stage_gap": Distribution().add_samples(
-                    generate_skew_normal_samples(
-                        *self.model_dict[stage_name]["gap_time"][2:],
-                        window_size
-                    )).update_cache(),
+                "loops": Distribution().add_samples(
+                    {
+                        "react_fever": np.random.geometric(1 - 0.5370370370370371, size=100).tolist(),
+                        "react_alfw": np.random.geometric(1 - 0.9362843729040912, size=100).tolist(),
+                    }.get(app_name, [1])
+                ).update_cache(),
+                "next_stage": {
+                    next_stage_name: self.model_dict[stage_name]["next_stages"][next_stage_name]["probability"]
+                    for next_stage_name in self.model_dict[stage_name]["next_stages"]
+                },
             } for stage_name in self.model_dict["stage_list"]
         }
 
-        # prior_distribution = {
-        #     stage_name: {
-        #         "parallelism": self.distribution[stage_name]["parallelism"].get_truncated_dist_mean(),
-        #         "prompt": self.distribution[stage_name]["prompt"].get_truncated_dist_mean(),
-        #         "decode": self.distribution[stage_name]["decode"].get_truncated_dist_mean(),
-        #     } for stage_name in self.model_dict["stage_list"]
-        # }
-        # logger.info(f"AppPredictor {app_name} initialized. Prior distribution: {prior_distribution}")
+        prior_distribution = {
+            stage_name: {
+                "stage_gap": self.distribution[stage_name]["stage_gap"].get_truncated_dist_mean(),
+                "parallelism": self.distribution[stage_name]["parallelism"].get_truncated_dist_mean(),
+                "prompt": self.distribution[stage_name]["prompt"].get_truncated_dist_mean(),
+                "decode": self.distribution[stage_name]["decode"].get_truncated_dist_mean(),
+                "loops": self.distribution[stage_name]["loops"].get_truncated_dist_mean(),
+                "next_stage": self.distribution[stage_name]["next_stage"],
+            } for stage_name in self.model_dict["stage_list"]
+        }
+        logger.info(f"AppPredictor {app_name} initialized. Prior distribution: {prior_distribution}")
 
     def set_seed(self, seed):
         random.seed(seed)
@@ -134,6 +166,43 @@ class AppPredictor:
 
     def get_decode_mean(self, stage_name: str, truncation_value: float = 0) -> float:
         return self.distribution[stage_name]["decode"].get_truncated_dist_mean(truncation_value)
+
+    def get_following_stage_info_with_bayesian(
+            self,
+            cur_stage: str,
+            looped: Dict,
+            evidence: Dict = None,
+    ) -> Tuple[float, float, float]:
+        if evidence is None:
+            evidence = {}
+
+        prompt_tokens, decode_tokens, stage_gap = 0, 0, 0
+        follow_up = False
+        for stage_name in self.model_dict["stage_list"]:
+            if not follow_up:
+                follow_up = cur_stage == stage_name
+                if not follow_up:
+                    continue
+
+            stage_looped = looped.get(stage_name, 0)
+            loops = int(self.distribution[stage_name]["loops"].get_truncated_dist_mean(stage_looped) - stage_looped)
+            # logger.info(f"Stage: {stage_name}, has_looped: {stage_looped}, remaining_loop: {loops}")
+            if loops == 0:
+                continue
+            parallelism = self.distribution[stage_name]["parallelism"].get_posterior_mean_with_bayesian(
+                new_samples=evidence.get(stage_name, {}).get("parallelism", []), weight=10
+            )
+            prompt_tokens += self.distribution[stage_name]["prompt"].get_posterior_mean_with_bayesian(
+                new_samples=evidence.get(stage_name, {}).get("prompt", []), weight=10
+            ) * parallelism * loops
+            decode_tokens += self.distribution[stage_name]["decode"].get_posterior_mean_with_bayesian(
+                new_samples=evidence.get(stage_name, {}).get("decode", []), weight=10
+            ) * parallelism * loops
+            stage_gap += self.distribution[stage_name]["stage_gap"].get_posterior_mean_with_bayesian(
+                new_samples=evidence.get(stage_name, {}).get("stage_gap", []), weight=10
+            ) * loops
+
+        return prompt_tokens, decode_tokens, stage_gap
 
 
 APPLICATION = {

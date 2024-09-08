@@ -37,45 +37,30 @@ class CoInferenceStage:
             self,
             stage_name: Optional[str] = None,
             stage_gap: float = 0,  # ms
-            max_interval_time: float = 10,  # s
             hint: Hint = None,
     ) -> None:
         self.stage_name = stage_name
-        self.max_interval_time = max_interval_time
         self.hint = hint
 
         self.parallel_requests: List[SequenceGroup] = []
         self.stage_gap = stage_gap
 
-        self.waitting_time = None
-        self.timeout_time = None
-
-        self.use_truncated_mean = True  # set True to use truncated distribution mean
-
     def add_req(self, seq_group: SequenceGroup):
-        if not self.parallel_requests:
-            self.waitting_time = time.time() + 0.5  # todo？
         self.parallel_requests.append(seq_group)
 
-    def is_finished(self, now: float) -> FinishType:
-        if self.parallel_requests:
-            if now > self.waitting_time:
-                if len([seq_group for seq_group in self.parallel_requests if
-                        seq_group.is_finished()]) == len(self.parallel_requests):
-                    return FinishType.StageFinished
+    def is_finished(self) -> bool:
+        if self.hint is None:
+            assert len(self.parallel_requests) > 0, "No seq_group in this stage. It's not correct."
         else:
-            if now > self.timeout_time:
-                return FinishType.CoInfFinished
-        return FinishType.UnFinished
+            if len(self.parallel_requests) == 0:
+                return False
+        return sum([seq_group.is_finished() for seq_group in self.parallel_requests]) == len(self.parallel_requests)
 
     def get_num_unfinished_seqs(self) -> int:
         return sum([len(seq_group.get_unfinished_seqs()) for seq_group in self.parallel_requests])
 
     def get_num_unfinished_seq_groups(self) -> int:
         return len([seq_group for seq_group in self.parallel_requests if not seq_group.is_finished()])
-
-    def update_timeout_time(self, now: float):
-        self.timeout_time = now + self.max_interval_time
 
     def get_all_prompt_tokens(self) -> List:
         return [len(seq_group.prompt_token_ids) for seq_group in self.parallel_requests]
@@ -84,9 +69,6 @@ class CoInferenceStage:
         return [sum(seq.get_output_len() for seq in seq_group.get_seqs()) for seq_group in self.parallel_requests]
 
     def get_remaining_tokens(self, predictor: AppPredictor) -> Tuple[float, float]:
-        if self.stage_name == "unexpected":
-            return 0, 0
-
         if self.hint is not None:
             fin_prompt_tokens, fin_decode_tokens = 0, 0
             for seq_group in self.parallel_requests:
@@ -103,26 +85,15 @@ class CoInferenceStage:
             #             f" - {fin_decode_tokens} = {decode_tokens}.")
             return prompt_tokens, decode_tokens
 
-        # TODO: predict stages_num and interval_time dynamically
-        # Case 1. This stage has not started.
-        if len(self.parallel_requests) == 0:
-            avg_parallelism = predictor.get_parallelism_mean(self.stage_name)
-            avg_prompt_tokens = predictor.get_prompt_mean(self.stage_name)
-            avg_decode_tokens = predictor.get_decode_mean(self.stage_name)
-            return avg_parallelism * avg_prompt_tokens, avg_parallelism * avg_decode_tokens
-
-        # Case 2. This stage has started.
         predict_prompt_tokens, predict_decode_tokens = 0, 0
         for seq_group in self.parallel_requests:
-            # 2.1 Prompt is known.
-            fin_prompt_tokens = min(len(seq_group.prompt_token_ids),
-                                    next(iter(seq_group.seqs_dict.values())).data.get_num_computed_tokens())
-            predict_prompt_tokens += max(0, len(seq_group.prompt_token_ids) - fin_prompt_tokens)
-            # 2.2 Decode is unknown. Use truncated distribution.
-            fin_decode_tokens = sum(seq.get_output_len() for seq in seq_group.get_seqs())
-            predict_decode_tokens += (predictor.get_decode_mean(self.stage_name, truncation_value=fin_decode_tokens)
-                                      if self.use_truncated_mean else predictor.get_decode_mean(self.stage_name)
-                                      ) - fin_decode_tokens
+            # 1. Prompt is known.
+            sq_prompt_tokens = min(len(seq_group.prompt_token_ids),
+                                   next(iter(seq_group.seqs_dict.values())).data.get_num_computed_tokens())
+            predict_prompt_tokens += len(seq_group.prompt_token_ids) - sq_prompt_tokens
+            # 2. Decode is unknown. Use truncated distribution.
+            sq_decode_tokens = sum(seq.get_output_len() for seq in seq_group.get_seqs())
+            predict_decode_tokens += predictor.get_decode_mean(self.stage_name, sq_decode_tokens) - sq_decode_tokens
 
         return predict_prompt_tokens, predict_decode_tokens
 
@@ -136,7 +107,8 @@ class CoInference:
             app_name: Union[None, str],
             coinf_id: str,
             arrival_time: float,
-            coinference_info_dict: Optional[Dict],
+            hint: Optional[Dict],
+            time_out: float = 30,
     ) -> None:
         self.predictor: AppPredictor = APPLICATION[app_name] if app_name else None
         self.app_name = app_name
@@ -144,22 +116,67 @@ class CoInference:
         self.arrival_time = arrival_time
         self.stages: List[CoInferenceStage] = []
         self.current_stage_id = 0
-        self.create(coinference_info_dict)
+        self.hint = hint
+        self.create(hint)  # only used to test theoretical values
         self.finish_time = None
+        self.finish_status = FinishType.UnFinished
+        self.time_out = time_out
 
         self.remaining_time: float = 0
 
         self.stage_gap_timer = time.time()
 
+        self.following_stages_info = {
+            "prompt_tokens": 0,
+            "decode_tokens": 0,
+            "stage_gap": 0,
+        }
+
     def create(self, coinference_info_dict: Optional[Dict]):
         raise NotImplementedError
 
     def add_stage(self, stage_name):
-        stage_gap = (time.time() - self.stage_gap_timer) * 1000
-        self.stages.append(CoInferenceStage(stage_name=stage_name, stage_gap=stage_gap))
+        if self.app_name is None:  # support online request level fifo, don't suggest
+            self.stages.append(CoInferenceStage())
+            return
 
-        # 1. Bayesian update
-        # 2. self.following_stages_time = expected remaining time of the following stages
+        self.stages.append(
+            CoInferenceStage(
+                stage_name=stage_name,
+                stage_gap=(time.time() - self.stage_gap_timer) * 1000
+            )
+        )
+
+        looped, evidence = {}, {}
+        for i, stage in enumerate(self.stages):
+            looped[stage.stage_name] = looped[stage.stage_name] + 1 if stage.stage_name in looped else 1
+
+            if i == self.current_stage_id:
+                break
+
+            prompt_tokens: List = stage.get_all_prompt_tokens()
+            decode_tokens: List = stage.get_all_decode_tokens()
+            parallelism: List = [len(stage.parallel_requests)]
+            stage_gap: List = [stage.stage_gap]
+            evidence[stage.stage_name] = {
+                "prompt": evidence.get(stage.stage_name, {}).get("prompt", []) + prompt_tokens,
+                "decode": evidence.get(stage.stage_name, {}).get("decode", []) + decode_tokens,
+                "parallelism": evidence.get(stage.stage_name, {}).get("parallelism", []) + parallelism,
+                "stage_gap": evidence.get(stage.stage_name, {}).get("stage_gap", []) + stage_gap,
+            }
+
+        prompt_tokens, decode_tokens, stage_gap = self.predictor.get_following_stage_info_with_bayesian(
+            cur_stage=stage_name,
+            looped=looped,
+            evidence=evidence,
+        )
+        self.following_stages_info = {
+            "prompt_tokens": prompt_tokens,
+            "decode_tokens": decode_tokens,
+            "stage_gap": stage_gap,
+        }
+        # logger.info(f"CoInfer {self.coinf_id} starts a new stage: {stage_name}, "
+        #             f"following_stages_info: {self.following_stages_info}.")
 
     def add_req(self, seq_group: SequenceGroup, stage_name: str):
         if self.current_stage_id == len(self.stages):
@@ -169,23 +186,26 @@ class CoInference:
         seq_group.metrics.coinf_arrival_time = self.arrival_time
 
     def is_finished(self, now: float) -> bool:
-        if self.finish_time:
-            if now > self.finish_time:
-                return True
+        if self.finish_status == FinishType.UnFinished:
+            if self.current_stage.is_finished():
+                self.finish_status = FinishType.StageFinished
+                self.stage_gap_timer = time.time()
+                self.current_stage_id += 1
+                self.finish_time = now
+            return False
+
+        if self.finish_status == FinishType.StageFinished:
+            if self.current_stage_id != len(self.stages):
+                self.finish_status = FinishType.UnFinished
+                return False  # new requests were added
+            elif now - self.finish_time > self.time_out:
+                self.finish_status = FinishType.CoInfFinished
+                return True  # no more requests will arrive
             else:
-                return False
-        stage_finishtype = self.current_stage.is_finished(now)
-        if stage_finishtype == FinishType.StageFinished:
-            # TODO (zgan): create next stage with state machine
-            self.stage_gap_timer = time.time()
-            self.current_stage_id += 1
-            if self.current_stage_id == len(self.stages):
-                self.finish_time = now + 1
-            else:
-                self.current_stage.update_timeout_time(now)
-        elif stage_finishtype == FinishType.CoInfFinished:
+                return False  # keep waiting for new requests
+
+        if self.finish_status == FinishType.CoInfFinished:
             return True
-        return False
 
     def estimate_remaining_time(
             self,
@@ -194,29 +214,35 @@ class CoInference:
     ):
         """
         Estimate the avg number of remaining tokens in the condition of the finished tokens
-        1. use known information (parallelism, truncated distribution for each seq_group) to predict current stage's time
-        2. use online profiling distribution to predict later stages' time
+        1. Use known information (parallelism, truncated distribution for each seq_group) to predict current stage time.
+        2. Use online profiling distribution and Bayesian to predict later stage time which is updated in add_stage().
         """
         if self.current_stage_id == len(self.stages):
             self.remaining_time = 0  # ms
             return
 
-        prompt_tokens, decode_tokens = 0, 0
-        for stage in self.stages[self.current_stage_id:]:
-            stage_prompt_tokens, stage_decode_tokens = stage.get_remaining_tokens(self.predictor)
-            prompt_tokens += stage_prompt_tokens
-            decode_tokens += stage_decode_tokens
+        prompt_tokens, decode_tokens = self.current_stage.get_remaining_tokens(self.predictor)
+        prompt_tokens += self.following_stages_info["prompt_tokens"]
+        decode_tokens += self.following_stages_info["decode_tokens"]
 
-        self.remaining_time = prefill_time_per_token * prompt_tokens + decode_time_per_token * decode_tokens
+        if self.hint is not None:  # only used to test theoretical values
+            for stage in self.stages[self.current_stage_id + 1:]:
+                stage_prompt_tokens, stage_decode_tokens = stage.get_remaining_tokens(self.predictor)
+                prompt_tokens += stage_prompt_tokens
+                decode_tokens += stage_decode_tokens
+
+        self.remaining_time = (prefill_time_per_token * prompt_tokens + decode_time_per_token * decode_tokens
+                               + self.following_stages_info["stage_gap"])
 
         # logger.info(f"coinf_id: {self.coinf_id}, stages {self.current_stage_id + 1}/{len(self.stages)}, "
         #             f"prefill_token {prompt_tokens}, decode_token {decode_tokens}.")
 
     def update_online_profiling(self):
+        if self.app_name is None or self.hint is not None:
+            return
+
         # timer = time.time()
         for stage in self.stages:
-            if stage.hint is not None or self.predictor is None or stage.stage_name == "unexpected":
-                continue
             prompt_tokens: List = stage.get_all_prompt_tokens()
             decode_tokens: List = stage.get_all_decode_tokens()
             parallelism: List = [len(stage.parallel_requests)]
@@ -228,6 +254,13 @@ class CoInference:
             self.predictor.distribution[stage.stage_name]["prompt"].add_samples(prompt_tokens).update_cache()
             self.predictor.distribution[stage.stage_name]["decode"].add_samples(decode_tokens).update_cache()
             self.predictor.distribution[stage.stage_name]["stage_gap"].add_samples(stage_gap).update_cache()
+
+        looped = {}
+        for stage in self.stages:
+            looped[stage.stage_name] = looped[stage.stage_name] + 1 if stage.stage_name in looped else 1
+        for stage_name, times in looped.items():
+            self.predictor.distribution[stage_name]["loops"].add_samples([times]).update_cache()
+
         # logger.info(f"Update online profiling distribution time {(time.time() - timer) * 1000:.2f} ms.")
 
     @property

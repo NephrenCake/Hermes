@@ -494,17 +494,19 @@ class CoInferenceScheduler:
         seq_group: SequenceGroup,
         coinference_info_dict: Optional[Dict],
     ) -> int:
-        stage_name = coinference_info_dict["stage_name"]
+        self.free_finished_seq_groups()
+        # logger.info(f"Add seq_group {seq_group.request_id}, coinference_info_dict: {coinference_info_dict}")
         if seq_group.coinf_id not in self.coinferences_dict:
             new_coinf = create_coinference(seq_group.app_name,
                                            seq_group.coinf_id,
                                            seq_group.metrics.arrival_time,
-                                           coinference_info_dict)
-            new_coinf.add_req(seq_group, stage_name)
+                                           coinference_info_dict["hint"])
             self.coinferences_dict[seq_group.coinf_id] = new_coinf
             self.coinferences_queue.append(new_coinf)
-        else:
-            self.coinferences_dict[seq_group.coinf_id].add_req(seq_group, stage_name)
+
+            # logger.info(f"Add coinference {seq_group.coinf_id} to scheduler")
+
+        self.coinferences_dict[seq_group.coinf_id].add_req(seq_group, coinference_info_dict["stage_name"])
 
     def abort_seq_group(self, request_id: Union[str, Iterable[str]]):
         # TODO: implement
