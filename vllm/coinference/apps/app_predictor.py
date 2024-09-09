@@ -93,31 +93,24 @@ class AppPredictor:
             self.model_dict = json.load(f)[app_name]
         self.distribution: Dict = {
             stage_name: {
-                "stage_gap": Distribution().add_samples([0]).update_cache(),
-                "parallelism": Distribution().add_samples(
-                    generate_skew_normal_samples(
-                        *self.model_dict[stage_name]["parallelism"][2:],
-                        window_size
-                    )).update_cache(),
-                "prompt": Distribution().add_samples(
-                    generate_skew_normal_samples(
-                        *self.model_dict[stage_name]["prompt_tokens"][2:],
-                        window_size
-                    )).update_cache(),
-                "decode": Distribution().add_samples(
-                    generate_skew_normal_samples(
-                        *self.model_dict[stage_name]["completion_tokens"][2:],
-                        window_size
-                    )).update_cache(),
-                "loops": Distribution().add_samples(
-                    {
-                        "react_fever": np.random.geometric(1 - 0.5370370370370371, size=100).tolist(),
-                        "react_alfw": np.random.geometric(1 - 0.9362843729040912, size=100).tolist(),
-                    }.get(app_name, [1])
+                "stage_gap": Distribution(window_size).add_samples(
+                    [i * 1000 for i in self.model_dict[stage_name]["stage_gap"]]  # s -> ms
+                ).update_cache(),
+                "parallelism": Distribution(window_size).add_samples(
+                    self.model_dict[stage_name]["parallelism"]
+                ).update_cache(),
+                "prompt": Distribution(window_size).add_samples(
+                    self.model_dict[stage_name]["prompt_tokens"]
+                ).update_cache(),
+                "decode": Distribution(window_size).add_samples(
+                    self.model_dict[stage_name]["completion_tokens"]
+                ).update_cache(),
+                "loops": Distribution(window_size).add_samples(
+                    self.model_dict[stage_name]["loops"]
                 ).update_cache(),
                 "next_stage": {
-                    next_stage_name: self.model_dict[stage_name]["next_stages"][next_stage_name]["probability"]
-                    for next_stage_name in self.model_dict[stage_name]["next_stages"]
+                    next_stage_name: probability
+                    for next_stage_name, probability in self.model_dict[stage_name]["next_stages"].items()
                 },
             } for stage_name in self.model_dict["stage_list"]
         }
