@@ -30,6 +30,8 @@ class Distribution:
         self.bin_edges = []
         self.counts = []
         self.suffix_mean = {}
+        self.gittins = {}
+        self.mode = "gittins"
 
     def add_samples(self, samples: List) -> 'Distribution':
         self.samples += samples
@@ -42,20 +44,57 @@ class Distribution:
         else:
             counts, bin_edges = np.histogram(sorted(self.samples), bins=10)
         bin_sum = [(bin_edges[i] + bin_edges[i + 1]) / 2 * counts[i] for i in range(len(bin_edges) - 1)]
-        suffix_sum = np.cumsum(bin_sum[::-1])[::-1]
-        suffix_cnt = np.cumsum(counts[::-1])[::-1]
+        suffix_sum = np.cumsum(bin_sum[::-1])[::-1].tolist() + [0]
+        suffix_cnt = np.cumsum(counts[::-1])[::-1].tolist() + [0]
         self.bin_edges, self.counts = bin_edges, counts
         self.suffix_mean = {
             v: suffix_sum[i] / suffix_cnt[i]
             for i, v in enumerate(bin_edges[:-1])
         }
+        self.gittins = {
+            v: min([
+                (suffix_sum[i] - suffix_sum[j]) / (suffix_cnt[i] - suffix_cnt[j])  # E
+                / ((suffix_cnt[i] - suffix_cnt[j]) / suffix_cnt[i])  # P
+                if suffix_cnt[i] - suffix_cnt[j] > 0 else 1 << 30
+                for j in range(i + 1, len(suffix_sum))
+            ])
+            for i, v in enumerate(bin_edges[:-1])
+        }
+        # logger.info(f"counts: {counts}")
+        # logger.info(f"self.suffix_mean: {self.suffix_mean}")
+        # logger.info(f"self.gittins: {self.gittins}")
+        # if self.suffix_mean == self.gittins:
+        #     input("check")
         return self
 
-    def get_truncated_dist_mean(self, truncation_value: float = 0) -> float:
-        idx = bisect_right(self.bin_edges[:-1], truncation_value)
-        if idx == len(self.bin_edges[:-1]):
-            return truncation_value
-        return self.suffix_mean[self.bin_edges[idx]]
+    def get_mean(
+            self,
+            truncation_value: float = 0,
+            set_mode=None,  # "gittins", "mean", None
+    ) -> float:
+        """
+        Get the mean of the distribution.
+        When truncation_value is set, the mean is calculated based on the truncated distribution.
+        When return_gittins is set, the Gittins index is returned.
+        """
+        if set_mode is not None:
+            self.mode = set_mode
+
+        # logger.info(f"using mode: {'mean' if truncation_value == 0 else self.mode}")
+        if self.mode == "mean" or truncation_value == 0:
+            return self.suffix_mean[self.bin_edges[0]]
+        elif self.mode == "truncated_mean":
+            idx = bisect_right(self.bin_edges[:-1], truncation_value)
+            if idx == len(self.bin_edges[:-1]):
+                return truncation_value
+            return self.suffix_mean[self.bin_edges[idx]]
+        elif self.mode == "gittins":
+            idx = bisect_right(self.bin_edges[:-1], truncation_value)
+            if idx == len(self.bin_edges[:-1]):
+                return truncation_value
+            return self.gittins[self.bin_edges[idx]]
+        else:
+            raise ValueError(f"Unknown mode: {self.mode}")
 
     def get_posterior_mean_with_bayesian(self, new_samples: List[float], weight: float = 1) -> float:
         likelihoods, weighted_samples = [], []
@@ -77,7 +116,7 @@ class Distribution:
             weighted_samples.append(new_sample * adjusted_likelihood)
 
         # Step 2: Update the posterior mean
-        prior_mean = self.get_truncated_dist_mean()
+        prior_mean = self.get_mean()
         posterior_mean = (prior_mean + sum(weighted_samples)) / (1 + sum(likelihoods))
         # logger.info(f"Prior mean: {prior_mean}, Posterior mean: {posterior_mean}, new_samples: {new_samples}")
         return posterior_mean
@@ -115,56 +154,28 @@ class AppPredictor:
             } for stage_name in self.model_dict["stage_list"]
         }
 
-        prior_distribution = {
-            stage_name: {
-                "stage_gap": self.distribution[stage_name]["stage_gap"].get_truncated_dist_mean(),
-                "parallelism": self.distribution[stage_name]["parallelism"].get_truncated_dist_mean(),
-                "prompt": self.distribution[stage_name]["prompt"].get_truncated_dist_mean(),
-                "decode": self.distribution[stage_name]["decode"].get_truncated_dist_mean(),
-                "loops": self.distribution[stage_name]["loops"].get_truncated_dist_mean(),
-                "next_stage": self.distribution[stage_name]["next_stage"],
-            } for stage_name in self.model_dict["stage_list"]
-        }
-        logger.info(f"AppPredictor {app_name} initialized. Prior distribution: {prior_distribution}")
+        # prior_distribution = {
+        #     stage_name: {
+        #         "stage_gap": self.distribution[stage_name]["stage_gap"].get_mean(),
+        #         "parallelism": self.distribution[stage_name]["parallelism"].get_mean(),
+        #         "prompt": self.distribution[stage_name]["prompt"].get_mean(),
+        #         "decode": self.distribution[stage_name]["decode"].get_mean(),
+        #         "loops": self.distribution[stage_name]["loops"].get_mean(),
+        #         "next_stage": self.distribution[stage_name]["next_stage"],
+        #     } for stage_name in self.model_dict["stage_list"]
+        # }
+        # logger.info(f"AppPredictor {app_name} initialized. Prior distribution: {prior_distribution}")
 
     def set_seed(self, seed):
         random.seed(seed)
         np.random.seed(seed)
-
-    def get_first_stage(self) -> str:
-        return self.model_dict["stage_list"][0]
-
-    def predict_next_stage(self, current_stage_name: str, set_available_stage=False) -> Tuple[str, float]:
-        next_stages = self.model_dict[current_stage_name]["next_stages"]
-        next_stages_list = list(next_stages.keys())
-        probability_list = list(next_stage["probability"] for next_stage in next_stages.values())
-
-        if not set_available_stage:
-            next_stages_list += [None]
-            probability_list += [1 - sum(probability_list)]
-        next_stage = random.choices(next_stages_list, probability_list)[0]
-        gap_time = 0
-        if next_stage:
-            args = next_stages[next_stage]["gap_time"]
-            gap_time = int(skew_normal_mean(args[2], args[3], args[4])) * 1000
-        if set_available_stage and next_stage is None:
-            raise ValueError("No available stage.")
-        return next_stage, gap_time
-
-    def get_parallelism_mean(self, stage_name: str, truncation_value: float = 0) -> float:
-        return self.distribution[stage_name]["parallelism"].get_truncated_dist_mean(truncation_value)
-
-    def get_prompt_mean(self, stage_name: str, truncation_value: float = 0) -> float:
-        return self.distribution[stage_name]["prompt"].get_truncated_dist_mean(truncation_value)
-
-    def get_decode_mean(self, stage_name: str, truncation_value: float = 0) -> float:
-        return self.distribution[stage_name]["decode"].get_truncated_dist_mean(truncation_value)
 
     def get_following_stage_info_with_bayesian(
             self,
             cur_stage: str,
             looped: Dict,
             evidence: Dict = None,
+            use_mean: bool = False,
     ) -> Tuple[float, float, float]:
         if evidence is None:
             evidence = {}
@@ -178,7 +189,8 @@ class AppPredictor:
                     continue
 
             stage_looped = looped.get(stage_name, 0)
-            loops = int(self.distribution[stage_name]["loops"].get_truncated_dist_mean(stage_looped) - stage_looped)
+            loops = int(self.distribution[stage_name]["loops"].get_mean(
+                stage_looped, set_mode="mean" if use_mean else "gittins") - stage_looped)
             # logger.info(f"Stage: {stage_name}, has_looped: {stage_looped}, remaining_loop: {loops}")
             if loops == 0:
                 continue

@@ -447,13 +447,10 @@ class SequenceGroup:
         encoder_seq: Optional[Sequence] = None,
     ) -> None:
         self.request_id = request_id # app_name--coinf_id--req_id
-        self.app_name = None
-        self.coinf_id = request_id
-        if '--' in request_id:
-            splited_id = request_id.split('--')
-            if len(splited_id) == 3:
-                self.app_name = splited_id[0]
-                self.coinf_id = f"{splited_id[0]}--{splited_id[1]}"
+        splited_id = request_id.split('--')
+        assert '--' in request_id and len(splited_id) == 3, "Wrong request format!"
+        self.app_name = splited_id[0]
+        self.coinf_id = f"{splited_id[0]}--{splited_id[1]}"
         self.seqs_dict = {seq.seq_id: seq for seq in seqs}
         self.sampling_params = sampling_params
         self.metrics = RequestMetrics(arrival_time=arrival_time,

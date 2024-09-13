@@ -95,6 +95,7 @@ class EngineArgs:
     # coinference
     coinference_scheduler: bool = False
     proactive_reservation: bool = False
+    scheduling_policy: str = "Hermes"
 
     def __post_init__(self):
         if self.tokenizer is None:
@@ -557,6 +558,12 @@ class EngineArgs:
             "--proactive-reservation",
             action='store_true',
             help="if use proactive reservation")
+        parser.add_argument(
+            "--scheduling-policy",
+            type=str,
+            default=EngineArgs.scheduling_policy,
+            choices=["Hermes", "Idealized-SRJF", "Mean-SRJF", "Request-Level-FIFO", "CoInference-Level-FIFO"],
+            help="if use proactive reservation")
 
         return parser
 
@@ -627,6 +634,7 @@ class EngineArgs:
             embedding_mode=model_config.embedding_mode,
             coinference_scheduler=self.coinference_scheduler,
             proactive_reservation=self.proactive_reservation,
+            scheduling_policy=self.scheduling_policy,
         )
         lora_config = LoRAConfig(
             max_lora_rank=self.max_lora_rank,

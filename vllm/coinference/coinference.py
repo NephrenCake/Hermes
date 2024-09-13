@@ -68,7 +68,7 @@ class CoInferenceStage:
     def get_all_decode_tokens(self) -> List:
         return [sum(seq.get_output_len() for seq in seq_group.get_seqs()) for seq_group in self.parallel_requests]
 
-    def get_remaining_tokens(self, predictor: AppPredictor) -> Tuple[float, float]:
+    def get_remaining_tokens(self, predictor: AppPredictor, use_mean: bool = False) -> Tuple[float, float]:
         if self.hint is not None:
             fin_prompt_tokens, fin_decode_tokens = 0, 0
             for seq_group in self.parallel_requests:
@@ -93,12 +93,10 @@ class CoInferenceStage:
             predict_prompt_tokens += len(seq_group.prompt_token_ids) - sq_prompt_tokens
             # 2. Decode is unknown. Use truncated distribution.
             sq_decode_tokens = sum(seq.get_output_len() for seq in seq_group.get_seqs())
-            predict_decode_tokens += predictor.get_decode_mean(self.stage_name, sq_decode_tokens) - sq_decode_tokens
+            predict_decode_tokens += predictor.distribution[self.stage_name]["decode"].get_mean(
+                sq_decode_tokens, set_mode="mean" if use_mean else "gittins") - sq_decode_tokens
 
         return predict_prompt_tokens, predict_decode_tokens
-
-    def __str__(self):
-        return f"{self.parallel_requests}"
 
 
 class CoInference:
@@ -135,7 +133,7 @@ class CoInference:
     def create(self, coinference_info_dict: Optional[Dict]):
         raise NotImplementedError
 
-    def add_stage(self, stage_name):
+    def add_stage(self, stage_name, use_mean):
         if self.app_name is None:  # support online request level fifo, don't suggest
             self.stages.append(CoInferenceStage())
             return
@@ -169,6 +167,7 @@ class CoInference:
             cur_stage=stage_name,
             looped=looped,
             evidence=evidence,
+            use_mean=use_mean,
         )
         self.following_stages_info = {
             "prompt_tokens": prompt_tokens,
@@ -178,9 +177,9 @@ class CoInference:
         # logger.info(f"CoInfer {self.coinf_id} starts a new stage: {stage_name}, "
         #             f"following_stages_info: {self.following_stages_info}.")
 
-    def add_req(self, seq_group: SequenceGroup, stage_name: str):
+    def add_req(self, seq_group: SequenceGroup, stage_name: str, use_mean):
         if self.current_stage_id == len(self.stages):
-            self.add_stage(stage_name)
+            self.add_stage(stage_name, use_mean)
             self.finish_time = None
         self.stages[self.current_stage_id].add_req(seq_group)
         seq_group.metrics.coinf_arrival_time = self.arrival_time
@@ -211,6 +210,7 @@ class CoInference:
             self,
             prefill_time_per_token: float,
             decode_time_per_token: float,
+            use_mean: bool = False,
     ):
         """
         Estimate the avg number of remaining tokens in the condition of the finished tokens
@@ -221,7 +221,7 @@ class CoInference:
             self.remaining_time = 0  # ms
             return
 
-        prompt_tokens, decode_tokens = self.current_stage.get_remaining_tokens(self.predictor)
+        prompt_tokens, decode_tokens = self.current_stage.get_remaining_tokens(self.predictor, use_mean)
         prompt_tokens += self.following_stages_info["prompt_tokens"]
         decode_tokens += self.following_stages_info["decode_tokens"]
 
@@ -231,16 +231,14 @@ class CoInference:
                 prompt_tokens += stage_prompt_tokens
                 decode_tokens += stage_decode_tokens
 
-        self.remaining_time = (prefill_time_per_token * prompt_tokens + decode_time_per_token * decode_tokens
-                               + self.following_stages_info["stage_gap"])
+        # self.remaining_time = (prefill_time_per_token * prompt_tokens + decode_time_per_token * decode_tokens
+        #                        + self.following_stages_info["stage_gap"])
+        self.remaining_time = prefill_time_per_token * prompt_tokens + decode_time_per_token * decode_tokens
 
         # logger.info(f"coinf_id: {self.coinf_id}, stages {self.current_stage_id + 1}/{len(self.stages)}, "
         #             f"prefill_token {prompt_tokens}, decode_token {decode_tokens}.")
 
     def update_online_profiling(self):
-        if self.app_name is None or self.hint is not None:
-            return
-
         # timer = time.time()
         for stage in self.stages:
             prompt_tokens: List = stage.get_all_prompt_tokens()

@@ -8,16 +8,16 @@ from vllm.coinference.coinference import CoInference
 class Policy:
 
     def get_priority(
-        self,
-        now: float,
-        seq_group: SequenceGroup,
+            self,
+            now: float,
+            seq_group: SequenceGroup,
     ) -> float:
         raise NotImplementedError
 
     def sort_by_priority(
-        self,
-        now: float,
-        seq_groups: Deque[SequenceGroup],
+            self,
+            now: float,
+            seq_groups: Deque[SequenceGroup],
     ) -> Deque[SequenceGroup]:
         return deque(
             sorted(
@@ -30,65 +30,65 @@ class Policy:
 class FCFS(Policy):
 
     def get_priority(
-        self,
-        now: float,
-        seq_group: SequenceGroup,
+            self,
+            now: float,
+            seq_group: SequenceGroup,
     ) -> float:
         return now - seq_group.metrics.arrival_time
-    
-    
+
+
 class CoInferencePolicy:
     def get_priority(
-        self,
-        now: float,
-        coinference: CoInference,
+            self,
+            now: float,
+            coinference: CoInference,
     ) -> float:
         raise NotImplementedError
 
     def sort_by_priority(
-        self,
-        now: float,
-        coinferences: List[CoInference],
+            self,
+            now: float,
+            coinferences: List[CoInference],
     ) -> List[CoInference]:
         return sorted(
-                coinferences,
-                key=lambda coinference: self.get_priority(now, coinference),
-                reverse=True,
-            )
-    
+            coinferences,
+            key=lambda coinference: self.get_priority(now, coinference),
+            reverse=True,
+        )
+
+
 class CoInferenceFCFS(CoInferencePolicy):
     def get_priority(
-        self,
-        now: float,
-        coinference: CoInference,
+            self,
+            now: float,
+            coinference: CoInference,
     ) -> float:
         return now - coinference.arrival_time
-    
+
+
 class CoInferenceSRCF(CoInferencePolicy):
     def __init__(
-        self,
+            self,
     ) -> None:
         super().__init__()
-    
+
     def sort_by_priority(
-        self,
-        now: float,
-        coinferences: List[CoInference],
+            self,
+            now: float,
+            coinferences: List[CoInference],
     ) -> List[CoInference]:
-        if coinferences[0].predictor is None:
-            return sorted(
-                coinferences,
-                key=lambda coinference: now - coinference.arrival_time,
-                reverse=True,
-            )
         return sorted(coinferences)
-    
+
 
 class PolicyFactory:
-
-    _POLICY_REGISTRY = {'fcfs': FCFS,
-                        'coinf_fcfs': CoInferenceFCFS,
-                        'coinf_srcf': CoInferenceSRCF}
+    _POLICY_REGISTRY = {
+        'fcfs': FCFS,
+        'Hermes': CoInferenceSRCF,  # use distribution
+        'Idealized-SRJF': CoInferenceSRCF,  # use hint
+        'Mean-SRJF': CoInferenceSRCF,  # use average remaining time
+        'Request-Level-FIFO': CoInferenceFCFS,  # each request is a co-infer
+        'CoInference-Level-FIFO': CoInferenceFCFS,
+    }
 
     @classmethod
     def get_policy(cls, policy_name: str, **kwargs) -> Union[Policy, CoInferencePolicy]:

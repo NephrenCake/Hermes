@@ -167,6 +167,7 @@ class CoInferenceScheduler:
         self.num_swapped_seq_groups = 0
 
         self.proactive_reservation = scheduler_config.proactive_reservation
+        self.scheduling_policy = scheduler_config.scheduling_policy
 
         self.prefill_recorder = TimeRecorder(record_window_size=10, default_time_per_token=0.1)
         self.decode_recorder = TimeRecorder(record_window_size=50, default_time_per_token=3)
@@ -254,16 +255,14 @@ class CoInferenceScheduler:
         return self._schedule_default()
 
     def _schedule_default(self) -> SchedulerOutputs:
-        # sort coinference by priority
         now = time.time()
 
-        policy_name = "coinf_fcfs"
-        policy_name = "coinf_srcf"
-        policy: CoInferencePolicy = PolicyFactory.get_policy(policy_name=policy_name)
-        if policy_name == "coinf_srcf" and self.coinferences_queue[0].predictor is not None:
+        policy: CoInferencePolicy = PolicyFactory.get_policy(policy_name=self.scheduling_policy)
+        if self.scheduling_policy in ["Hermes", "Idealized-SRJF", "Mean-SRJF"]:
             for coinf in self.coinferences_dict.values():
                 coinf.estimate_remaining_time(self.prefill_recorder.time_per_token,
-                                              self.decode_recorder.time_per_token)
+                                              self.decode_recorder.time_per_token,
+                                              use_mean=self.scheduling_policy == "Mean-SRJF")
         self.coinferences_queue = policy.sort_by_priority(now, self.coinferences_queue)
         # logger.info(f"{self.coinferences_queue}")
 
@@ -495,18 +494,26 @@ class CoInferenceScheduler:
         coinference_info_dict: Optional[Dict],
     ) -> int:
         self.free_finished_seq_groups()
+
+        hint = coinference_info_dict["hint"] if self.scheduling_policy == "Idealized-SRJF" else None
+        stage_name = coinference_info_dict["stage_name"]
+
+        if self.scheduling_policy == "Request-Level-FIFO":
+            seq_group.app_name = None
+            seq_group.coinf_id = seq_group.request_id
+
         # logger.info(f"Add seq_group {seq_group.request_id}, coinference_info_dict: {coinference_info_dict}")
         if seq_group.coinf_id not in self.coinferences_dict:
             new_coinf = create_coinference(seq_group.app_name,
                                            seq_group.coinf_id,
                                            seq_group.metrics.arrival_time,
-                                           coinference_info_dict["hint"])
+                                           hint)
             self.coinferences_dict[seq_group.coinf_id] = new_coinf
             self.coinferences_queue.append(new_coinf)
 
             # logger.info(f"Add coinference {seq_group.coinf_id} to scheduler")
 
-        self.coinferences_dict[seq_group.coinf_id].add_req(seq_group, coinference_info_dict["stage_name"])
+        self.coinferences_dict[seq_group.coinf_id].add_req(seq_group, stage_name, self.scheduling_policy == "Mean-SRJF")
 
     def abort_seq_group(self, request_id: Union[str, Iterable[str]]):
         # TODO: implement
@@ -555,7 +562,8 @@ class CoInferenceScheduler:
 
         for coinf_id in finished_coinf:
             coinf = self.coinferences_dict.pop(coinf_id)
-            coinf.update_online_profiling()
+            if self.scheduling_policy in ["Hermes", "Mean-SRJF"]:
+                coinf.update_online_profiling()
             self.coinferences_queue.remove(coinf)
 
     def _allocate_and_set_running(self, seq_group: SequenceGroup) -> None:
