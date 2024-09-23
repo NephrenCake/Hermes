@@ -29,6 +29,7 @@ class Distribution:
 
         self.bin_edges = []
         self.counts = []
+        self.cdf = []
         self.suffix_mean = {}
         self.gittins = {}
         self.mode = "gittins"
@@ -47,6 +48,7 @@ class Distribution:
         suffix_sum = np.cumsum(bin_sum[::-1])[::-1].tolist() + [0]
         suffix_cnt = np.cumsum(counts[::-1])[::-1].tolist() + [0]
         self.bin_edges, self.counts = bin_edges, counts
+        self.cdf = np.cumsum(counts) / len(self.samples)
         self.suffix_mean = {
             v: suffix_sum[i] / suffix_cnt[i]
             for i, v in enumerate(bin_edges[:-1])
@@ -96,6 +98,14 @@ class Distribution:
         else:
             raise ValueError(f"Unknown mode: {self.mode}")
 
+    def get_cdf(self, request_value: float) -> float:
+        if request_value < self.bin_edges[0]:
+            return 0
+        if request_value >= self.bin_edges[-1]:
+            return 1
+        idx = bisect_right(self.bin_edges[:-1], request_value) - 1
+        return self.cdf[idx]
+
     def get_posterior_mean_with_bayesian(self, new_samples: List[float], weight: float = 1) -> float:
         likelihoods, weighted_samples = [], []
 
@@ -128,12 +138,13 @@ class AppPredictor:
             app_name: str,
             window_size: int = 100,
     ) -> None:
+        self.app_name = app_name
         with open(os.path.join(os.path.dirname(__file__), "task_models_skewnorm.json"), 'r') as f:
             self.model_dict = json.load(f)[app_name]
-        self.distribution: Dict = {
+        self.distribution: Dict[str, Dict[str, Distribution]] = {
             stage_name: {
                 "stage_gap": Distribution(window_size).add_samples(
-                    [i * 1000 for i in self.model_dict[stage_name]["stage_gap"]]  # s -> ms
+                    [i for i in self.model_dict[stage_name]["stage_gap"]]  # ms
                 ).update_cache(),
                 "parallelism": Distribution(window_size).add_samples(
                     self.model_dict[stage_name]["parallelism"]
@@ -165,6 +176,23 @@ class AppPredictor:
         #     } for stage_name in self.model_dict["stage_list"]
         # }
         # logger.info(f"AppPredictor {app_name} initialized. Prior distribution: {prior_distribution}")
+
+    def save_profiling(self):
+        logger.info(f"AppPredictor {self.app_name} saved.")
+        profiling_distribution = {
+            stage_name: {
+                "stage_gap": self.distribution[stage_name]["stage_gap"].samples,
+                "parallelism": self.distribution[stage_name]["parallelism"].samples,
+                "prompt": self.distribution[stage_name]["prompt"].samples,
+                "decode": self.distribution[stage_name]["decode"].samples,
+                "loops": self.distribution[stage_name]["loops"].samples,
+                "next_stage": self.distribution[stage_name]["next_stage"],
+            } for stage_name in self.model_dict["stage_list"]
+        }
+        profiling_distribution["stage_list"] = self.model_dict["stage_list"]
+        json_file = f"{self.app_name}.json"
+        with open(json_file, 'w') as f:
+            json.dump(profiling_distribution, f)
 
     def set_seed(self, seed):
         random.seed(seed)
@@ -208,6 +236,18 @@ class AppPredictor:
             ) * loops
 
         return prompt_tokens, decode_tokens, stage_gap
+
+    def get_next_stage_gap_cdf(self, stage_name, request_val) -> float:
+        request_val *= 1000  # s -> ms
+        # 有loop返回自身
+        if self.distribution[stage_name]["loops"].get_mean() > 1:
+            return self.distribution[stage_name]["stage_gap"].get_cdf(request_val)
+        # 没loop返回下一个
+        idx = self.model_dict["stage_list"].index(stage_name)
+        if idx == len(self.model_dict["stage_list"]) - 1:
+            return 1
+        next_stage = self.model_dict["stage_list"][idx + 1]
+        return self.distribution[next_stage]["stage_gap"].get_cdf(request_val)
 
 
 APPLICATION = {

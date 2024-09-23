@@ -96,6 +96,7 @@ class EngineArgs:
     coinference_scheduler: bool = False
     proactive_reservation: bool = False
     scheduling_policy: str = "Hermes"
+    lora_policy: str = "Hermes"
 
     def __post_init__(self):
         if self.tokenizer is None:
@@ -563,7 +564,14 @@ class EngineArgs:
             type=str,
             default=EngineArgs.scheduling_policy,
             choices=["Hermes", "Idealized-SRJF", "Mean-SRJF", "Request-Level-FIFO", "CoInference-Level-FIFO"],
-            help="if use proactive reservation")
+            help="use which scheduling policy")
+        parser.add_argument(
+            "--lora-policy",
+            type=str,
+            default=EngineArgs.lora_policy,
+            choices=["Hermes", "LRU", "EPWQ"],
+            # "Hermes", "LRU", "Evict/Prefetch on Waiting Queue", "No-Cache", "Full-Cache"
+            help="use which lora management")
 
         return parser
 
@@ -635,6 +643,7 @@ class EngineArgs:
             coinference_scheduler=self.coinference_scheduler,
             proactive_reservation=self.proactive_reservation,
             scheduling_policy=self.scheduling_policy,
+            lora_policy=self.lora_policy,
         )
         lora_config = LoRAConfig(
             max_lora_rank=self.max_lora_rank,

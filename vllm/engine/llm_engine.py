@@ -280,11 +280,12 @@ class LLMEngine:
         # NOTE: the cache_config here have been updated with the numbers of
         # GPU and CPU blocks, which are profiled in the distributed executor.
         if self.scheduler_config.coinference_scheduler:
-            self.scheduler = CoInferenceScheduler(scheduler_config, cache_config)
+            self.scheduler = CoInferenceScheduler(scheduler_config, cache_config, lora_config)
         else:
             self.scheduler = Scheduler(scheduler_config, cache_config, lora_config)
 
         # Metric Logging.
+        self.timer = None
         if self.log_stats:
             self.stat_logger = StatLogger(
                 local_interval=_LOCAL_LOGGING_INTERVAL_SEC,
@@ -598,7 +599,8 @@ class LLMEngine:
                                   seqs=[seq],
                                   arrival_time=arrival_time,
                                   sampling_params=sampling_params,
-                                  lora_request=lora_request)
+                                  lora_request=lora_request,
+                                  coinference_format=self.scheduler_config.coinference_scheduler)
 
         return seq_group
 
@@ -618,7 +620,8 @@ class LLMEngine:
                                   seqs=[seq],
                                   arrival_time=arrival_time,
                                   lora_request=lora_request,
-                                  pooling_params=pooling_params)
+                                  pooling_params=pooling_params,
+                                  coinference_format=self.scheduler_config.coinference_scheduler)
         return seq_group
 
     def abort_request(self, request_id: Union[str, Iterable[str]]) -> None:
@@ -769,11 +772,17 @@ class LLMEngine:
             >>>     if not (engine.has_unfinished_requests() or example_inputs):
             >>>         break
         """
-        step_start_time = time.time()
+        inter_step_time = 0 if self.timer is None else time.time() - self.timer
+        self.timer = time.time()
+
         seq_group_metadata_list, scheduler_outputs = self.scheduler.schedule()
-        schedule_time = time.time() - step_start_time
+
+        # logger.info(f"seq_group_metadata_list: {seq_group_metadata_list}, scheduler_outputs: {scheduler_outputs}")
+        schedule_time = time.time() - self.timer
+        self.timer = time.time()
 
         if not scheduler_outputs.is_empty():
+            # Execute the model.
             execute_model_req = ExecuteModelRequest(
                 seq_group_metadata_list=seq_group_metadata_list,
                 blocks_to_swap_in=scheduler_outputs.blocks_to_swap_in,
@@ -781,18 +790,32 @@ class LLMEngine:
                 blocks_to_copy=scheduler_outputs.blocks_to_copy,
                 num_lookahead_slots=scheduler_outputs.num_lookahead_slots,
                 running_queue_size=scheduler_outputs.running_queue_size,
+                advised_lora=scheduler_outputs.advised_lora,
             )
-            output = self.model_executor.execute_model(
+            output, swap_time, execute_time = self.model_executor.execute_model(
                 execute_model_req=execute_model_req)
         else:
-            output = []
+            output, swap_time, execute_time = [], 0, 0
 
         request_outputs = self._process_model_outputs(
             output, scheduler_outputs.scheduled_seq_groups,
             scheduler_outputs.ignored_seq_groups, seq_group_metadata_list)
 
+        infer_time = time.time() - self.timer
+        comm_time = infer_time - swap_time - execute_time
+        cur_step_time = schedule_time + infer_time
+        self.timer = time.time()
+
         # Log stats.
-        self.do_log_stats(scheduler_outputs, output, schedule_time)
+        runtime_inspect = {
+            "inter_step_time": inter_step_time * 1000,
+            "schedule_time": schedule_time * 1000,
+            "comm_time": comm_time * 1000,
+            "swap_time": swap_time * 1000,
+            "execute_time": execute_time * 1000,
+            "cur_step_time": cur_step_time * 1000,
+        }
+        self.do_log_stats(scheduler_outputs, output, runtime_inspect)
 
         if not request_outputs:
             # Stop the execute model loop in parallel workers until there are
@@ -802,16 +825,21 @@ class LLMEngine:
             # queued control plane messages, such as add/remove lora adapters.
             self.model_executor.stop_remote_worker_execution_loop()
 
-        step_time = (time.time() - step_start_time)*1000
         is_prefill = scheduler_outputs.num_prefill_groups > 0
         num_tokens = scheduler_outputs.num_batched_tokens
         if self.scheduler_config.coinference_scheduler:
-            self.scheduler.record_step_time(num_tokens, step_time, is_prefill)
-        logger.info("num_prefill_groups: %d, running_queue_size: %d, cost %.2f ms", 
-                    scheduler_outputs.num_prefill_groups,
-                    scheduler_outputs.running_queue_size,
-                    step_time)
-        
+            self.scheduler.record_step_time(num_tokens, cur_step_time * 1000, is_prefill)
+        # logger.info(
+        #     f"num_prefill: {scheduler_outputs.num_prefill_groups}, "
+        #     f"num_decode: {len(scheduler_outputs.scheduled_seq_groups) - scheduler_outputs.num_prefill_groups}, "
+        #     f"num_tokens: {num_tokens}. "
+        #     # f"inter_step: {(inter_step_time * 1000):.2f}ms, "
+        #     f"schedule: {(schedule_time * 1000):.2f}ms({(schedule_time / cur_step_time * 100):.2f}%), "
+        #     f"comm: {(comm_time * 1000):.2f}ms({(comm_time / cur_step_time * 100):.2f}%), "
+        #     f"swap: {(swap_time * 1000):.2f}ms({(swap_time / cur_step_time * 100):.2f}%), "
+        #     f"execute: {(execute_time * 1000):.2f}ms({(execute_time / cur_step_time * 100):.2f}%), "
+        #     f"cur_step: {(cur_step_time * 1000):.2f}ms"
+        # )
         return request_outputs
 
     def do_log_stats(

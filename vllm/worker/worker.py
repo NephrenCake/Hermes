@@ -15,12 +15,16 @@ from vllm.distributed import (broadcast_tensor_dict,
                               init_distributed_environment,
                               set_custom_all_reduce)
 from vllm.lora.request import LoRARequest
+from vllm.lora.worker_manager import LRUCacheWorkerLoRAManagerWithPrefetch
 from vllm.model_executor import set_random_seed
 from vllm.sequence import ExecuteModelRequest, PoolerOutput, SamplerOutput
 from vllm.worker.cache_engine import CacheEngine
 from vllm.worker.embedding_model_runner import EmbeddingModelRunner
 from vllm.worker.model_runner import ModelRunner
 from vllm.worker.worker_base import WorkerBase
+from vllm.logger import init_logger
+
+logger = init_logger(__name__)
 
 
 class Worker(WorkerBase):
@@ -222,11 +226,44 @@ class Worker(WorkerBase):
         if blocks_to_copy.numel() > 0:
             self.cache_engine.copy(blocks_to_copy)
 
+    def do_lora_prefetch(self, execute_model_req):
+        if not self.lora_config:
+            return
+
+        if not isinstance(self.model_runner.lora_manager, LRUCacheWorkerLoRAManagerWithPrefetch):
+            return
+
+        timer = time.time()
+        assert execute_model_req.advised_lora is not None
+        assert len(execute_model_req.advised_lora) <= self.model_runner.lora_config.max_cpu_loras, \
+            (f"Number of advised LoRAs ({len(execute_model_req.advised_lora)}) exceeds the "
+             f"maximum number of CPU LoRAs ({self.model_runner.lora_config.max_cpu_loras}).")
+        advised_lora_map = {i.lora_int_id: i for i in execute_model_req.advised_lora}
+
+        loading_lora = {i for i, f in self.model_runner.lora_manager.io_futures.items() if not f.done()}
+        exist_lora = self.list_loras() | loading_lora
+        lora_to_remove = exist_lora - advised_lora_map.keys()
+        lora_to_add = advised_lora_map.keys() - exist_lora
+
+        # logger.info(f"[LoRA Debug] > "
+        #             f"exist_lora: {self.list_loras()} + {loading_lora}, "
+        #             f"advised_lora: {[i for i in advised_lora_map.keys()]}, "
+        #             f"lora_to_remove: {lora_to_remove}, lora_to_add: {lora_to_add}")
+
+        for lora_id in lora_to_remove:
+            self.remove_lora(lora_id)  # remove all unnecessary loras before triggering LRU
+        for lora_id in lora_to_add:
+            self.add_lora(advised_lora_map[lora_id])
+        pre_lora_time = time.time() - timer
+        # logger.info(f"Pre Lora Time: {pre_lora_time * 1000:.2f} ms")
+
     @torch.inference_mode()
     def execute_model(
         self,
         execute_model_req: Optional[ExecuteModelRequest] = None
     ) -> List[Union[SamplerOutput, PoolerOutput]]:
+        self.do_lora_prefetch(execute_model_req)  # trigger processes to (pre)fetch loras
+
         if not self.is_driver_worker:
             self._execute_model_non_driver()
             return []

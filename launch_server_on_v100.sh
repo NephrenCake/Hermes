@@ -7,7 +7,7 @@ python -m vllm.entrypoints.openai.api_server \
   --swap-space 64 \
   --max-model-len 16000 \
   --coinference-scheduler \
-  --scheduling-policy Idealized-SRJF \
+  --scheduling-policy Hermes \
   --chat-template ./examples/template_alpaca.jinja
 #  --proactive-reservation \
 

@@ -15,7 +15,7 @@ from vllm.distributed.communication_op import graph_capture
 from vllm.logger import init_logger
 from vllm.lora.layers import LoRAMapping
 from vllm.lora.request import LoRARequest
-from vllm.lora.worker_manager import LRUCacheWorkerLoRAManager
+from vllm.lora.worker_manager import LRUCacheWorkerLoRAManagerWithPrefetch, LRUCacheWorkerLoRAManager
 from vllm.model_executor import SamplingMetadata
 from vllm.model_executor.model_loader import get_model
 from vllm.sampling_params import SamplingParams
@@ -127,7 +127,7 @@ class ModelRunner:
         # Set if the backend is flashinfer.
         self.flashinfer_workspace_buffer: torch.Tensor
         # Set after load_model.
-        self.lora_manager: Optional[LRUCacheWorkerLoRAManager] = None
+        self.lora_manager: Optional[LRUCacheWorkerLoRAManagerWithPrefetch, LRUCacheWorkerLoRAManager] = None
 
     def load_model(self) -> None:
         with CudaMemoryProfiler() as m:
@@ -155,17 +155,33 @@ class ModelRunner:
                 "embedding_modules"), "Model does not have embedding_modules"
             assert hasattr(self.model, "embedding_padding_modules"
                            ), "Model does not have embedding_padding_modules"
-            self.lora_manager = LRUCacheWorkerLoRAManager(
-                self.scheduler_config.max_num_seqs,
-                self.scheduler_config.max_num_batched_tokens,
-                self.vocab_size,
-                self.lora_config,
-                self.device,
-                self.model.embedding_modules,
-                self.model.embedding_padding_modules,
-                max_position_embeddings=self.model.config.
-                max_position_embeddings,
-            )
+            logger.info("Using LoRA with %s policy", self.scheduler_config.lora_policy)
+            if self.scheduler_config.lora_policy == "LRU":
+                self.lora_manager = LRUCacheWorkerLoRAManager(
+                    self.scheduler_config.max_num_seqs,
+                    self.scheduler_config.max_num_batched_tokens,
+                    self.vocab_size,
+                    self.lora_config,
+                    self.device,
+                    self.model.embedding_modules,
+                    self.model.embedding_padding_modules,
+                    max_position_embeddings=self.model.config.
+                    max_position_embeddings,
+                )
+            elif self.scheduler_config.lora_policy in ["Hermes", "EPWQ"]:
+                self.lora_manager = LRUCacheWorkerLoRAManagerWithPrefetch(
+                    self.scheduler_config.max_num_seqs,
+                    self.scheduler_config.max_num_batched_tokens,
+                    self.vocab_size,
+                    self.lora_config,
+                    self.device,
+                    self.model.embedding_modules,
+                    self.model.embedding_padding_modules,
+                    max_position_embeddings=self.model.config.
+                    max_position_embeddings,
+                )
+            else:
+                assert False, f"Unsupported LoRA policy: {self.scheduler_config.lora_policy}"
             self.model = self.lora_manager.create_lora_manager(self.model)
 
         if self.kv_cache_dtype == "fp8" and is_hip():

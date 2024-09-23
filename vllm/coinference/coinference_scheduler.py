@@ -15,7 +15,7 @@ from vllm.logger import init_logger
 from vllm.lora.request import LoRARequest
 from vllm.sequence import (Sequence, SequenceData, SequenceGroup,
                            SequenceGroupMetadata, SequenceStatus)
-from vllm.coinference.coinference import CoInference
+from vllm.coinference.coinference import CoInference, FinishType
 from vllm.coinference.coinference_creator import create_coinference
 from vllm.utils import Counter
 
@@ -31,6 +31,7 @@ class SplitSeqGroupOutputs:
     swapout_queue: List[SequenceGroup]
     swapped_queue: List[SequenceGroup]
     waiting_queue: List[SequenceGroup]
+    curr_loras: Set[LoRARequest]
 
 
 @dataclass
@@ -111,10 +112,10 @@ class TokenBudget:
 
 class TimeRecorder:
     def __init__(
-        self,
-        record_window_size: int,
-        default_time_per_token: float = 0.1,
-        ema_alpha: float = 0.7,
+            self,
+            record_window_size: int,
+            default_time_per_token: float = 0.1,
+            ema_alpha: float = 0.7,
     ) -> None:
         ''' ms '''
         self.time_per_token = default_time_per_token
@@ -124,28 +125,29 @@ class TimeRecorder:
         self.ema_alpha = ema_alpha
 
     def update(
-        self,
-        num_tokens: int,
-        time: float
+            self,
+            num_tokens: int,
+            time: float
     ):
         self.time_recorder.append(time)
         self.num_tokens_recorder.append(num_tokens)
         if len(self.num_tokens_recorder) >= self.record_window_size:
-            time_per_token = sum(self.time_recorder)/sum(self.num_tokens_recorder)
+            time_per_token = sum(self.time_recorder) / sum(self.num_tokens_recorder)
             self.time_recorder = []
             self.num_tokens_recorder = []
             self.time_per_token = self.time_per_token * self.ema_alpha + time_per_token * (1 - self.ema_alpha)
 
 
-
 class CoInferenceScheduler:
     def __init__(
-        self,
-        scheduler_config: SchedulerConfig,
-        cache_config: CacheConfig,
+            self,
+            scheduler_config: SchedulerConfig,
+            cache_config: CacheConfig,
+            lora_config: Optional[LoRAConfig] = None,
     ) -> None:
         self.scheduler_config = scheduler_config
         self.cache_config = cache_config
+        self.lora_config = lora_config
 
         version = "v1"
         BlockSpaceManagerImpl = BlockSpaceManager.get_block_space_manager_class(
@@ -171,6 +173,10 @@ class CoInferenceScheduler:
 
         self.prefill_recorder = TimeRecorder(record_window_size=10, default_time_per_token=0.1)
         self.decode_recorder = TimeRecorder(record_window_size=50, default_time_per_token=3)
+
+    @property
+    def lora_enabled(self) -> bool:
+        return bool(self.lora_config)
 
     # schedule main function
     def schedule(self) -> Tuple[List[SequenceGroupMetadata], SchedulerOutputs]:
@@ -254,6 +260,45 @@ class CoInferenceScheduler:
     def _schedule(self) -> SchedulerOutputs:
         return self._schedule_default()
 
+    def get_lora_preference(self, schedule_prefill_outputs, schedule_decode_outputs, split_outputs, mode="Hermes"):
+        # scheduled_loras contains prefill/decode loras, curr_loras contains prefill+decode loras
+        scheduled_loras = {i.seq_group.lora_request for i in
+                           schedule_prefill_outputs.seq_groups + schedule_decode_outputs.seq_groups}
+        # logger.info(f"scheduled_loras: {scheduled_loras}, curr_loras: {split_outputs.curr_loras}")
+        lora_preference = list(scheduled_loras) + list(split_outputs.curr_loras - scheduled_loras)
+        advised_lora = set(lora_preference)
+        for coinf in self.coinferences_queue:
+            if len(advised_lora) == self.lora_config.max_cpu_loras:
+                break
+
+            if mode == "Hermes":
+                is_in_queue = coinf.finish_status == FinishType.UnFinished
+                if coinf.finish_status == FinishType.StageFinished:
+                    detected_gap = time.time() - coinf.finish_time
+                    prob1 = coinf.predictor.get_next_stage_gap_cdf(
+                        coinf.stages[-1].stage_name, detected_gap + 0.3)  # consider the transferring time
+                    prob2 = coinf.predictor.get_next_stage_gap_cdf(
+                        coinf.stages[-1].stage_name, detected_gap - 0.3)  # extra slack time
+                    is_in_queue |= 0.1 <= prob1 and prob2 <= 0.9
+                    # logger.info(f"Next Stage GAP CDF: {prob2:.2f}~{prob1:.2f}, detected_gap: {detected_gap * 1000}")
+            elif mode == "EPWQ":  # Evict/Prefetch on Waiting Queue
+                is_in_queue = coinf.finish_status == FinishType.UnFinished
+            else:
+                raise
+
+            if not is_in_queue:
+                continue
+
+            lr = coinf.stages[-1].parallel_requests[0].lora_request
+            if lr in advised_lora:
+                continue
+            advised_lora.add(lr)
+            lora_preference.append(lr)
+        # logger.info(f"lora_preference: {[lr.lora_int_id for lr in lora_preference]}, "
+        #             f"advised_lora: {[lr.lora_int_id for lr in advised_lora]}")
+
+        return lora_preference, advised_lora
+
     def _schedule_default(self) -> SchedulerOutputs:
         now = time.time()
 
@@ -264,7 +309,6 @@ class CoInferenceScheduler:
                                               self.decode_recorder.time_per_token,
                                               use_mean=self.scheduling_policy == "Mean-SRJF")
         self.coinferences_queue = policy.sort_by_priority(now, self.coinferences_queue)
-        # logger.info(f"{self.coinferences_queue}")
 
         # split coinference to running_queue and waiting_queue
         split_outputs = self.split_seq_groups(self.coinferences_queue)
@@ -281,8 +325,27 @@ class CoInferenceScheduler:
             schedule_decode_outputs = self.schedule_decode(split_outputs.decode_queue,
                                                            split_outputs.swapin_queue)
 
+        # get lora preference
+        advised_lora = set()
+        if self.lora_enabled and self.scheduler_config.lora_policy in ["Hermes", "EPWQ"]:
+            lora_preference, advised_lora = self.get_lora_preference(schedule_prefill_outputs,
+                                                                     schedule_decode_outputs,
+                                                                     split_outputs,
+                                                                     mode=self.scheduler_config.lora_policy)
+            # lora_preference_, advised_lora_ = self.get_lora_preference(schedule_prefill_outputs,
+            #                                                            schedule_decode_outputs,
+            #                                                            split_outputs,
+            #                                                            mode="EPWQ")
+            # logger.info(
+            #     f"[LoRA Debug] > "
+            #     f"Hermes: {[i.lora_int_id for i in lora_preference[:10]]}, "
+            #     # f"advised_lora: {[i.lora_int_id for i in advised_lora]}, "
+            #     f"WaitingQueue: {[i.lora_int_id for i in lora_preference_[:10]]}, "
+            # )
+
         # update num of seq_groups in different status
-        self.num_waiting_seq_groups = len(split_outputs.waiting_queue) + len(split_outputs.prefill_queue) - len(schedule_prefill_outputs.seq_groups)
+        self.num_waiting_seq_groups = (len(split_outputs.waiting_queue) + len(split_outputs.prefill_queue)
+                                       - len(schedule_prefill_outputs.seq_groups))
         self.num_running_seq_groups = len(split_outputs.decode_queue) + len(schedule_prefill_outputs.seq_groups)
         if schedule_prefill_outputs.is_empty():
             self.num_running_seq_groups += len(split_outputs.swapin_queue)
@@ -309,6 +372,7 @@ class CoInferenceScheduler:
             num_lookahead_slots=0,
             running_queue_size=0,
             preempted=len(split_outputs.swapout_queue),
+            advised_lora=advised_lora,
         )
 
     def split_seq_groups(self, coinferences_queue: List[CoInference]) -> SplitSeqGroupOutputs:
@@ -326,15 +390,21 @@ class CoInferenceScheduler:
         waiting_queue: List[SequenceGroup] = []
 
         budget_full = False
-        now = time.time()
-
+        curr_loras = set()
         for coinf in coinferences_queue:
             if coinf.current_stage_id == len(coinf.stages):
                 continue
             stage = coinf.current_stage
             seq_groups = [seq_group for seq_group in stage.parallel_requests if not seq_group.is_finished()]
             for seq_group in seq_groups:
-                if budget_full:
+                has_lora_slot = True
+                if self.lora_enabled:
+                    assert self.lora_config is not None
+                    new_lora_num = len(curr_loras) + (seq_group.lora_request not in curr_loras)
+                    if new_lora_num > self.lora_config.max_loras:
+                        has_lora_slot = False
+
+                if budget_full or not has_lora_slot:
                     if seq_group.is_running():
                         swapout_queue.append(seq_group)
                     elif seq_group.is_swapped():
@@ -342,6 +412,7 @@ class CoInferenceScheduler:
                     else:
                         waiting_queue.append(seq_group)
                     continue
+
                 if seq_group.is_prefill():
                     # prompt too long
                     prompt_limit = self.scheduler_config.max_model_len
@@ -373,14 +444,15 @@ class CoInferenceScheduler:
                             seq.status = SequenceStatus.FINISHED_IGNORED
                         ignored_seq_groups.append(seq_group)
                         continue
-
                 else:
                     num_new_seqs = seq_group.get_max_num_running_seqs()
                     num_new_blocks = len(self.block_manager._get_physical_blocks(seq_group))
                     num_new_blocks += seq_group.num_seqs(status=SequenceStatus.RUNNING)
                     num_new_blocks += seq_group.num_seqs(status=SequenceStatus.SWAPPED)
                     num_watermark_blocks = 0
-                if logicalbudget.can_schedule(num_new_seqs, num_new_blocks+num_watermark_blocks):
+
+                if logicalbudget.can_schedule(num_new_seqs, num_new_blocks + num_watermark_blocks):
+                    curr_loras.add(seq_group.lora_request)
                     logicalbudget.add_num_seqs(num_new_seqs)
                     logicalbudget.add_num_used_blocks(num_new_blocks)
                     if seq_group.is_prefill():
@@ -415,14 +487,14 @@ class CoInferenceScheduler:
             #                 budget_full = True
             #                 break
 
-
         return SplitSeqGroupOutputs(ignored_seq_groups=ignored_seq_groups,
                                     prefill_queue=prefill_queue,
                                     decode_queue=decode_queue,
                                     swapin_queue=swapin_queue,
                                     swapout_queue=swapout_queue,
                                     swapped_queue=swapped_queue,
-                                    waiting_queue=waiting_queue)
+                                    waiting_queue=waiting_queue,
+                                    curr_loras=curr_loras)
 
     def schedule_swapout(self, swapout_queue: List[SequenceGroup]) -> SchedulerSwapOutOutputs:
         blocks_to_swap_out: List[Tuple[int, int]] = []
@@ -447,16 +519,16 @@ class CoInferenceScheduler:
             self._allocate_and_set_running(seq_group)
             seq_groups.append(
                 ScheduledSequenceGroup(seq_group=seq_group,
-                                    token_chunk_size=num_new_tokens))
+                                       token_chunk_size=num_new_tokens))
             tokenbudget.add_num_batched_tokens(num_new_tokens)
 
         return SchedulerPrefillOutputs(seq_groups=seq_groups,
                                        num_batched_tokens=tokenbudget.num_batched_tokens)
 
     def schedule_decode(
-        self,
-        decode_queue: List[SequenceGroup],
-        swapin_queue: List[SequenceGroup],
+            self,
+            decode_queue: List[SequenceGroup],
+            swapin_queue: List[SequenceGroup],
     ) -> SchedulerDecodeOutputs:
         tokenbudget = TokenBudget(
             token_budget=self.scheduler_config.max_num_batched_tokens,
@@ -489,14 +561,15 @@ class CoInferenceScheduler:
 
     # other function
     def add_seq_group(
-        self,
-        seq_group: SequenceGroup,
-        coinference_info_dict: Optional[Dict],
+            self,
+            seq_group: SequenceGroup,
+            coinference_info_dict: Optional[Dict],
     ) -> int:
         self.free_finished_seq_groups()
 
-        hint = coinference_info_dict["hint"] if self.scheduling_policy == "Idealized-SRJF" else None
-        stage_name = coinference_info_dict["stage_name"]
+        coinference_info_dict = coinference_info_dict if coinference_info_dict is not None else {}
+        hint = coinference_info_dict.get("hint", None) if self.scheduling_policy == "Idealized-SRJF" else None
+        stage_name = coinference_info_dict.get("stage_name", None)
 
         if self.scheduling_policy == "Request-Level-FIFO":
             seq_group.app_name = None
@@ -518,7 +591,7 @@ class CoInferenceScheduler:
     def abort_seq_group(self, request_id: Union[str, Iterable[str]]):
         # TODO: implement
         if isinstance(request_id, str):
-            request_id = (request_id, )
+            request_id = (request_id,)
         request_ids = set(request_id)
         aborted_groups: List[SequenceGroup] = []
         for request_id in request_ids:
@@ -572,9 +645,9 @@ class CoInferenceScheduler:
             seq.status = SequenceStatus.RUNNING
 
     def _append_slots(
-        self,
-        seq_group: SequenceGroup,
-        blocks_to_copy: List[Tuple[int, int]],
+            self,
+            seq_group: SequenceGroup,
+            blocks_to_copy: List[Tuple[int, int]],
     ) -> None:
         """Appends new slots to the sequences in the given sequence group.
 
@@ -592,10 +665,10 @@ class CoInferenceScheduler:
             blocks_to_copy.extend(cows)
 
     def _preempt(
-        self,
-        seq_group: SequenceGroup,
-        blocks_to_swap_out: List[Tuple[int, int]],
-        preemption_mode: Optional[PreemptionMode] = None,
+            self,
+            seq_group: SequenceGroup,
+            blocks_to_swap_out: List[Tuple[int, int]],
+            preemption_mode: Optional[PreemptionMode] = None,
     ) -> PreemptionMode:
         # If preemption mode is not specified, we determine the mode as follows:
         # We use recomputation by default since it incurs lower overhead than
@@ -623,8 +696,8 @@ class CoInferenceScheduler:
         return preemption_mode
 
     def _preempt_by_recompute(
-        self,
-        seq_group: SequenceGroup,
+            self,
+            seq_group: SequenceGroup,
     ) -> None:
         seqs = seq_group.get_seqs(status=SequenceStatus.RUNNING)
         assert len(seqs) == 1
@@ -634,16 +707,16 @@ class CoInferenceScheduler:
             seq.reset_state_for_recompute()
 
     def _preempt_by_swap(
-        self,
-        seq_group: SequenceGroup,
-        blocks_to_swap_out: List[Tuple[int, int]],
+            self,
+            seq_group: SequenceGroup,
+            blocks_to_swap_out: List[Tuple[int, int]],
     ) -> None:
         self._swap_out(seq_group, blocks_to_swap_out)
 
     def _swap_in(
-        self,
-        seq_group: SequenceGroup,
-        blocks_to_swap_in: List[Tuple[int, int]],
+            self,
+            seq_group: SequenceGroup,
+            blocks_to_swap_in: List[Tuple[int, int]],
     ) -> None:
         mapping = self.block_manager.swap_in(seq_group)
         blocks_to_swap_in.extend(mapping)
@@ -651,9 +724,9 @@ class CoInferenceScheduler:
             seq.status = SequenceStatus.RUNNING
 
     def _swap_out(
-        self,
-        seq_group: SequenceGroup,
-        blocks_to_swap_out: List[Tuple[int, int]],
+            self,
+            seq_group: SequenceGroup,
+            blocks_to_swap_out: List[Tuple[int, int]],
     ) -> None:
         if not self.block_manager.can_swap_out(seq_group):
             # FIXME(woosuk): Abort the sequence group instead of aborting the

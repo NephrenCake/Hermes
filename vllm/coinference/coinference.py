@@ -180,6 +180,7 @@ class CoInference:
     def add_req(self, seq_group: SequenceGroup, stage_name: str, use_mean):
         if self.current_stage_id == len(self.stages):
             self.add_stage(stage_name, use_mean)
+            self.finish_status = FinishType.UnFinished
             self.finish_time = None
         self.stages[self.current_stage_id].add_req(seq_group)
         seq_group.metrics.coinf_arrival_time = self.arrival_time
@@ -217,11 +218,12 @@ class CoInference:
         1. Use known information (parallelism, truncated distribution for each seq_group) to predict current stage time.
         2. Use online profiling distribution and Bayesian to predict later stage time which is updated in add_stage().
         """
-        if self.current_stage_id == len(self.stages):
+        if self.current_stage_id == len(self.stages) and self.following_stages_info["prompt_tokens"] == 0:
             self.remaining_time = 0  # ms
             return
 
-        prompt_tokens, decode_tokens = self.current_stage.get_remaining_tokens(self.predictor, use_mean)
+        prompt_tokens, decode_tokens = self.current_stage.get_remaining_tokens(self.predictor, use_mean) \
+            if self.current_stage_id < len(self.stages) else (0, 0)
         prompt_tokens += self.following_stages_info["prompt_tokens"]
         decode_tokens += self.following_stages_info["decode_tokens"]
 
@@ -244,7 +246,7 @@ class CoInference:
             prompt_tokens: List = stage.get_all_prompt_tokens()
             decode_tokens: List = stage.get_all_decode_tokens()
             parallelism: List = [len(stage.parallel_requests)]
-            stage_gap: List = [stage.stage_gap]
+            stage_gap: List = [stage.stage_gap] if self.current_stage_id == 1 else []
             # logger.info(f"CoInfer {self.coinf_id} finishes and update the online profiling distribution: "
             #             f"stage_name: {stage.stage_name}, "
             #             f"prompt_tokens: {prompt_tokens}, decode_tokens: {decode_tokens}.")
@@ -261,6 +263,8 @@ class CoInference:
 
         # logger.info(f"Update online profiling distribution time {(time.time() - timer) * 1000:.2f} ms.")
 
+        # self.predictor.save_profiling()
+
     @property
     def current_stage(self) -> CoInferenceStage:
         if self.current_stage_id == len(self.stages):
@@ -271,6 +275,8 @@ class CoInference:
         return self.current_stage.get_num_unfinished_seqs()
 
     def get_num_unfinished_seq_groups(self) -> int:
+        if self.current_stage_id == len(self.stages):
+            return 0
         return self.current_stage.get_num_unfinished_seq_groups()
 
     def __lt__(self, other) -> bool:

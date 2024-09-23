@@ -130,6 +130,7 @@ class SchedulerOutputs:
     # The number of requests in the running queue
     running_queue_size: int
     preempted: int
+    advised_lora: Set[LoRARequest]
 
     def __post_init__(self):
         # Swap in and swap out should never happen at the same time.

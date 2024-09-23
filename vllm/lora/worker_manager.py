@@ -1,8 +1,10 @@
+import time
 from abc import ABC, abstractmethod, abstractproperty
 from contextlib import contextmanager
 from typing import Any, Dict, List, Literal, Optional, Set, Type, Union
-
+from threading import Lock
 import torch
+import concurrent.futures
 
 from vllm.config import LoRAConfig
 from vllm.logger import init_logger
@@ -138,26 +140,7 @@ class WorkerLoRAManager(AbstractWorkerLoRAManager):
         self._lora_manager.set_lora_mapping(lora_mapping)
 
     def _apply_loras(self, lora_requests: Set[LoRARequest]) -> None:
-        loras_that_exist = self.list_loras()
-        loras_map = {
-            lora_request.lora_int_id: lora_request
-            for lora_request in lora_requests if lora_request
-        }
-        if len(loras_map) > self._lora_manager.lora_slots:
-            raise RuntimeError(
-                f"Number of requested LoRAs ({len(loras_map)}) is greater "
-                "than the number of GPU LoRA slots "
-                f"({self._lora_manager.lora_slots}).")
-
-        new_loras = set(loras_map)
-        loras_to_add = new_loras - loras_that_exist
-        loras_to_remove = loras_that_exist - new_loras
-
-        for lora_id in loras_to_remove:
-            self.remove_lora(lora_id)
-
-        for lora_id in loras_to_add:
-            self.add_lora(loras_map[lora_id])
+        raise NotImplementedError
 
     def _load_lora(self, lora_request: LoRARequest) -> LoRAModel:
         try:
@@ -210,12 +193,7 @@ class WorkerLoRAManager(AbstractWorkerLoRAManager):
         return self._lora_manager.add_lora(dummy_lora)
 
     def add_lora(self, lora_request: LoRARequest) -> bool:
-        if lora_request.lora_int_id in self.list_loras():
-            return False
-        lora = self._load_lora(lora_request)
-        loaded = self._lora_manager.add_lora(lora)
-        self._lora_manager.activate_lora(lora.id)
-        return loaded
+        raise NotImplementedError
 
     def remove_lora(self, lora_id: int) -> bool:
         return self._lora_manager.remove_lora(lora_id)
@@ -236,6 +214,88 @@ class LRUCacheWorkerLoRAManager(WorkerLoRAManager):
 
     _lora_manager_cls: Type[
         LRUCacheLoRAModelManager] = LRUCacheLoRAModelManager
+
+    lora_request_num = 0
+    lora_hit_num = 0
+    io_time_disk = 0
+
+    def create_lora_manager(
+            self,
+            model: torch.nn.Module,
+    ) -> Any:
+        lora_manager = create_lora_manager(
+            model,
+            lora_manager_cls=self._lora_manager_cls,
+            max_num_seqs=self.max_num_seqs,
+            vocab_size=self.vocab_size,
+            lora_config=self.lora_config,
+            max_num_batched_tokens=self.max_num_batched_tokens,
+        )
+        self._lora_manager = lora_manager
+        return lora_manager.model
+
+    def _apply_loras(self, lora_requests: Set[LoRARequest]) -> None:
+        loras_map = {
+            lora_request.lora_int_id: lora_request
+            for lora_request in lora_requests if lora_request
+        }
+        if len(loras_map) > self._lora_manager.lora_slots:
+            raise RuntimeError(
+                f"Number of requested LoRAs ({len(loras_map)}) is greater "
+                "than the number of GPU LoRA slots "
+                f"({self._lora_manager.lora_slots}).")
+        for lora in loras_map.values():
+            loaded = self.add_lora(lora)
+            assert loaded, "LoRA should be loaded."
+            self._lora_manager.activate_lora(lora.lora_int_id)
+
+    def add_lora(self, lora_request: LoRARequest) -> bool:
+        if lora_request.lora_int_id not in self.list_loras():
+            timer = time.time()
+            # Remove before we load the new lora to save memory
+            if len(self._lora_manager) + 1 > self._lora_manager.capacity:
+                assert isinstance(self._lora_manager, LRUCacheLoRAModelManager)
+                self._lora_manager.remove_oldest_lora()
+            lora = self._load_lora(lora_request)
+            loaded = self._lora_manager.add_lora(lora)
+            self.io_time_disk += time.time() - timer
+        else:
+            # If the lora is already loaded, just touch it to
+            # update its position in the caches
+            loaded = self._lora_manager.get_lora(
+                lora_request.lora_int_id) is not None
+            self.lora_hit_num += 1
+
+        self.lora_request_num += 1
+        if self.lora_request_num % 100 == 0:
+            logger.info(
+                f"CHR: {self.lora_hit_num / self.lora_request_num:.2f}, "
+                f"IO Time: {self.io_time_disk:.2f} s "
+                f"({(self.io_time_disk / (self.lora_request_num - self.lora_hit_num)) * 1000:.2f} ms/miss "
+                f"{self.lora_request_num - self.lora_hit_num} miss)"
+            )
+
+        return loaded
+
+
+class LRUCacheWorkerLoRAManagerWithPrefetch(WorkerLoRAManager):
+    """WorkerLoRAManager that manages LoRA models on the worker side.
+
+    Uses an LRU Cache. Every request, the requested LoRAs will be loaded
+    (unless they are already loaded) and least recently used LoRAs will
+    be unloaded if the cache is above capacity."""
+
+    _lora_manager_cls: Type[
+        LRUCacheLoRAModelManager] = LRUCacheLoRAModelManager
+
+    lora_request_num = 0
+    lora_hit_num = 0
+    io_time_disk = 0
+
+    io_futures: Dict[int, concurrent.futures.Future] = {}
+    _io_futures_lock = Lock()
+    _executor = concurrent.futures.ThreadPoolExecutor(max_workers=10)
+    _lora_manager_lock = Lock()
 
     def create_lora_manager(
         self,
@@ -262,21 +322,77 @@ class LRUCacheWorkerLoRAManager(WorkerLoRAManager):
                 f"Number of requested LoRAs ({len(loras_map)}) is greater "
                 "than the number of GPU LoRA slots "
                 f"({self._lora_manager.lora_slots}).")
-        for lora in loras_map.values():
-            self.add_lora(lora)
 
-    def add_lora(self, lora_request: LoRARequest) -> bool:
-        if lora_request.lora_int_id not in self.list_loras():
-            # Remove before we load the new lora to save memory
+        # 1. Load LoRA simultaneously.
+        for lora in loras_map.values():
+            hit = self.add_lora(lora)
+            # if not hit:
+            #     logger.info(f"[LoRA Debug] > "
+            #                 f"Miss LoRA {lora.lora_int_id}")
+            self.lora_hit_num += hit
+            self.lora_request_num += 1
+
+        # 2. Wait for all LoRA to be loaded, and move them to GPU memory.
+        for lora in loras_map.values():
+            with self._lora_manager_lock:
+                loaded = self._lora_manager.get_lora(lora.lora_int_id) is not None
+
+            if not loaded:
+                timer = time.time()
+                with self._io_futures_lock:
+                    future = self.io_futures.get(lora.lora_int_id, None)
+                if future is None:
+                    assert False, "Can't find LoRA in lora_manager nor in io_futures"
+                loaded = future.result()  # 阻塞，直到加载完成
+                assert loaded, f"Failed to load LoRA {lora.lora_int_id}"
+                self.io_time_disk += time.time() - timer
+
+            with self._lora_manager_lock:
+                self._lora_manager.activate_lora(lora.lora_int_id)
+
+            if self.lora_request_num % 100 == 0:
+                logger.info(
+                    f"CHR: {self.lora_hit_num / self.lora_request_num:.2f}, "
+                    f"IO Time: {self.io_time_disk:.2f} s "
+                    f"({(self.io_time_disk / (self.lora_request_num - self.lora_hit_num)) * 1000:.2f} ms/miss "
+                    f"{self.lora_request_num - self.lora_hit_num} miss)"
+                )
+
+    def remove_lora(self, lora_id: int) -> bool:
+        with self._io_futures_lock:
+            future = self.io_futures.get(lora_id, None)
+            if future is not None and not future.done():
+                future.cancel()
+        with self._lora_manager_lock:
+            return self._lora_manager.remove_lora(lora_id)
+
+    def add_lora(self, lora_request: LoRARequest):
+        """
+        Behave a different way from the original one.
+        1. Just launch a new thread to load the LoRA to CPU memory, not GPU memory.
+        2. Return True if the LoRA is already loaded, and False as a miss.
+        """
+        with self._lora_manager_lock:
+            loaded = self._lora_manager.get_lora(lora_request.lora_int_id) is not None
+            if loaded:
+                return loaded  # LoRA is already loaded
+
+        with self._io_futures_lock:
+            future = self.io_futures.get(lora_request.lora_int_id, None)
+            if future is not None and not future.done():
+                return False  # LoRA is being loaded
+
+            future = self._executor.submit(self.add_lora_func, lora_request)
+            self.io_futures[lora_request.lora_int_id] = future
+            # logger.info(f"Submit async load for LoRA {lora_request.lora_int_id}")
+            return False
+
+    def add_lora_func(self, lora_request: LoRARequest) -> bool:
+        # Remove before we load the new lora to save memory
+        lora = self._load_lora(lora_request)
+        with self._lora_manager_lock:
             if len(self._lora_manager) + 1 > self._lora_manager.capacity:
                 assert isinstance(self._lora_manager, LRUCacheLoRAModelManager)
                 self._lora_manager.remove_oldest_lora()
-            lora = self._load_lora(lora_request)
             loaded = self._lora_manager.add_lora(lora)
-        else:
-            # If the lora is already loaded, just touch it to
-            # update its position in the caches
-            loaded = self._lora_manager.get_lora(
-                lora_request.lora_int_id) is not None
-        self._lora_manager.activate_lora(lora_request.lora_int_id)
         return loaded
