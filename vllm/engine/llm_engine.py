@@ -788,14 +788,16 @@ class LLMEngine:
                 blocks_to_swap_in=scheduler_outputs.blocks_to_swap_in,
                 blocks_to_swap_out=scheduler_outputs.blocks_to_swap_out,
                 blocks_to_copy=scheduler_outputs.blocks_to_copy,
+                blocks_to_save=scheduler_outputs.blocks_to_save,
+                blocks_to_load=scheduler_outputs.blocks_to_load,
                 num_lookahead_slots=scheduler_outputs.num_lookahead_slots,
                 running_queue_size=scheduler_outputs.running_queue_size,
                 advised_lora=scheduler_outputs.advised_lora,
             )
-            output, swap_time, execute_time = self.model_executor.execute_model(
+            output, swap_time, execute_time, load_time  = self.model_executor.execute_model(
                 execute_model_req=execute_model_req)
         else:
-            output, swap_time, execute_time = [], 0, 0
+            output, swap_time, execute_time, load_time  = [], 0, 0, 0
 
         request_outputs = self._process_model_outputs(
             output, scheduler_outputs.scheduled_seq_groups,
@@ -840,6 +842,14 @@ class LLMEngine:
         #     f"execute: {(execute_time * 1000):.2f}ms({(execute_time / cur_step_time * 100):.2f}%), "
         #     f"cur_step: {(cur_step_time * 1000):.2f}ms"
         # )
+        if not scheduler_outputs.swap_info_empty():
+            logger.info(f"num_blocks: (c2g: {len(scheduler_outputs.blocks_to_swap_in)}, "
+                        f"g2c: {len(scheduler_outputs.blocks_to_swap_out)}, "
+                        f"d2c: {len(scheduler_outputs.blocks_to_load)}, "
+                        f"c2d: {len(scheduler_outputs.blocks_to_save)}), "
+                        f"execute_time: {execute_time*1000:.2f} ms, "
+                        f"swap_time: {swap_time*1000:.2f} ms, "
+                        f"load_time: {load_time*1000:.2f} ms")
         return request_outputs
 
     def do_log_stats(
@@ -887,17 +897,33 @@ class LLMEngine:
         # KV Cache Usage in %
         num_total_gpu = self.cache_config.num_gpu_blocks
         gpu_cache_usage_sys = 0.
+        gpu_cached_cache_usage_sys = 0.
         if num_total_gpu is not None:
             num_free_gpu = self.scheduler.block_manager.get_num_free_gpu_blocks(
             )
+            num_cached_gpu = self.scheduler.block_manager.gpu_allocator.get_num_cached_blocks()
             gpu_cache_usage_sys = 1.0 - (num_free_gpu / num_total_gpu)
+            gpu_cached_cache_usage_sys = num_cached_gpu / num_total_gpu
 
         num_total_cpu = self.cache_config.num_cpu_blocks
         cpu_cache_usage_sys = 0.
+        cpu_cached_cache_usage_sys = 0.
         if num_total_cpu is not None and num_total_cpu > 0:
             num_free_cpu = self.scheduler.block_manager.get_num_free_cpu_blocks(
             )
+            num_cached_cpu = self.scheduler.block_manager.cpu_allocator.get_num_cached_blocks()
             cpu_cache_usage_sys = 1.0 - (num_free_cpu / num_total_cpu)
+            cpu_cached_cache_usage_sys = num_cached_cpu / num_total_cpu
+
+        num_total_disk = self.cache_config.num_disk_blocks
+        disk_cache_usage_sys = 0.
+        if num_total_disk is not None and num_total_disk > 0:
+            num_free_disk = self.scheduler.block_manager.disk_block_manager.get_num_free_blocks()
+            disk_cache_usage_sys = 1.0 - (num_free_disk / num_total_disk)
+
+        num_load_blocks = 0
+        if scheduler_outputs is not None:
+            num_load_blocks = len(scheduler_outputs.blocks_to_load)
 
         # Iteration stats
         num_prompt_tokens_iter = 0
@@ -1007,6 +1033,10 @@ class LLMEngine:
             #   KV Cache Usage in %
             gpu_cache_usage_sys=gpu_cache_usage_sys,
             cpu_cache_usage_sys=cpu_cache_usage_sys,
+            gpu_cached_cache_usage_sys=gpu_cached_cache_usage_sys,
+            cpu_cached_cache_usage_sys=cpu_cached_cache_usage_sys,
+            disk_cache_usage_sys=disk_cache_usage_sys,
+            num_load_blocks=num_load_blocks,
 
             # Iteration stats
             num_prompt_tokens_iter=num_prompt_tokens_iter,

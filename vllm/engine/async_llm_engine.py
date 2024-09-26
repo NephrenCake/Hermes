@@ -239,14 +239,16 @@ class _AsyncLLMEngine(LLMEngine):
                 blocks_to_swap_in=scheduler_outputs.blocks_to_swap_in,
                 blocks_to_swap_out=scheduler_outputs.blocks_to_swap_out,
                 blocks_to_copy=scheduler_outputs.blocks_to_copy,
+                blocks_to_save=scheduler_outputs.blocks_to_save,
+                blocks_to_load=scheduler_outputs.blocks_to_load,
                 num_lookahead_slots=scheduler_outputs.num_lookahead_slots,
                 running_queue_size=scheduler_outputs.running_queue_size,
                 advised_lora=scheduler_outputs.advised_lora,
             )
-            output, swap_time, execute_time = await self.model_executor.execute_model_async(
+            output, swap_time, execute_time, load_time = await self.model_executor.execute_model_async(
                 execute_model_req)
         else:
-            output, swap_time, execute_time = [], 0, 0
+            output, swap_time, execute_time, load_time = [], 0, 0, 0
 
         request_outputs = self._process_model_outputs(
             output, scheduler_outputs.scheduled_seq_groups,
@@ -291,6 +293,16 @@ class _AsyncLLMEngine(LLMEngine):
         #     f"execute: {(execute_time * 1000):.2f}ms({(execute_time / cur_step_time * 100):.2f}%), "
         #     f"cur_step: {(cur_step_time * 1000):.2f}ms"
         # )
+        # if not scheduler_outputs.swap_info_empty():
+        #     logger.info(f"num_blocks: (c2g: {len(scheduler_outputs.blocks_to_swap_in)}, "
+        #                 f"g2c: {len(scheduler_outputs.blocks_to_swap_out)}, "
+        #                 f"d2c: {len(scheduler_outputs.blocks_to_load)}, "
+        #                 f"c2d: {len(scheduler_outputs.blocks_to_save)}), "
+        #                 f"execute_time: {execute_time*1000:.2f} ms, "
+        #                 f"swap_time: {swap_time*1000:.2f} ms, "
+        #                 f"load_time: {load_time*1000:.2f} ms")
+        if len(scheduler_outputs.blocks_to_load) > 0:
+            logger.info(f"load {len(scheduler_outputs.blocks_to_load)} blocks")
         return request_outputs
 
     async def process_model_inputs_async(

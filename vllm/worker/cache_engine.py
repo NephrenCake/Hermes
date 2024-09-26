@@ -1,5 +1,7 @@
 """CacheEngine class for managing the KV cache."""
 from typing import List
+import datetime
+import os
 
 import torch
 
@@ -57,6 +59,13 @@ class CacheEngine:
         self.gpu_cache = self._allocate_kv_cache(self.num_gpu_blocks, "cuda")
         self.cpu_cache = self._allocate_kv_cache(self.num_cpu_blocks, "cpu")
 
+        cur_time = datetime.datetime.now().strftime(('%Y-%m-%d-%H-%M-%S'))
+        self.disk_dir_path = os.path.join(self.cache_config.disk_dir_path, cur_time)
+        os.makedirs(self.disk_dir_path)
+
+    def __del__(self):
+        os.system(f"rm -rf {self.disk_dir_path}")
+
     def _allocate_kv_cache(
         self,
         num_blocks: int,
@@ -90,6 +99,40 @@ class CacheEngine:
 
     def copy(self, src_to_dsts: torch.Tensor) -> None:
         self.attn_backend.copy_blocks(self.gpu_cache, src_to_dsts)
+
+    def save_to_disk(self, src_to_dst: torch.Tensor) -> None:
+        # kv_cache_shape: (2, num_blocks, block_size * num_kv_heads * head_size)
+        src_to_dst = src_to_dst.tolist()
+        # for i in range(self.num_layers):
+        #     for src, dst in src_to_dst:
+        #         key_file_name = os.path.join(self.disk_dir_path, f"{dst}-key-{i}.pt")
+        #         torch.save(self.cpu_cache[i][0][src], key_file_name)
+
+        #         value_file_name = os.path.join(self.disk_dir_path, f"{dst}-value-{i}.pt")
+        #         torch.save(self.cpu_cache[i][1][src], value_file_name)
+
+        for src, dst in src_to_dst:
+            tensor_list = [torch.unsqueeze(self.cpu_cache[i][:,src,], 0) for i in range(self.num_layers)]
+            tensor_to_save = torch.cat(tensor_list, 0)
+            file_name = os.path.join(self.disk_dir_path, f"{dst}.pt")
+            torch.save(tensor_to_save, file_name)
+
+    def load_from_disk(self, src_to_dst: torch.Tensor) -> None:
+        src_to_dst = src_to_dst.tolist()
+        # for i in range(self.num_layers):
+        #     for src, dst in src_to_dst:
+        #         key_file_name = os.path.join(self.disk_dir_path, f"{src}-key-{i}.pt")
+        #         self.cpu_cache[i][0][dst] = torch.load(key_file_name)
+
+        #         value_file_name = os.path.join(self.disk_dir_path, f"{src}-value-{i}.pt")
+        #         self.cpu_cache[i][1][dst] = torch.load(value_file_name)
+
+        for src, dst in src_to_dst:
+            file_name = os.path.join(self.disk_dir_path, f"{src}.pt")
+            tensor_loaded = torch.load(file_name)
+            for i in range(self.num_layers):
+                self.cpu_cache[i][:, dst] = tensor_loaded[i]
+
 
     @staticmethod
     def get_cache_block_size(

@@ -159,7 +159,8 @@ class CoInferenceScheduler:
             num_gpu_blocks=self.cache_config.num_gpu_blocks,
             num_cpu_blocks=self.cache_config.num_cpu_blocks,
             sliding_window=self.cache_config.sliding_window,
-            enable_caching=self.cache_config.enable_prefix_caching)
+            enable_caching=self.cache_config.enable_prefix_caching,
+            num_disk_blocks=self.cache_config.num_disk_blocks)
 
         self.coinferences_dict: Dict[str, CoInference] = {}
         self.coinferences_queue: List[CoInference] = []
@@ -222,6 +223,8 @@ class CoInferenceScheduler:
                 if (token_chunk_size + seqs[0].data.get_num_computed_tokens() <
                         seqs[0].data.get_len()):
                     do_sample = False
+                if len(common_computed_block_nums) > 0:
+                    logger.info(f"{seq_group.request_id} prefill with prefix: {len(common_computed_block_nums)}/{len(block_tables[seqs[0].seq_id])}")
 
             # It assumes the scheduled_seq_groups is ordered by
             # prefill < decoding.
@@ -359,21 +362,27 @@ class CoInferenceScheduler:
         # logger.info(f"\tswapped_queue: {split_outputs.swapped_queue}")
         # logger.info(f"\twaiting_queue: {split_outputs.waiting_queue}")
 
-        return SchedulerOutputs(
+        schedule_outputs = SchedulerOutputs(
             scheduled_seq_groups=(schedule_prefill_outputs.seq_groups +
                                   schedule_decode_outputs.seq_groups),
             num_prefill_groups=len(schedule_prefill_outputs.seq_groups),
             num_batched_tokens=(schedule_prefill_outputs.num_batched_tokens +
                                 schedule_decode_outputs.num_batched_tokens),
-            blocks_to_swap_in=schedule_decode_outputs.blocks_to_swap_in,
-            blocks_to_swap_out=schedule_swapout_outputs.blocks_to_swap_out,
+            blocks_to_swap_in=(schedule_decode_outputs.blocks_to_swap_in + 
+                               self.block_manager.cache_swap_mapping.cache_swap_in_mapping),
+            blocks_to_swap_out=(schedule_swapout_outputs.blocks_to_swap_out + 
+                                self.block_manager.cache_swap_mapping.cache_swap_out_mapping),
             blocks_to_copy=schedule_decode_outputs.blocks_to_copy,
+            blocks_to_save=self.block_manager.cache_swap_mapping.cache_save_mapping,
+            blocks_to_load=self.block_manager.cache_swap_mapping.cache_load_mapping,
             ignored_seq_groups=split_outputs.ignored_seq_groups,
             num_lookahead_slots=0,
             running_queue_size=0,
             preempted=len(split_outputs.swapout_queue),
             advised_lora=advised_lora,
         )
+        self.block_manager.cache_swap_mapping.clear()
+        return schedule_outputs
 
     def split_seq_groups(self, coinferences_queue: List[CoInference]) -> SplitSeqGroupOutputs:
         logicalbudget = LogicalBudget(

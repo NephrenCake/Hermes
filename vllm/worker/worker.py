@@ -257,6 +257,16 @@ class Worker(WorkerBase):
         pre_lora_time = time.time() - timer
         # logger.info(f"Pre Lora Time: {pre_lora_time * 1000:.2f} ms")
 
+    def cache_save_load(
+        self,
+        blocks_to_save: torch.Tensor,
+        blocks_to_load: torch.Tensor,
+    ) -> None:
+        if blocks_to_save.numel() > 0:
+            self.cache_engine.save_to_disk(blocks_to_save)
+        if blocks_to_load.numel() > 0:
+            self.cache_engine.load_from_disk(blocks_to_load)
+
     @torch.inference_mode()
     def execute_model(
         self,
@@ -293,13 +303,27 @@ class Worker(WorkerBase):
         blocks_to_copy = torch.tensor(execute_model_req.blocks_to_copy,
                                       device=self.device,
                                       dtype=torch.int64).view(-1, 2)
+
+        blocks_to_save = torch.tensor(execute_model_req.blocks_to_save,
+                                         device="cpu",
+                                         dtype=torch.int64).view(-1, 2)
+        blocks_to_load = torch.tensor(execute_model_req.blocks_to_load,
+                                          device="cpu",
+                                          dtype=torch.int64).view(-1, 2)
+
         data: Dict[str, Any] = {
             "num_seq_groups": num_seq_groups,
             "blocks_to_swap_in": blocks_to_swap_in,
             "blocks_to_swap_out": blocks_to_swap_out,
             "blocks_to_copy": blocks_to_copy,
+            "blocks_to_save": blocks_to_save,
+            "blocks_to_load": blocks_to_load,
         }
         broadcast_tensor_dict(data, src=0)
+
+        load_start_time = time.time()
+        self.cache_save_load(blocks_to_save, blocks_to_load)
+        load_time = time.time() - load_start_time
 
         timer = time.time()
         self.cache_swap(blocks_to_swap_in, blocks_to_swap_out, blocks_to_copy)
@@ -316,7 +340,7 @@ class Worker(WorkerBase):
 
         # Worker only supports single-step execution. Wrap the output in a list
         # to conform to interface.
-        return [output], swap_time, execute_time
+        return [output], swap_time, execute_time, load_time
 
     @torch.inference_mode()
     def start_worker_execution_loop(self) -> None:
@@ -342,6 +366,11 @@ class Worker(WorkerBase):
         blocks_to_swap_in = data.get("blocks_to_swap_in")
         blocks_to_swap_out = data.get("blocks_to_swap_out")
         blocks_to_copy = data.get("blocks_to_copy")
+        blocks_to_save = data.get("blocks_to_save")
+        blocks_to_load = data.get("blocks_to_load")
+
+        self.cache_save_load(blocks_to_save, blocks_to_load)
+
         self.cache_swap(blocks_to_swap_in, blocks_to_swap_out, blocks_to_copy)
 
         # If there is no input, we don't need to execute the model.

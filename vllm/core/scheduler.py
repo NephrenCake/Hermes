@@ -107,6 +107,11 @@ class ScheduledSequenceGroup:
     # chunked, it can be smaller than that.
     token_chunk_size: int
 
+    def __repr__(self) -> str:
+        return (f"request: {self.seq_group.request_id}, "
+                f"prompt_len: {len(self.seq_group.prompt_token_ids)}, "
+                f"chunk_size: {self.token_chunk_size}")
+
 
 @dataclass
 class SchedulerOutputs:
@@ -123,6 +128,10 @@ class SchedulerOutputs:
     blocks_to_swap_out: List[Tuple[int, int]]
     # Blocks to copy. Source to dest block.
     blocks_to_copy: List[Tuple[int, int]]
+    # blocks to save.
+    blocks_to_save: List[Tuple[int, int]]
+    # blocks to load.
+    blocks_to_load: List[Tuple[int, int]]
     # Sequence groups that are going to be ignored.
     ignored_seq_groups: List[SequenceGroup]
     # The number of slots for lookahead decoding.
@@ -143,12 +152,18 @@ class SchedulerOutputs:
     def is_empty(self) -> bool:
         # NOTE: We do not consider the ignored sequence groups.
         return (not self.scheduled_seq_groups and not self.blocks_to_swap_in
-                and not self.blocks_to_swap_out and not self.blocks_to_copy)
+                and not self.blocks_to_swap_out and not self.blocks_to_copy 
+                and not self.blocks_to_save and not self.blocks_to_load)
 
     def _sort_by_lora_ids(self):
         self.scheduled_seq_groups = sorted(
             self.scheduled_seq_groups,
             key=lambda g: (g.seq_group.lora_int_id, g.seq_group.request_id))
+        
+    def swap_info_empty(self) -> bool:
+        return (not self.blocks_to_swap_in and not self.blocks_to_swap_out 
+                and not self.blocks_to_copy 
+                and not self.blocks_to_save and not self.blocks_to_load)
 
     @property
     def lora_requests(self) -> Set[LoRARequest]:
@@ -280,7 +295,8 @@ class Scheduler:
             num_gpu_blocks=self.cache_config.num_gpu_blocks,
             num_cpu_blocks=self.cache_config.num_cpu_blocks,
             sliding_window=self.cache_config.sliding_window,
-            enable_caching=self.cache_config.enable_prefix_caching)
+            enable_caching=self.cache_config.enable_prefix_caching,
+            num_disk_blocks=self.cache_config.num_disk_blocks)
 
         # Sequence groups in the WAITING state.
         # Contain new prefill or preempted requests.
@@ -807,22 +823,28 @@ class Scheduler:
         # doesn't allow chunked prefills.
         assert len(running_scheduled.prefill_seq_groups) == 0
         assert len(swapped_in.prefill_seq_groups) == 0
-        return SchedulerOutputs(
+        schedule_outputs = SchedulerOutputs(
             scheduled_seq_groups=(prefills.seq_groups +
                                   running_scheduled.decode_seq_groups +
                                   swapped_in.decode_seq_groups),
             num_prefill_groups=len(prefills.seq_groups),
             num_batched_tokens=budget.num_batched_tokens,
-            blocks_to_swap_in=swapped_in.blocks_to_swap_in,
-            blocks_to_swap_out=running_scheduled.blocks_to_swap_out,
+            blocks_to_swap_in=(swapped_in.blocks_to_swap_in + 
+                               self.block_manager.cache_swap_mapping.cache_swap_in_mapping),
+            blocks_to_swap_out=(running_scheduled.blocks_to_swap_out + 
+                                self.block_manager.cache_swap_mapping.cache_swap_out_mapping),
             blocks_to_copy=running_scheduled.blocks_to_copy +
             swapped_in.blocks_to_copy,
+            blocks_to_save=self.block_manager.cache_swap_mapping.cache_save_mapping,
+            blocks_to_load=self.block_manager.cache_swap_mapping.cache_load_mapping,
             ignored_seq_groups=prefills.ignored_seq_groups +
             swapped_in.infeasible_seq_groups,
             num_lookahead_slots=running_scheduled.num_lookahead_slots,
             running_queue_size=len(self.running),
             preempted=preempted,
         )
+        self.block_manager.cache_swap_mapping.clear()
+        return schedule_outputs
 
     def _schedule_chunked_prefill(self):
         """Schedule queued requests.
@@ -982,6 +1004,8 @@ class Scheduler:
                 if (token_chunk_size + seqs[0].data.get_num_computed_tokens() <
                         seqs[0].data.get_len()):
                     do_sample = False
+                if len(common_computed_block_nums) > 0:
+                    logger.info(f"prefill with prefix: {len(common_computed_block_nums)}/{len(block_tables[seqs[0].seq_id])}")
 
             # It assumes the scheduled_seq_groups is ordered by
             # prefill < decoding.

@@ -80,5 +80,18 @@ class PhysicalTokenBlock:
                 f'computed={self.computed})')
 
 
+class DiskBlock:
+    def __init__(
+        self,
+        block_number: int,
+        block_hash: int,
+        num_hashed_tokens: int,
+        computed: bool,
+    ) -> None:
+        self.block_number = block_number
+        self.block_hash = block_hash
+        self.num_hashed_tokens = num_hashed_tokens
+        self.computed = computed
+
 # Mapping: logical block number -> physical block.
 BlockTable = List[PhysicalTokenBlock]

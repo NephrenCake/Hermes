@@ -82,6 +82,7 @@ class EngineArgs:
     image_feature_size: Optional[int] = None
     scheduler_delay_factor: float = 0.0
     enable_chunked_prefill: bool = False
+    num_disk_blocks: int = 1000
 
     guided_decoding_backend: str = 'outlines'
     # Speculative decoding configuration.
@@ -97,6 +98,9 @@ class EngineArgs:
     proactive_reservation: bool = False
     scheduling_policy: str = "Hermes"
     lora_policy: str = "Hermes"
+
+    # disk kv cache dir path
+    disk_dir_path: str = "/workspace/kv_cache/"
 
     def __post_init__(self):
         if self.tokenizer is None:
@@ -274,6 +278,11 @@ class EngineArgs:
         parser.add_argument('--enable-prefix-caching',
                             action='store_true',
                             help='Enables automatic prefix caching.')
+        parser.add_argument('--num-disk-blocks',
+                            type=int,
+                            default=EngineArgs.num_disk_blocks,
+                            help='total num disk blocks')
+
         parser.add_argument('--disable-sliding-window',
                             action='store_true',
                             help='Disables sliding window, '
@@ -572,6 +581,11 @@ class EngineArgs:
             choices=["Hermes", "LRU", "EPWQ"],
             # "Hermes", "LRU", "Evict/Prefetch on Waiting Queue", "No-Cache", "Full-Cache"
             help="use which lora management")
+        parser.add_argument(
+            "--disk-dir-path",
+            type=str,
+            default=EngineArgs.disk_dir_path
+        )
 
         return parser
 
@@ -597,9 +611,11 @@ class EngineArgs:
         cache_config = CacheConfig(self.block_size,
                                    self.gpu_memory_utilization,
                                    self.swap_space, self.kv_cache_dtype,
+                                   self.disk_dir_path,
                                    self.num_gpu_blocks_override,
                                    model_config.get_sliding_window(),
-                                   self.enable_prefix_caching)
+                                   self.enable_prefix_caching,
+                                   self.num_disk_blocks)
         parallel_config = ParallelConfig(
             self.pipeline_parallel_size,
             self.tensor_parallel_size,

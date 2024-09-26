@@ -891,6 +891,10 @@ class ExecuteModelRequest:
     # The number of requests in the running queue.
     running_queue_size: int = 0
     advised_lora: Set[LoRARequest] = None
+    # Blocks to save to disk.
+    blocks_to_save: List[Tuple[int, int]] = field(default_factory=list)
+    # Blocks to load from
+    blocks_to_load: List[Tuple[int, int]] = field(default_factory=list)
 
     def clone(
         self, seq_group_metadata_list: List[SequenceGroupMetadata]
@@ -903,4 +907,6 @@ class ExecuteModelRequest:
             blocks_to_copy=self.blocks_to_copy.copy(),
             num_lookahead_slots=self.num_lookahead_slots,
             running_queue_size=self.running_queue_size,
+            blocks_to_save=self.blocks_to_save.copy(),
+            blocks_to_load=self.blocks_to_load.copy(),
         )
