@@ -1,6 +1,6 @@
-python -m vllm.entrypoints.openai.api_server \
+CUDA_VISIBLE_DEVICES=2,3 python -m vllm.entrypoints.openai.api_server \
   --uvicorn-log-level warning \
-  --model /home/zgan/Models/Llama-2-7b-chat-hf \
+  --model /workspace/Llama-2-7b-chat-hf \
   --served-model-name gpt-3.5-turbo \
   --gpu-memory-utilization 0.9 \
   --tensor-parallel-size 2 \
@@ -10,4 +10,4 @@ python -m vllm.entrypoints.openai.api_server \
   --scheduling-policy Hermes \
   --chat-template ./examples/template_alpaca.jinja
 #  --proactive-reservation \
-
+  # --scheduling-policy Hermes  \
