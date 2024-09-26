@@ -899,8 +899,7 @@ class LLMEngine:
         gpu_cache_usage_sys = 0.
         gpu_cached_cache_usage_sys = 0.
         if num_total_gpu is not None:
-            num_free_gpu = self.scheduler.block_manager.get_num_free_gpu_blocks(
-            )
+            num_free_gpu = self.scheduler.block_manager.get_num_free_gpu_blocks()
             num_cached_gpu = self.scheduler.block_manager.gpu_allocator.get_num_cached_blocks()
             gpu_cache_usage_sys = 1.0 - (num_free_gpu / num_total_gpu)
             gpu_cached_cache_usage_sys = num_cached_gpu / num_total_gpu
@@ -909,17 +908,19 @@ class LLMEngine:
         cpu_cache_usage_sys = 0.
         cpu_cached_cache_usage_sys = 0.
         if num_total_cpu is not None and num_total_cpu > 0:
-            num_free_cpu = self.scheduler.block_manager.get_num_free_cpu_blocks(
-            )
+            num_free_cpu = self.scheduler.block_manager.get_num_free_cpu_blocks()
             num_cached_cpu = self.scheduler.block_manager.cpu_allocator.get_num_cached_blocks()
             cpu_cache_usage_sys = 1.0 - (num_free_cpu / num_total_cpu)
             cpu_cached_cache_usage_sys = num_cached_cpu / num_total_cpu
 
         num_total_disk = self.cache_config.num_disk_blocks
         disk_cache_usage_sys = 0.
+        disk_cached_cache_usage_sys = 0.
         if num_total_disk is not None and num_total_disk > 0:
             num_free_disk = self.scheduler.block_manager.disk_allocator.get_num_free_blocks()
+            num_cached_disk = self.scheduler.block_manager.disk_allocator.get_num_cached_blocks()
             disk_cache_usage_sys = 1.0 - (num_free_disk / num_total_disk)
+            disk_cached_cache_usage_sys = num_cached_disk / num_total_disk
 
         num_load_blocks = 0
         if scheduler_outputs is not None:
@@ -1033,9 +1034,10 @@ class LLMEngine:
             #   KV Cache Usage in %
             gpu_cache_usage_sys=gpu_cache_usage_sys,
             cpu_cache_usage_sys=cpu_cache_usage_sys,
+            disk_cache_usage_sys=disk_cache_usage_sys,
             gpu_cached_cache_usage_sys=gpu_cached_cache_usage_sys,
             cpu_cached_cache_usage_sys=cpu_cached_cache_usage_sys,
-            disk_cache_usage_sys=disk_cache_usage_sys,
+            disk_cached_cache_usage_sys=disk_cached_cache_usage_sys,
             num_load_blocks=num_load_blocks,
 
             # Iteration stats

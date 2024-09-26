@@ -611,11 +611,11 @@ class EngineArgs:
         cache_config = CacheConfig(self.block_size,
                                    self.gpu_memory_utilization,
                                    self.swap_space, self.kv_cache_dtype,
-                                   self.disk_dir_path,
                                    self.num_gpu_blocks_override,
                                    model_config.get_sliding_window(),
                                    self.enable_prefix_caching,
-                                   self.num_disk_blocks)
+                                   self.num_disk_blocks,
+                                   self.disk_dir_path)
         parallel_config = ParallelConfig(
             self.pipeline_parallel_size,
             self.tensor_parallel_size,

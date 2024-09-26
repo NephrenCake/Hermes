@@ -294,9 +294,9 @@ class Scheduler:
             block_size=self.cache_config.block_size,
             num_gpu_blocks=self.cache_config.num_gpu_blocks,
             num_cpu_blocks=self.cache_config.num_cpu_blocks,
+            num_disk_blocks=self.cache_config.num_disk_blocks,
             sliding_window=self.cache_config.sliding_window,
-            enable_caching=self.cache_config.enable_prefix_caching,
-            num_disk_blocks=self.cache_config.num_disk_blocks)
+            enable_caching=self.cache_config.enable_prefix_caching)
 
         # Sequence groups in the WAITING state.
         # Contain new prefill or preempted requests.
@@ -842,6 +842,7 @@ class Scheduler:
             num_lookahead_slots=running_scheduled.num_lookahead_slots,
             running_queue_size=len(self.running),
             preempted=preempted,
+            advised_lora=set()  # not supported in scheduler.py
         )
         self.block_manager.cache_swap_mapping.clear()
         return schedule_outputs

@@ -1,6 +1,5 @@
 """CacheEngine class for managing the KV cache."""
 from typing import List
-import datetime
 import os
 
 import torch

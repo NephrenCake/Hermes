@@ -5,7 +5,6 @@ from vllm.engine.arg_utils import EngineArgs
 from vllm.sequence import ExecuteModelRequest
 from vllm.utils import get_distributed_init_method, get_ip, get_open_port
 from vllm.worker.worker import Worker
-from vllm.core.disk_block_manager import DiskBlockAllocator
 
 allclose = lambda a, b: torch.allclose(a.cuda(), b.cuda(), rtol=0.0, atol=0.0)
 
@@ -51,8 +50,6 @@ for i in range(num_layers):
     cpu_key_cache, cpu_value_cache = cpu_cache[i]
     cpu_key_cache.random_()
     cpu_value_cache.random_()
-
-disk_block_manager = DiskBlockAllocator(1000)
 
 
 def test_swap() -> None:

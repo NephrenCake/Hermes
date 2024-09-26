@@ -16,9 +16,9 @@ class LogicalTokenBlock:
     """
 
     def __init__(
-            self,
-            block_number: int,
-            block_size: int,
+        self,
+        block_number: int,
+        block_size: int,
     ) -> None:
         self.block_number = block_number
         self.block_size = block_size
@@ -53,12 +53,12 @@ class PhysicalTokenBlock:
     """Represents the state of a block in the KV cache."""
 
     def __init__(
-            self,
-            device: Device,
-            block_number: int,
-            block_size: int,
-            block_hash: int,
-            num_hashed_tokens: int,
+        self,
+        device: Device,
+        block_number: int,
+        block_size: int,
+        block_hash: int,
+        num_hashed_tokens: int,
     ) -> None:
         self.device = device
         self.block_number = block_number
@@ -78,22 +78,6 @@ class PhysicalTokenBlock:
                 f'ref_count={self.ref_count}, '
                 f'last_accessed={self.last_accessed}, '
                 f'computed={self.computed})')
-
-
-class DiskBlock:
-    def __init__(
-            self,
-            device: Device,
-            block_number: int,
-            block_hash: int,
-            num_hashed_tokens: int,
-            computed: bool,
-    ) -> None:
-        self.device = device
-        self.block_number = block_number
-        self.block_hash = block_hash
-        self.num_hashed_tokens = num_hashed_tokens
-        self.computed = computed
 
 
 # Mapping: logical block number -> physical block.

@@ -179,9 +179,10 @@ class Stats:
     #   KV Cache Usage in %
     gpu_cache_usage_sys: float
     cpu_cache_usage_sys: float
+    disk_cache_usage_sys: float
     gpu_cached_cache_usage_sys: float
     cpu_cached_cache_usage_sys: float
-    disk_cache_usage_sys: float
+    disk_cached_cache_usage_sys: float
     num_load_blocks: int
 
     # Iteration stats (should have _iter suffix)
@@ -402,9 +403,9 @@ class StatLogger:
                 "Avg generation throughput: %.1f tokens/s, "
                 "Running: %d reqs, Swapped: %d reqs, "
                 "Pending: %d reqs, Num CoInferences: %d, "
-                "GPU KV cache usage: %.1f%%(%.1f%%), "
-                "CPU KV cache usage: %.1f%%(%.1f%%), "
-                "DISK KV cache usage: %.1f%%, "
+                "GPU space usage: %.1f%%(%.1f%%), "
+                "CPU space usage: %.1f%%(%.1f%%), "
+                "DISK space usage: %.1f%%(%.1f%%), "
                 "Num Cache Miss: %d, ",
                 prompt_throughput,
                 generation_throughput,
@@ -417,6 +418,7 @@ class StatLogger:
                 stats.cpu_cache_usage_sys * 100,
                 stats.cpu_cached_cache_usage_sys * 100,
                 stats.disk_cache_usage_sys * 100,
+                stats.disk_cached_cache_usage_sys * 100,
                 self.total_blocks_have_load,
             )
             logger.info(
