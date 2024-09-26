@@ -31,6 +31,7 @@ class Bayes_predictor:
         else:
             print('wrong task type !!!')
 
+
     def following_predict(self, row, current_stage_id):
         current_stage_id = current_stage_id * 2
 
@@ -62,6 +63,7 @@ class Bayes_predictor:
         update_beliefs(ie, self.bn, row, self.stages, current_stage_id)
 
         for target in self.stages[current_stage_id:]:
+
             ie.addTarget(target)
             marginal = ie.posterior(target)
             results[target] = (np.mean(np.where(marginal.toarray() == np.max(marginal.toarray()))) + np.min(
@@ -80,9 +82,11 @@ Bayes_predictors = {
 }
 
 if __name__ == '__main__':
+
     # b = Bayes_predictors['got_docmerge']
     # r = b.following_predict([1300, 600],1)
     b = Bayes_predictors['factool_code']
     r = b.following_predict([350, 110], 1)
+
 
     print(r)

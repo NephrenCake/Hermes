@@ -6,7 +6,7 @@ import random
 import numpy as np
 from scipy.stats import skewnorm
 from vllm.logger import init_logger
-from vllm.coinference.Bayes.bayes_coinfer import Bayes_predictors
+from vllm.coinference.Bayes.bayes_coinfer import Bayes_predictors, Bayes_predictor
 
 logger = init_logger(__name__)
 
