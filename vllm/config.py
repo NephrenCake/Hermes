@@ -366,7 +366,6 @@ class CacheConfig:
         self.cache_dtype = cache_dtype
         self.sliding_window = sliding_window
         self.enable_prefix_caching = enable_prefix_caching
-        self.disk_dir_path = disk_dir_path
         self._verify_args()
         self._verify_cache_dtype()
         self._verify_prefix_caching()
@@ -374,7 +373,10 @@ class CacheConfig:
         # Will be set after profiling.
         self.num_gpu_blocks = None
         self.num_cpu_blocks = None
+
+        # support for disk offloading
         self.num_disk_blocks = num_disk_blocks if enable_prefix_caching else None
+        self.disk_dir_path = disk_dir_path if enable_prefix_caching else None
 
     def metrics_info(self):
         # convert cache_config to dict(key: str, value: str) for prometheus

@@ -36,20 +36,20 @@ class Worker(WorkerBase):
     """
 
     def __init__(
-        self,
-        model_config: ModelConfig,
-        parallel_config: ParallelConfig,
-        scheduler_config: SchedulerConfig,
-        device_config: DeviceConfig,
-        cache_config: CacheConfig,
-        load_config: LoadConfig,
-        local_rank: int,
-        rank: int,
-        distributed_init_method: str,
-        lora_config: Optional[LoRAConfig] = None,
-        vision_language_config: Optional[VisionLanguageConfig] = None,
-        speculative_config: Optional[SpeculativeConfig] = None,
-        is_driver_worker: bool = False,
+            self,
+            model_config: ModelConfig,
+            parallel_config: ParallelConfig,
+            scheduler_config: SchedulerConfig,
+            device_config: DeviceConfig,
+            cache_config: CacheConfig,
+            load_config: LoadConfig,
+            local_rank: int,
+            rank: int,
+            distributed_init_method: str,
+            lora_config: Optional[LoRAConfig] = None,
+            vision_language_config: Optional[VisionLanguageConfig] = None,
+            speculative_config: Optional[SpeculativeConfig] = None,
+            is_driver_worker: bool = False,
     ) -> None:
         self.model_config = model_config
         self.parallel_config = parallel_config
@@ -126,10 +126,10 @@ class Worker(WorkerBase):
         self.model_runner.load_model()
 
     def save_sharded_state(
-        self,
-        path: str,
-        pattern: Optional[str] = None,
-        max_size: Optional[int] = None,
+            self,
+            path: str,
+            pattern: Optional[str] = None,
+            max_size: Optional[int] = None,
     ) -> None:
         self.model_runner.save_sharded_state(
             path,
@@ -213,10 +213,10 @@ class Worker(WorkerBase):
         set_random_seed(self.model_config.seed)
 
     def cache_swap(
-        self,
-        blocks_to_swap_in: torch.Tensor,
-        blocks_to_swap_out: torch.Tensor,
-        blocks_to_copy: torch.Tensor,
+            self,
+            blocks_to_swap_in: torch.Tensor,
+            blocks_to_swap_out: torch.Tensor,
+            blocks_to_copy: torch.Tensor,
     ) -> None:
         # Issue cache operations.
         if blocks_to_swap_out.numel() > 0:
@@ -258,9 +258,9 @@ class Worker(WorkerBase):
         # logger.info(f"Pre Lora Time: {pre_lora_time * 1000:.2f} ms")
 
     def cache_save_load(
-        self,
-        blocks_to_save: torch.Tensor,
-        blocks_to_load: torch.Tensor,
+            self,
+            blocks_to_save: torch.Tensor,
+            blocks_to_load: torch.Tensor,
     ) -> None:
         if blocks_to_save.numel() > 0:
             self.cache_engine.save_to_disk(blocks_to_save)
@@ -269,9 +269,10 @@ class Worker(WorkerBase):
 
     @torch.inference_mode()
     def execute_model(
-        self,
-        execute_model_req: Optional[ExecuteModelRequest] = None
+            self,
+            execute_model_req: Optional[ExecuteModelRequest] = None
     ) -> List[Union[SamplerOutput, PoolerOutput]]:
+        # TODO yfliu: Consider distributed inference.
         self.do_lora_prefetch(execute_model_req)  # trigger processes to (pre)fetch loras
 
         if not self.is_driver_worker:
@@ -305,11 +306,11 @@ class Worker(WorkerBase):
                                       dtype=torch.int64).view(-1, 2)
 
         blocks_to_save = torch.tensor(execute_model_req.blocks_to_save,
-                                         device="cpu",
-                                         dtype=torch.int64).view(-1, 2)
+                                      device="cpu",
+                                      dtype=torch.int64).view(-1, 2)
         blocks_to_load = torch.tensor(execute_model_req.blocks_to_load,
-                                          device="cpu",
-                                          dtype=torch.int64).view(-1, 2)
+                                      device="cpu",
+                                      dtype=torch.int64).view(-1, 2)
 
         data: Dict[str, Any] = {
             "num_seq_groups": num_seq_groups,
@@ -406,10 +407,10 @@ class Worker(WorkerBase):
 
 
 def init_worker_distributed_environment(
-    parallel_config: ParallelConfig,
-    rank: int,
-    distributed_init_method: Optional[str] = None,
-    local_rank: int = -1,
+        parallel_config: ParallelConfig,
+        rank: int,
+        distributed_init_method: Optional[str] = None,
+        local_rank: int = -1,
 ) -> None:
     """Initialize the distributed environment."""
     set_custom_all_reduce(not parallel_config.disable_custom_all_reduce)

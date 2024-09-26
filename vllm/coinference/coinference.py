@@ -237,8 +237,8 @@ class CoInference:
         #                        + self.following_stages_info["stage_gap"])
         self.remaining_time = prefill_time_per_token * prompt_tokens + decode_time_per_token * decode_tokens
 
-        logger.info(f"coinf_id: {self.coinf_id}, stages {self.current_stage_id + 1}/{len(self.stages)}, "
-                    f"prefill_token {prompt_tokens}, decode_token {decode_tokens}.")
+        # logger.info(f"coinf_id: {self.coinf_id}, stages {self.current_stage_id + 1}/{len(self.stages)}, "
+        #             f"prefill_token {prompt_tokens}, decode_token {decode_tokens}.")
 
     def update_online_profiling(self):
         # timer = time.time()

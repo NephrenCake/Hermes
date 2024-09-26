@@ -175,7 +175,7 @@ class RequestTracker:
 
         self._request_streams[request_id].finish()
         self._request_streams.pop(request_id, None)
-        
+
 
     def get_new_and_finished_requests(self) -> Tuple[List[Dict], Set[str]]:
         """Get the new requests and finished requests to be
@@ -293,14 +293,14 @@ class _AsyncLLMEngine(LLMEngine):
         #     f"execute: {(execute_time * 1000):.2f}ms({(execute_time / cur_step_time * 100):.2f}%), "
         #     f"cur_step: {(cur_step_time * 1000):.2f}ms"
         # )
-        # if not scheduler_outputs.swap_info_empty():
-        #     logger.info(f"num_blocks: (c2g: {len(scheduler_outputs.blocks_to_swap_in)}, "
-        #                 f"g2c: {len(scheduler_outputs.blocks_to_swap_out)}, "
-        #                 f"d2c: {len(scheduler_outputs.blocks_to_load)}, "
-        #                 f"c2d: {len(scheduler_outputs.blocks_to_save)}), "
-        #                 f"execute_time: {execute_time*1000:.2f} ms, "
-        #                 f"swap_time: {swap_time*1000:.2f} ms, "
-        #                 f"load_time: {load_time*1000:.2f} ms")
+        if not scheduler_outputs.swap_info_empty():
+            logger.info(f"num_blocks: (c2g: {len(scheduler_outputs.blocks_to_swap_in)}, "
+                        f"g2c: {len(scheduler_outputs.blocks_to_swap_out)}, "
+                        f"d2c: {len(scheduler_outputs.blocks_to_load)}, "
+                        f"c2d: {len(scheduler_outputs.blocks_to_save)}), "
+                        f"execute_time: {execute_time * 1000:.2f} ms, "
+                        f"swap_time: {swap_time * 1000:.2f} ms, "
+                        f"load_time: {load_time * 1000:.2f} ms")
         if len(scheduler_outputs.blocks_to_load) > 0:
             logger.info(f"load {len(scheduler_outputs.blocks_to_load)} blocks")
         return request_outputs

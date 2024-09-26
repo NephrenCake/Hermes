@@ -49,7 +49,7 @@ class BlockAllocatorBase(ABC):
     @abstractmethod
     def get_num_free_blocks(self) -> int:
         pass
-    
+
     @abstractmethod
     def get_num_cached_blocks(self) -> int:
         pass
@@ -71,14 +71,13 @@ class BlockAllocatorBase(ABC):
         pass
 
 
-
-class CacheSwapMapping():
+class CacheSwapMapping:
     def __init__(self) -> None:
         self.cache_swap_in_mapping: List[Tuple[int, int]] = []
         self.cache_swap_out_mapping: List[Tuple[int, int]] = []
         self.cache_save_mapping: List[Tuple[int, int]] = []
         self.cache_load_mapping: List[Tuple[int, int]] = []
-        
+
     def clear(self) -> None:
         self.cache_swap_in_mapping = []
         self.cache_swap_out_mapping = []
@@ -124,12 +123,12 @@ class CachedBlockAllocator(BlockAllocatorBase):
                 if self.device == Device.GPU:
                     next_level_block_number = self.next_level_cache.swap_out(block)
                     self.cache_swap_mapping.cache_swap_out_mapping.append((block.block_number,
-                                                                        next_level_block_number))
+                                                                           next_level_block_number))
                 # cpu allocator, save to disk
                 else:
                     next_level_block_number = self.next_level_cache.save_to_disk(block)
                     self.cache_swap_mapping.cache_save_mapping.append((block.block_number,
-                                                                    next_level_block_number))
+                                                                       next_level_block_number))
             block.block_hash = block_hash
             block.num_hashed_tokens = num_hashed_tokens
             return block
@@ -145,7 +144,7 @@ class CachedBlockAllocator(BlockAllocatorBase):
                  num_hashed_tokens: int = 0) -> PhysicalTokenBlock:
         if block_hash is None:
             block_hash = next(self.default_hash_ctr)
-            
+
         if block_hash in self.evictor:
             # assert block_hash not in self.cached_blocks
             block = self.evictor.remove(block_hash)
@@ -175,7 +174,7 @@ class CachedBlockAllocator(BlockAllocatorBase):
 
     def get_num_free_blocks(self) -> int:
         return len(self.free_block_ids) + self.evictor.num_blocks
-    
+
     def get_num_cached_blocks(self) -> int:
         return self.evictor.num_blocks
 
@@ -192,7 +191,7 @@ class CachedBlockAllocator(BlockAllocatorBase):
         block.block_hash = block_hash
         del self.cached_blocks[old_hash]
         self.cached_blocks[block_hash] = block
-    
+
     def swap_out(self, pre_level_block: PhysicalTokenBlock) -> int:
         assert self.device == Device.CPU
         # assert not self.contains_block(pre_level_block.block_hash)
@@ -211,10 +210,10 @@ class UncachedBlockAllocator(BlockAllocatorBase):
     """
 
     def __init__(
-        self,
-        device: Device,
-        block_size: int,
-        num_blocks: int,
+            self,
+            device: Device,
+            block_size: int,
+            num_blocks: int,
     ) -> None:
         self.device = device
         self.block_size = block_size
@@ -262,7 +261,7 @@ class UncachedBlockAllocator(BlockAllocatorBase):
     def update_hash(self, block_hash: int, block: PhysicalTokenBlock):
         raise NotImplementedError(
             "Invalid codepath for uncached block allocator.")
-        
+
     def swap_out(self, pre_level_block: PhysicalTokenBlock) -> int:
         raise NotImplementedError(
             "Invalid codepath for uncached block allocator.")
@@ -272,14 +271,14 @@ class BlockSpaceManagerV1(BlockSpaceManager):
     """Manages the mapping between logical and physical token blocks."""
 
     def __init__(
-        self,
-        block_size: int,
-        num_gpu_blocks: int,
-        num_cpu_blocks: int,
-        num_disk_blocks: int,
-        watermark: float = 0.01,
-        sliding_window: Optional[int] = None,
-        enable_caching: bool = False,
+            self,
+            block_size: int,
+            num_gpu_blocks: int,
+            num_cpu_blocks: int,
+            num_disk_blocks: int,
+            watermark: float = 0.01,
+            sliding_window: Optional[int] = None,
+            enable_caching: bool = False,
     ) -> None:
         self.block_size = block_size
         self.num_total_gpu_blocks = num_gpu_blocks
@@ -344,7 +343,6 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                               cross_num_required_blocks
 
         if self.block_sliding_window is not None:
-
             num_required_blocks = min(num_required_blocks,
                                       self.block_sliding_window)
         num_free_gpu_blocks = self.gpu_allocator.get_num_free_blocks()
@@ -359,10 +357,10 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             return AllocStatus.LATER
 
     def _allocate_sequence(
-        self,
-        seq: Sequence,
-        ref_count: int,
-        is_encoder_decoder: bool = True,
+            self,
+            seq: Sequence,
+            ref_count: int,
+            is_encoder_decoder: bool = True,
     ) -> BlockTable:
         # Allocate new physical token blocks that will store the prompt tokens.
         num_prompt_blocks = len(seq.logical_token_blocks)
@@ -396,8 +394,8 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         return block_table
 
     def allocate(
-        self, 
-        seq_group: SequenceGroup,
+            self,
+            seq_group: SequenceGroup,
     ) -> None:
         is_encoder_decoder = seq_group.is_encoder_decoder()
         check_no_caching_or_swa_for_blockmgr_encdec(self, seq_group)
@@ -438,9 +436,9 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         return num_seqs <= num_free_gpu_blocks
 
     def _promote_last_block(
-        self,
-        seq: Sequence,
-        last_block: PhysicalTokenBlock,
+            self,
+            seq: Sequence,
+            last_block: PhysicalTokenBlock,
     ) -> PhysicalTokenBlock:
         assert self.enable_caching
 
@@ -458,16 +456,16 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             return last_block
 
     def _is_last_block_full(
-        self,
-        seq: Sequence,
+            self,
+            seq: Sequence,
     ) -> bool:
         token_ids_len = seq.data.get_len()
         return token_ids_len > 0 and token_ids_len % seq.block_size == 0
 
     def _maybe_promote_last_block(
-        self,
-        seq: Sequence,
-        last_block: PhysicalTokenBlock,
+            self,
+            seq: Sequence,
+            last_block: PhysicalTokenBlock,
     ) -> PhysicalTokenBlock:
         if self._is_last_block_full(seq):
             return self._promote_last_block(seq, last_block)
@@ -475,8 +473,8 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             return last_block
 
     def _allocate_last_physical_block(
-        self,
-        seq: Sequence,
+            self,
+            seq: Sequence,
     ) -> PhysicalTokenBlock:
         # Called before a new block is appended.
         # This is in charge of allocating a new physical block (to be appended).
@@ -503,9 +501,9 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         return new_block
 
     def append_slots(
-        self,
-        seq: Sequence,
-        num_lookahead_slots: int = 0,
+            self,
+            seq: Sequence,
+            num_lookahead_slots: int = 0,
     ) -> List[Tuple[int, int]]:
         """Allocate a physical slot for a new token."""
         logical_blocks = seq.logical_token_blocks
@@ -600,10 +598,12 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             return AllocStatus.LATER
 
     def _swap_block_table(
-            self, block_table: BlockTable, src_allocator: BlockAllocatorBase,
+            self,
+            block_table: BlockTable,
+            src_allocator: BlockAllocatorBase,
             dest_allocator: BlockAllocatorBase,
-            mapping: Dict[PhysicalTokenBlock,
-                          PhysicalTokenBlock]) -> BlockTable:
+            mapping: Dict[PhysicalTokenBlock, PhysicalTokenBlock]
+    ) -> BlockTable:
         new_block_table = []
 
         for from_block in block_table:
@@ -731,9 +731,9 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         return self.cpu_allocator.get_num_free_blocks()
 
     def access_all_blocks_in_seq(
-        self,
-        seq: Sequence,
-        access_time: float,
+            self,
+            seq: Sequence,
+            access_time: float,
     ) -> None:
         if self.enable_caching:
             # Update the last accessed time of all the blocks accessed
@@ -783,7 +783,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         if self.enable_caching:
             for seq in seq_group.seqs_dict.values():
                 self.compute_full_blocks_in_seq(seq)
-                
+
     def swap_out_cached_block(self, block_hash: int):
         self.gpu_allocator: CachedBlockAllocator
         self.cpu_allocator: CachedBlockAllocator
@@ -795,9 +795,9 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                                                       block_to_swap_out.num_hashed_tokens)
         cpu_block.computed = block_to_swap_out.computed
         self.cpu_allocator.evictor.add(cpu_block)
-        self.cache_swap_mapping.cache_swap_out_mapping.append((block_to_swap_out.block_number, 
+        self.cache_swap_mapping.cache_swap_out_mapping.append((block_to_swap_out.block_number,
                                                                cpu_block.block_number))
-        
+
     def swap_in_cached_block(self, block_hash: int):
         self.gpu_allocator: CachedBlockAllocator
         self.cpu_allocator: CachedBlockAllocator
@@ -809,9 +809,9 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                                                       block_to_swap_in.num_hashed_tokens)
         gpu_block.computed = block_to_swap_in.computed
         self.gpu_allocator.evictor.add(gpu_block)
-        self.cache_swap_mapping.cache_swap_in_mapping.append((block_to_swap_in.block_number, 
-                                                               gpu_block.block_number))
-        
+        self.cache_swap_mapping.cache_swap_in_mapping.append((block_to_swap_in.block_number,
+                                                              gpu_block.block_number))
+
     def save_cached_block(self, block_hash: int):
         self.cpu_allocator: CachedBlockAllocator
         assert block_hash in self.cpu_allocator.evictor
@@ -821,7 +821,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         disk_block_id = self.disk_block_manager.save_to_disk(block_to_save)
         self.cache_swap_mapping.cache_save_mapping.append((block_to_save.block_number,
                                                            disk_block_id))
-        
+
     def load_cached_block(self, block_hash: int):
         self.cpu_allocator: CachedBlockAllocator
         assert self.disk_block_manager.contains_block(block_hash)

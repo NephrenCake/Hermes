@@ -1,0 +1,13 @@
+python -m vllm.entrypoints.openai.api_server \
+  --uvicorn-log-level warning \
+  --model /state/partition/llama/llama-7b-hf \
+  --served-model-name gpt-3.5-turbo \
+  --gpu-memory-utilization 0.6 \
+  --tensor-parallel-size 1 \
+  --swap-space 10 \
+  --max-model-len 16000 \
+  --chat-template ./examples/template_alpaca.jinja \
+  --coinference-scheduler \
+  --scheduling-policy Hermes \
+  --enable-prefix-caching \
+  --num-disk-blocks 2000

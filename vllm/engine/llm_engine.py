@@ -794,10 +794,10 @@ class LLMEngine:
                 running_queue_size=scheduler_outputs.running_queue_size,
                 advised_lora=scheduler_outputs.advised_lora,
             )
-            output, swap_time, execute_time, load_time  = self.model_executor.execute_model(
+            output, swap_time, execute_time, load_time = self.model_executor.execute_model(
                 execute_model_req=execute_model_req)
         else:
-            output, swap_time, execute_time, load_time  = [], 0, 0, 0
+            output, swap_time, execute_time, load_time = [], 0, 0, 0
 
         request_outputs = self._process_model_outputs(
             output, scheduler_outputs.scheduled_seq_groups,
@@ -1061,7 +1061,7 @@ class LLMEngine:
             best_of_requests=best_of_requests,
             n_requests=n_requests,
             finished_reason_requests=finished_reason_requests,
-            
+
             # CoInference
             num_coinferences=num_coinferences
         )
@@ -1077,7 +1077,7 @@ class LLMEngine:
 
     def check_health(self) -> None:
         self.model_executor.check_health()
-        
+
     def test_swap_out(self, num_blocks: int) -> None:
         blocks_to_swap_out = [(i, i) for i in range(num_blocks)]
         execute_model_req = ExecuteModelRequest(
@@ -1091,4 +1091,4 @@ class LLMEngine:
             execute_model_req=execute_model_req)
         t2 = time.time()
         logger.info(f"swap cost {(t2-t1)*1000} ms")
-        
+

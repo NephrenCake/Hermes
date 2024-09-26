@@ -32,5 +32,3 @@ python -m vllm.entrypoints.openai.api_server \
   --max-lora-rank 16 \
   --max-cpu-loras 20 \
   --lora-modules $lora_modules_str
-#  --proactive-reservation \
-

@@ -22,10 +22,10 @@ class CacheEngine:
     """
 
     def __init__(
-        self,
-        cache_config: CacheConfig,
-        model_config: ModelConfig,
-        parallel_config: ParallelConfig,
+            self,
+            cache_config: CacheConfig,
+            model_config: ModelConfig,
+            parallel_config: ParallelConfig,
     ) -> None:
         self.cache_config = cache_config
         self.model_config = model_config
@@ -59,17 +59,18 @@ class CacheEngine:
         self.gpu_cache = self._allocate_kv_cache(self.num_gpu_blocks, "cuda")
         self.cpu_cache = self._allocate_kv_cache(self.num_cpu_blocks, "cpu")
 
-        cur_time = datetime.datetime.now().strftime(('%Y-%m-%d-%H-%M-%S'))
-        self.disk_dir_path = os.path.join(self.cache_config.disk_dir_path, cur_time)
+        self.disk_dir_path = self.cache_config.disk_dir_path
+        logger.info(f"Disk dir path: {self.disk_dir_path}")
+        os.system(f"rm -rf {self.disk_dir_path}")
         os.makedirs(self.disk_dir_path)
 
     def __del__(self):
         os.system(f"rm -rf {self.disk_dir_path}")
 
     def _allocate_kv_cache(
-        self,
-        num_blocks: int,
-        device: str,
+            self,
+            num_blocks: int,
+            device: str,
     ) -> List[torch.Tensor]:
         """Allocates KV cache on the specified device."""
         kv_cache_shape = self.attn_backend.get_kv_cache_shape(
@@ -112,7 +113,7 @@ class CacheEngine:
         #         torch.save(self.cpu_cache[i][1][src], value_file_name)
 
         for src, dst in src_to_dst:
-            tensor_list = [torch.unsqueeze(self.cpu_cache[i][:,src,], 0) for i in range(self.num_layers)]
+            tensor_list = [torch.unsqueeze(self.cpu_cache[i][:, src, ], 0) for i in range(self.num_layers)]
             tensor_to_save = torch.cat(tensor_list, 0)
             file_name = os.path.join(self.disk_dir_path, f"{dst}.pt")
             torch.save(tensor_to_save, file_name)
@@ -133,12 +134,11 @@ class CacheEngine:
             for i in range(self.num_layers):
                 self.cpu_cache[i][:, dst] = tensor_loaded[i]
 
-
     @staticmethod
     def get_cache_block_size(
-        cache_config: CacheConfig,
-        model_config: ModelConfig,
-        parallel_config: ParallelConfig,
+            cache_config: CacheConfig,
+            model_config: ModelConfig,
+            parallel_config: ParallelConfig,
     ) -> int:
         head_size = model_config.get_head_size()
         num_heads = model_config.get_num_kv_heads(parallel_config)

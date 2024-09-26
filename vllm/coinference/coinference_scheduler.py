@@ -224,7 +224,10 @@ class CoInferenceScheduler:
                         seqs[0].data.get_len()):
                     do_sample = False
                 if len(common_computed_block_nums) > 0:
-                    logger.info(f"{seq_group.request_id} prefill with prefix: {len(common_computed_block_nums)}/{len(block_tables[seqs[0].seq_id])}")
+                    logger.info(
+                        f"{seq_group.request_id} prefill with prefix: "
+                        f"{len(common_computed_block_nums)}/{len(block_tables[seqs[0].seq_id])}"
+                    )
 
             # It assumes the scheduled_seq_groups is ordered by
             # prefill < decoding.
@@ -368,9 +371,9 @@ class CoInferenceScheduler:
             num_prefill_groups=len(schedule_prefill_outputs.seq_groups),
             num_batched_tokens=(schedule_prefill_outputs.num_batched_tokens +
                                 schedule_decode_outputs.num_batched_tokens),
-            blocks_to_swap_in=(schedule_decode_outputs.blocks_to_swap_in + 
+            blocks_to_swap_in=(schedule_decode_outputs.blocks_to_swap_in +
                                self.block_manager.cache_swap_mapping.cache_swap_in_mapping),
-            blocks_to_swap_out=(schedule_swapout_outputs.blocks_to_swap_out + 
+            blocks_to_swap_out=(schedule_swapout_outputs.blocks_to_swap_out +
                                 self.block_manager.cache_swap_mapping.cache_swap_out_mapping),
             blocks_to_copy=schedule_decode_outputs.blocks_to_copy,
             blocks_to_save=self.block_manager.cache_swap_mapping.cache_save_mapping,
