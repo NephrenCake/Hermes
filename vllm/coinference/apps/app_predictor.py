@@ -6,6 +6,7 @@ import random
 import numpy as np
 from scipy.stats import skewnorm
 from vllm.logger import init_logger
+from vllm.coinference.Bayes.bayes_coinfer import Bayes_predictors, Bayes_predictor
 
 logger = init_logger(__name__)
 
@@ -141,7 +142,8 @@ class AppPredictor:
         self.app_name = app_name
         with open(os.path.join(os.path.dirname(__file__), "task_models_skewnorm.json"), 'r') as f:
             self.model_dict = json.load(f)[app_name]
-        self.distribution: Dict[str, Dict[str, Distribution]] = {
+        self.app_name = app_name
+        self.distribution: Dict = {
             stage_name: {
                 "stage_gap": Distribution(window_size).add_samples(
                     [(
@@ -192,10 +194,13 @@ class AppPredictor:
                 "next_stage": self.distribution[stage_name]["next_stage"],
             } for stage_name in self.model_dict["stage_list"]
         }
-        profiling_distribution["stage_list"] = self.model_dict["stage_list"]
-        json_file = f"{self.app_name}.json"
-        with open(json_file, 'w') as f:
-            json.dump(profiling_distribution, f)
+        logger.info(f"AppPredictor {app_name} initialized. Prior distribution: {prior_distribution}")
+
+        if app_name in ['got_docmerge', 'factool_code','factool_kbqa','factool_math']:
+            self.bayes_predictor = Bayes_predictors[app_name]
+            logger.info(f'bayes net of {app_name} is loaded')
+        else:
+            self.bayes_predictor = None
 
     def set_seed(self, seed):
         random.seed(seed)
@@ -212,6 +217,19 @@ class AppPredictor:
             evidence = {}
 
         prompt_tokens, decode_tokens, stage_gap = 0, 0, 0
+        bayes_result = []
+        if self.bayes_predictor != None:     ### use bayes prediction for no-loop apps
+            row = []
+            for stage_name in self.model_dict["stage_list"]:
+                try:
+                    row.append(np.mean(evidence[stage_name]['prompt']))
+                    row.append(np.mean(evidence[stage_name]['decode']))
+                except:
+                    break
+            assert len(row)==2*len(list(evidence.keys())), "bayes predict input wrong"
+            bayes_result = self.bayes_predictor.following_predict(row, int(len(row)/2))
+            logger.info(f'{self.app_name} result: {bayes_result}')
+
         follow_up = False
         for stage_name in self.model_dict["stage_list"]:
             if not follow_up:
@@ -228,12 +246,16 @@ class AppPredictor:
             parallelism = self.distribution[stage_name]["parallelism"].get_posterior_mean_with_bayesian(
                 new_samples=evidence.get(stage_name, {}).get("parallelism", []), weight=10
             )
-            prompt_tokens += self.distribution[stage_name]["prompt"].get_posterior_mean_with_bayesian(
-                new_samples=evidence.get(stage_name, {}).get("prompt", []), weight=10
-            ) * parallelism * loops
-            decode_tokens += self.distribution[stage_name]["decode"].get_posterior_mean_with_bayesian(
-                new_samples=evidence.get(stage_name, {}).get("decode", []), weight=10
-            ) * parallelism * loops
+            if bayes_result == []:
+                prompt_tokens += self.distribution[stage_name]["prompt"].get_posterior_mean_with_bayesian(
+                    new_samples=evidence.get(stage_name, {}).get("prompt", []), weight=10
+                ) * parallelism * loops
+                decode_tokens += self.distribution[stage_name]["decode"].get_posterior_mean_with_bayesian(
+                    new_samples=evidence.get(stage_name, {}).get("decode", []), weight=10
+                ) * parallelism * loops
+            else:
+                prompt_tokens += bayes_result[f'{stage_name}_p'] * parallelism * loops
+                decode_tokens += bayes_result[f'{stage_name}_c'] * parallelism * loops
             stage_gap += self.distribution[stage_name]["stage_gap"].get_posterior_mean_with_bayesian(
                 new_samples=evidence.get(stage_name, {}).get("stage_gap", []), weight=10
             ) * loops
