@@ -319,6 +319,8 @@ class CoInferenceScheduler:
         # split coinference to running_queue and waiting_queue
         split_outputs = self.split_seq_groups(self.coinferences_queue)
 
+        self.block_manager.cache_swap_mapping.clear()
+
         # swap out all seq_group in waiting_queue
         schedule_swapout_outputs = self.schedule_swapout(split_outputs.swapout_queue)
 
@@ -372,19 +374,18 @@ class CoInferenceScheduler:
             num_batched_tokens=(schedule_prefill_outputs.num_batched_tokens +
                                 schedule_decode_outputs.num_batched_tokens),
             blocks_to_swap_in=(schedule_decode_outputs.blocks_to_swap_in +
-                               self.block_manager.cache_swap_mapping.cache_swap_in_mapping),
+                               self.block_manager.cache_swap_mapping.cpu2gpu),
             blocks_to_swap_out=(schedule_swapout_outputs.blocks_to_swap_out +
-                                self.block_manager.cache_swap_mapping.cache_swap_out_mapping),
+                                self.block_manager.cache_swap_mapping.gpu2cpu),
             blocks_to_copy=schedule_decode_outputs.blocks_to_copy,
-            blocks_to_save=self.block_manager.cache_swap_mapping.cache_save_mapping,
-            blocks_to_load=self.block_manager.cache_swap_mapping.cache_load_mapping,
+            blocks_to_save=self.block_manager.cache_swap_mapping.cpu2disk,
+            blocks_to_load=self.block_manager.cache_swap_mapping.disk2cpu,
             ignored_seq_groups=split_outputs.ignored_seq_groups,
             num_lookahead_slots=0,
             running_queue_size=0,
             preempted=len(split_outputs.swapout_queue),
             advised_lora=advised_lora,
         )
-        self.block_manager.cache_swap_mapping.clear()
         return schedule_outputs
 
     def split_seq_groups(self, coinferences_queue: List[CoInference]) -> SplitSeqGroupOutputs:

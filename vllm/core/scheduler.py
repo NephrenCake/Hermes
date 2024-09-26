@@ -152,17 +152,17 @@ class SchedulerOutputs:
     def is_empty(self) -> bool:
         # NOTE: We do not consider the ignored sequence groups.
         return (not self.scheduled_seq_groups and not self.blocks_to_swap_in
-                and not self.blocks_to_swap_out and not self.blocks_to_copy 
+                and not self.blocks_to_swap_out and not self.blocks_to_copy
                 and not self.blocks_to_save and not self.blocks_to_load)
 
     def _sort_by_lora_ids(self):
         self.scheduled_seq_groups = sorted(
             self.scheduled_seq_groups,
             key=lambda g: (g.seq_group.lora_int_id, g.seq_group.request_id))
-        
+
     def swap_info_empty(self) -> bool:
-        return (not self.blocks_to_swap_in and not self.blocks_to_swap_out 
-                and not self.blocks_to_copy 
+        return (not self.blocks_to_swap_in and not self.blocks_to_swap_out
+                and not self.blocks_to_copy
                 and not self.blocks_to_save and not self.blocks_to_load)
 
     @property
@@ -829,14 +829,14 @@ class Scheduler:
                                   swapped_in.decode_seq_groups),
             num_prefill_groups=len(prefills.seq_groups),
             num_batched_tokens=budget.num_batched_tokens,
-            blocks_to_swap_in=(swapped_in.blocks_to_swap_in + 
-                               self.block_manager.cache_swap_mapping.cache_swap_in_mapping),
-            blocks_to_swap_out=(running_scheduled.blocks_to_swap_out + 
-                                self.block_manager.cache_swap_mapping.cache_swap_out_mapping),
+            blocks_to_swap_in=(swapped_in.blocks_to_swap_in +
+                               self.block_manager.cache_swap_mapping.cpu2gpu),
+            blocks_to_swap_out=(running_scheduled.blocks_to_swap_out +
+                                self.block_manager.cache_swap_mapping.gpu2cpu),
             blocks_to_copy=running_scheduled.blocks_to_copy +
             swapped_in.blocks_to_copy,
-            blocks_to_save=self.block_manager.cache_swap_mapping.cache_save_mapping,
-            blocks_to_load=self.block_manager.cache_swap_mapping.cache_load_mapping,
+            blocks_to_save=self.block_manager.cache_swap_mapping.cpu2disk,
+            blocks_to_load=self.block_manager.cache_swap_mapping.disk2cpu,
             ignored_seq_groups=prefills.ignored_seq_groups +
             swapped_in.infeasible_seq_groups,
             num_lookahead_slots=running_scheduled.num_lookahead_slots,

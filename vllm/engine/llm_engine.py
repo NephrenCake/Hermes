@@ -918,7 +918,7 @@ class LLMEngine:
         num_total_disk = self.cache_config.num_disk_blocks
         disk_cache_usage_sys = 0.
         if num_total_disk is not None and num_total_disk > 0:
-            num_free_disk = self.scheduler.block_manager.disk_block_manager.get_num_free_blocks()
+            num_free_disk = self.scheduler.block_manager.disk_allocator.get_num_free_blocks()
             disk_cache_usage_sys = 1.0 - (num_free_disk / num_total_disk)
 
         num_load_blocks = 0

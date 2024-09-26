@@ -76,7 +76,7 @@ class Worker(WorkerBase):
 
         ModelRunnerClass = (EmbeddingModelRunner if
                             self.model_config.embedding_mode else ModelRunner)
-        self.model_runner = ModelRunnerClass(
+        self.model_runner: ModelRunner = ModelRunnerClass(
             model_config,
             parallel_config,
             scheduler_config,

@@ -293,6 +293,10 @@ class _AsyncLLMEngine(LLMEngine):
         #     f"execute: {(execute_time * 1000):.2f}ms({(execute_time / cur_step_time * 100):.2f}%), "
         #     f"cur_step: {(cur_step_time * 1000):.2f}ms"
         # )
+        logger.info(f"gpu evictor: {self.scheduler.block_manager.gpu_allocator.evictor.num_blocks}, "
+                    f"gpu cached_blocks: {len(self.scheduler.block_manager.gpu_allocator.cached_blocks)}, "
+                    f"cpu evictor: {self.scheduler.block_manager.cpu_allocator.evictor.num_blocks}, "
+                    f"cpu cached_blocks: {len(self.scheduler.block_manager.cpu_allocator.cached_blocks)}, ")
         if not scheduler_outputs.swap_info_empty():
             logger.info(f"num_blocks: (c2g: {len(scheduler_outputs.blocks_to_swap_in)}, "
                         f"g2c: {len(scheduler_outputs.blocks_to_swap_out)}, "

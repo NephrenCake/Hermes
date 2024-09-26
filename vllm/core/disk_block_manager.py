@@ -2,9 +2,10 @@ from typing import Dict, List, Tuple
 from collections import deque, OrderedDict
 
 from vllm.block import PhysicalTokenBlock, DiskBlock
+from vllm.utils import Device
 
 
-class DiskBlockManager:
+class DiskBlockAllocator:
     def __init__(
             self,
             num_blocks: int,
@@ -20,10 +21,12 @@ class DiskBlockManager:
             block: PhysicalTokenBlock,
     ) -> int:
         if len(self.free_blocks) <= 0:
-            self.free_some_blocks()
+            assert False, "No free disk space left."
+            # self.free_some_blocks()
         assert block.block_hash not in self.block_table
         block_id = self.free_blocks.popleft()
-        self.block_table[block.block_hash] = DiskBlock(block_id,
+        self.block_table[block.block_hash] = DiskBlock(Device.DISK,
+                                                       block_id,
                                                        block.block_hash,
                                                        block.num_hashed_tokens,
                                                        block.computed)

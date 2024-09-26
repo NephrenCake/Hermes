@@ -83,11 +83,13 @@ class PhysicalTokenBlock:
 class DiskBlock:
     def __init__(
             self,
+            device: Device,
             block_number: int,
             block_hash: int,
             num_hashed_tokens: int,
             computed: bool,
     ) -> None:
+        self.device = device
         self.block_number = block_number
         self.block_hash = block_hash
         self.num_hashed_tokens = num_hashed_tokens
