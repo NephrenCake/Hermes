@@ -6,7 +6,6 @@ from os.path import commonprefix
 from typing import Dict, List, Optional
 from typing import Sequence as GenericSequence
 from typing import Set, Tuple
-from collections import deque
 
 from vllm.block import BlockTable, PhysicalTokenBlock
 from vllm.core.block.utils import check_no_caching_or_swa_for_blockmgr_encdec
@@ -93,47 +92,53 @@ class CachedBlockAllocator(BlockAllocatorBase):
                  block_size: int,
                  num_blocks: int,
                  eviction_policy: EvictionPolicy = EvictionPolicy.LRU,
-                 next_level_cache: BlockAllocatorBase = None,
+                 next_level_cache: 'CachedBlockAllocator' = None,
                  cache_swap_mapping: CacheSwapMapping = None) -> None:
         self.device = device
         self.block_size = block_size
         self.num_blocks = num_blocks
 
-        self.free_block_ids = deque([i for i in range(num_blocks)])
-        self.cached_blocks: Dict[int, PhysicalTokenBlock] = {}  # block_hash -> block
+        self.current_num_blocks = 0
+        self.cached_blocks: Dict[int, PhysicalTokenBlock] = {}
 
         self.evictor: Evictor = make_evictor(eviction_policy)
 
         self.default_hash_ctr = count()
 
-        self.next_level_cache = next_level_cache
-        self.cache_swap_mapping = cache_swap_mapping
+        self.next_level_cache: 'CachedBlockAllocator' = next_level_cache
+        self.cache_swap_mapping: CacheSwapMapping = cache_swap_mapping
 
     def _allocate_block(self, block_hash: int,
                         num_hashed_tokens: int) -> PhysicalTokenBlock:
-        if len(self.free_block_ids) == 0:
+        if self.current_num_blocks == self.num_blocks:
             block = self.evictor.evict()  # evict a block which has no reference
+
             if self.next_level_cache is not None and not self.next_level_cache.contains_block(block.block_hash):
-                if self.device == Device.GPU:  # gpu allocator, swap to cpu
-                    next_level_block = self.next_level_cache.allocate(block_hash, num_hashed_tokens)
-                    self.next_level_cache.free(next_level_block)
+                # logger.info(f"[KVC Debug] > [{self.device}->{self.next_level_cache.device}] "
+                #             f"Evict {block.block_hash} to allocate {block_hash}")
+                next_level_block = self.next_level_cache.allocate(block.block_hash, block.num_hashed_tokens)
+                if self.device == Device.GPU:  # gpu allocator, swap out to cpu
                     self.cache_swap_mapping.gpu2cpu.append((block.block_number,
                                                             next_level_block.block_number))
-                elif self.device == Device.CPU:  # cpu allocator, save to disk
-                    next_level_block = self.next_level_cache.allocate(block_hash, num_hashed_tokens)
-                    self.next_level_cache.free(next_level_block)  # NotImplementedError
+                elif self.device == Device.CPU:  # cpu allocator, swap out to disk
                     self.cache_swap_mapping.cpu2disk.append((block.block_number,
                                                              next_level_block.block_number))
-                elif self.device == Device.DISK:
+                else:
                     raise NotImplementedError("DiskBlockAllocator does not support swap out.")
+                # logger.info(f"[KVC Debug] > [{self.device}->{self.next_level_cache.device}] "
+                #             f"{self.device}:{block.block_number} -> "
+                #             f"{self.next_level_cache.device}:{next_level_block.block_number}")
+                self.next_level_cache.free(next_level_block)
+
             block.block_hash = block_hash
             block.num_hashed_tokens = num_hashed_tokens
             return block
         block = PhysicalTokenBlock(device=self.device,
-                                   block_number=self.free_block_ids.popleft(),
+                                   block_number=self.current_num_blocks,
                                    block_size=self.block_size,
                                    block_hash=block_hash,
                                    num_hashed_tokens=num_hashed_tokens)
+        self.current_num_blocks += 1
         return block
 
     def allocate(self,
@@ -150,9 +155,31 @@ class CachedBlockAllocator(BlockAllocatorBase):
             block.ref_count += 1
             assert block.block_hash == block_hash
             return block
+
         if block_hash not in self.cached_blocks:
-            self.cached_blocks[block_hash] = self._allocate_block(
-                block_hash, num_hashed_tokens)
+            next_level_block = None  # lock the next level block to prevent eviction
+            if self.next_level_cache is not None and self.next_level_cache.contains_block(block_hash):
+                next_level_block = self.next_level_cache.allocate(block_hash, num_hashed_tokens)
+
+            block = self._allocate_block(block_hash, num_hashed_tokens)
+            self.cached_blocks[block_hash] = block
+
+            if next_level_block is not None:
+                # logger.info(f"[KVC Debug] > [{block.device}<-{self.next_level_cache.device}] "
+                #             f"Allocate {block_hash} from {next_level_block.block_hash}")
+                if self.device == Device.GPU:  # gpu allocator, swap in from cpu
+                    self.cache_swap_mapping.cpu2gpu.append((next_level_block.block_number,
+                                                            block.block_number))
+                elif self.device == Device.CPU:  # cpu allocator, swap in from disk
+                    self.cache_swap_mapping.disk2cpu.append((next_level_block.block_number,
+                                                             block.block_number))
+                else:
+                    raise NotImplementedError("DiskBlockAllocator does not support swap in.")
+                # logger.info(f"[KVC Debug] > [{block.device}<-{self.next_level_cache.device}] "
+                #             f"{block.device}:{block.block_number} <- "
+                #             f"{self.next_level_cache.device}:{next_level_block.block_number}")
+                self.next_level_cache.free(next_level_block)
+
         block = self.cached_blocks[block_hash]
         assert block.block_hash == block_hash
         block.ref_count += 1
@@ -170,7 +197,8 @@ class CachedBlockAllocator(BlockAllocatorBase):
             del self.cached_blocks[block.block_hash]
 
     def get_num_free_blocks(self) -> int:
-        return len(self.free_block_ids) + self.evictor.num_blocks
+        return (self.num_blocks - self.current_num_blocks +
+                self.evictor.num_blocks)
 
     def get_num_cached_blocks(self) -> int:
         return self.evictor.num_blocks
@@ -179,7 +207,8 @@ class CachedBlockAllocator(BlockAllocatorBase):
         return self.num_blocks
 
     def contains_block(self, block_hash: int) -> bool:
-        return block_hash in self.cached_blocks or block_hash in self.evictor
+        return (block_hash in self.cached_blocks or block_hash in self.evictor or
+                self.next_level_cache is not None and self.next_level_cache.contains_block(block_hash))
 
     def update_hash(self, block_hash: int, block: PhysicalTokenBlock):
         # Update the hash of block and the cached_blocks dictionary.
@@ -290,13 +319,13 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         self.cache_swap_mapping = CacheSwapMapping()
         if self.enable_caching:
             logger.info("Automatic prefix caching is enabled.")
-            self.disk_allocator: BlockAllocatorBase = CachedBlockAllocator(
+            self.disk_allocator: CachedBlockAllocator = CachedBlockAllocator(
                 device=Device.DISK, block_size=block_size, num_blocks=num_disk_blocks,
-                next_level_cache=None, cache_swap_mapping=self.cache_swap_mapping)
-            self.cpu_allocator: BlockAllocatorBase = CachedBlockAllocator(
+                next_level_cache=None, cache_swap_mapping=self.cache_swap_mapping) if num_disk_blocks else None
+            self.cpu_allocator: CachedBlockAllocator = CachedBlockAllocator(
                 device=Device.CPU, block_size=block_size, num_blocks=num_cpu_blocks,
                 next_level_cache=self.disk_allocator, cache_swap_mapping=self.cache_swap_mapping)
-            self.gpu_allocator: BlockAllocatorBase = CachedBlockAllocator(
+            self.gpu_allocator: CachedBlockAllocator = CachedBlockAllocator(
                 device=Device.GPU, block_size=block_size, num_blocks=num_gpu_blocks,
                 next_level_cache=self.cpu_allocator, cache_swap_mapping=self.cache_swap_mapping)
         else:
@@ -590,6 +619,9 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                     from_block.block_hash, from_block.num_hashed_tokens)
                 mapping[from_block] = to_block
             new_block_table.append(to_block)
+            # logger.info(f"[KVC Debug] > [{from_block.device}->{to_block.device}] "
+            #             f"{from_block.device}:{from_block.block_number} -> "
+            #             f"{to_block.device}:{to_block.block_number}")
             # Free the source block swapped in to destination.
             src_allocator.free(from_block)
 
@@ -625,9 +657,10 @@ class BlockSpaceManagerV1(BlockSpaceManager):
 
     def can_swap_out(self, seq_group: SequenceGroup) -> bool:
         blocks = self._get_physical_blocks(seq_group)
-        if len(blocks) <= self.cpu_allocator.get_num_free_blocks():
+        if len(blocks) <= self.cpu_allocator.get_num_free_blocks():  # TODO can't swap out
             logger.warning("CPU blocks are not enough to swap out.")
-        return len(blocks) <= self.cpu_allocator.get_num_free_blocks() + self.disk_allocator.get_num_free_blocks()
+        return (len(blocks) <= self.cpu_allocator.get_num_free_blocks() +
+                (self.disk_allocator.get_num_free_blocks() if self.enable_caching else 0))
 
     def swap_out(self, seq_group: SequenceGroup) -> List[Tuple[int, int]]:
         request_id = seq_group.request_id
@@ -664,8 +697,10 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         for block in set(blocks_to_free):
             if block.device == Device.GPU:
                 self.gpu_allocator.free(block)
-            else:
+            elif block.device == Device.CPU:
                 self.cpu_allocator.free(block)
+            else:
+                self.disk_allocator.free(block)
 
     def free(self, seq: Sequence) -> None:
         if seq.seq_id not in self.block_tables:
@@ -760,53 +795,3 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         if self.enable_caching:
             for seq in seq_group.seqs_dict.values():
                 self.compute_full_blocks_in_seq(seq)
-
-    # def swap_out_cached_block(self, block_hash: int):
-    #     self.gpu_allocator: CachedBlockAllocator
-    #     self.cpu_allocator: CachedBlockAllocator
-    #     assert block_hash in self.gpu_allocator.evictor
-    #     block_to_swap_out = self.gpu_allocator.evictor.remove(block_hash)
-    #     self.gpu_allocator.free_block_ids.append(block_to_swap_out.block_number)
-    #     # assert not self.cpu_allocator.contains_block(block_hash)
-    #     cpu_block = self.cpu_allocator._allocate_block(block_to_swap_out.block_hash,
-    #                                                   block_to_swap_out.num_hashed_tokens)
-    #     cpu_block.computed = block_to_swap_out.computed
-    #     self.cpu_allocator.evictor.add(cpu_block)
-    #     self.cache_swap_mapping.gpu2cpu.append((block_to_swap_out.block_number,
-    #                                             cpu_block.block_number))
-    #
-    # def swap_in_cached_block(self, block_hash: int):
-    #     self.gpu_allocator: CachedBlockAllocator
-    #     self.cpu_allocator: CachedBlockAllocator
-    #     assert block_hash in self.cpu_allocator.evictor
-    #     block_to_swap_in = self.cpu_allocator.evictor.remove(block_hash)
-    #     self.cpu_allocator.free_block_ids.append(block_to_swap_in.block_number)
-    #     # assert not self.gpu_allocator.contains_block(block_hash)
-    #     gpu_block = self.gpu_allocator._allocate_block(block_to_swap_in.block_hash,
-    #                                                   block_to_swap_in.num_hashed_tokens)
-    #     gpu_block.computed = block_to_swap_in.computed
-    #     self.gpu_allocator.evictor.add(gpu_block)
-    #     self.cache_swap_mapping.cpu2gpu.append((block_to_swap_in.block_number,
-    #                                             gpu_block.block_number))
-    #
-    # def save_cached_block(self, block_hash: int):
-    #     self.cpu_allocator: CachedBlockAllocator
-    #     assert block_hash in self.cpu_allocator.evictor
-    #     block_to_save = self.cpu_allocator.evictor.remove(block_hash)
-    #     self.cpu_allocator.free_block_ids.append(block_to_save.block_number)
-    #     # assert not self.disk_block_manager.contains_block(block_hash)
-    #     disk_block_id = self.disk_allocator.save_to_disk(block_to_save)
-    #     self.cache_swap_mapping.cpu2disk.append((block_to_save.block_number,
-    #                                              disk_block_id))
-    #
-    # def load_cached_block(self, block_hash: int):
-    #     self.cpu_allocator: CachedBlockAllocator
-    #     assert self.disk_allocator.contains_block(block_hash)
-    #     block_to_load = self.disk_allocator.load_from_disk(block_hash)
-    #     # assert not self.cpu_allocator.contains_block(block_hash)
-    #     cpu_block = self.cpu_allocator._allocate_block(block_to_load.block_hash,
-    #                                                   block_to_load.num_hashed_tokens)
-    #     cpu_block.computed = block_to_load.computed
-    #     self.cpu_allocator.evictor.add(cpu_block)
-    #     self.cache_swap_mapping.disk2cpu.append((block_to_load.block_number,
-    #                                              cpu_block.block_number))

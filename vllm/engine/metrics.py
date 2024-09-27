@@ -399,14 +399,14 @@ class StatLogger:
 
             # Log to stdout.
             logger.info(
-                "Avg prompt throughput: %.1f tokens/s, "
-                "Avg generation throughput: %.1f tokens/s, "
+                "Prompt throughput: %.1f tokens/s, "
+                "Generation throughput: %.1f tokens/s, "
                 "Running: %d reqs, Swapped: %d reqs, "
                 "Pending: %d reqs, Num CoInferences: %d, "
-                "GPU space usage: %.1f%%(%.1f%%), "
-                "CPU space usage: %.1f%%(%.1f%%), "
-                "DISK space usage: %.1f%%(%.1f%%), "
-                "Num Cache Miss: %d, ",
+                "GPU usage: %.1f%%(%.1f%%), "
+                "CPU usage: %.1f%%(%.1f%%), "
+                "DISK usage: %.1f%%(%.1f%%), "
+                "CPU Miss: %d, ",
                 prompt_throughput,
                 generation_throughput,
                 stats.num_running_sys,

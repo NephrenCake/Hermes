@@ -10,4 +10,5 @@ python -m vllm.entrypoints.openai.api_server \
   --coinference-scheduler \
   --scheduling-policy Hermes \
   --enable-prefix-caching \
+  --disk-dir-path /state1/yfliu/kv_cache \
   --num-disk-blocks 2000

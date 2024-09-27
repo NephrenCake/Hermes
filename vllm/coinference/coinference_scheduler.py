@@ -224,10 +224,11 @@ class CoInferenceScheduler:
                         seqs[0].data.get_len()):
                     do_sample = False
                 if len(common_computed_block_nums) > 0:
-                    logger.info(
-                        f"{seq_group.request_id} prefill with prefix: "
-                        f"{len(common_computed_block_nums)}/{len(block_tables[seqs[0].seq_id])}"
-                    )
+                    pass
+                    # logger.info(
+                    #     f"[KVC Debug] > {seq_group.request_id} prefill with prefix: "
+                    #     f"{len(common_computed_block_nums)}/{len(block_tables[seqs[0].seq_id])}"
+                    # )
 
             # It assumes the scheduled_seq_groups is ordered by
             # prefill < decoding.
