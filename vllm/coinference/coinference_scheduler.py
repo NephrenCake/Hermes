@@ -175,6 +175,9 @@ class CoInferenceScheduler:
         self.prefill_recorder = TimeRecorder(record_window_size=10, default_time_per_token=0.1)
         self.decode_recorder = TimeRecorder(record_window_size=50, default_time_per_token=3)
 
+        self.used_prefix_block = 0
+        self.all_prefill_block = 0
+
     @property
     def lora_enabled(self) -> bool:
         return bool(self.lora_config)
@@ -224,11 +227,15 @@ class CoInferenceScheduler:
                         seqs[0].data.get_len()):
                     do_sample = False
                 if len(common_computed_block_nums) > 0:
-                    pass
+                    self.used_prefix_block += len(common_computed_block_nums)
+                    self.all_prefill_block += len(block_tables[seqs[0].seq_id])
                     # logger.info(
                     #     f"[KVC Debug] > {seq_group.request_id} prefill with prefix: "
                     #     f"{len(common_computed_block_nums)}/{len(block_tables[seqs[0].seq_id])}"
                     # )
+                    logger.info(f"[KVC Debug] > prefix utilization: "
+                                f"{self.used_prefix_block} / {self.all_prefill_block} = "
+                                f"{self.used_prefix_block / self.all_prefill_block:.2f}")
 
             # It assumes the scheduled_seq_groups is ordered by
             # prefill < decoding.
@@ -367,20 +374,18 @@ class CoInferenceScheduler:
         # logger.info(f"\tswapout_queue: {split_outputs.swapout_queue}")
         # logger.info(f"\tswapped_queue: {split_outputs.swapped_queue}")
         # logger.info(f"\twaiting_queue: {split_outputs.waiting_queue}")
-
+        swap_mapping = self.block_manager.get_cache_swap_mapping()
         schedule_outputs = SchedulerOutputs(
             scheduled_seq_groups=(schedule_prefill_outputs.seq_groups +
                                   schedule_decode_outputs.seq_groups),
             num_prefill_groups=len(schedule_prefill_outputs.seq_groups),
             num_batched_tokens=(schedule_prefill_outputs.num_batched_tokens +
                                 schedule_decode_outputs.num_batched_tokens),
-            blocks_to_swap_in=(schedule_decode_outputs.blocks_to_swap_in +
-                               self.block_manager.cache_swap_mapping.cpu2gpu),
-            blocks_to_swap_out=(schedule_swapout_outputs.blocks_to_swap_out +
-                                self.block_manager.cache_swap_mapping.gpu2cpu),
+            blocks_to_swap_in=(schedule_decode_outputs.blocks_to_swap_in + swap_mapping.cpu2gpu),
+            blocks_to_swap_out=(schedule_swapout_outputs.blocks_to_swap_out + swap_mapping.gpu2cpu),
             blocks_to_copy=schedule_decode_outputs.blocks_to_copy,
-            blocks_to_save=self.block_manager.cache_swap_mapping.cpu2disk,
-            blocks_to_load=self.block_manager.cache_swap_mapping.disk2cpu,
+            blocks_to_save=swap_mapping.cpu2disk,
+            blocks_to_load=swap_mapping.disk2cpu,
             ignored_seq_groups=split_outputs.ignored_seq_groups,
             num_lookahead_slots=0,
             running_queue_size=0,
@@ -514,9 +519,13 @@ class CoInferenceScheduler:
         blocks_to_swap_out: List[Tuple[int, int]] = []
 
         for seq_group in swapout_queue:
+            preemption_mode = {
+                "swap": PreemptionMode.SWAP,
+                "recompute": PreemptionMode.RECOMPUTE,
+            }[self.cache_config.preemption_mode]
             self._preempt(seq_group,
                           blocks_to_swap_out,
-                          PreemptionMode.SWAP)
+                          preemption_mode)
 
         return SchedulerSwapOutOutputs(blocks_to_swap_out=blocks_to_swap_out)
 
@@ -601,6 +610,9 @@ class CoInferenceScheduler:
             # logger.info(f"Add coinference {seq_group.coinf_id} to scheduler")
 
         self.coinferences_dict[seq_group.coinf_id].add_req(seq_group, stage_name, self.scheduling_policy == "Mean-SRJF")
+
+        for seq in seq_group.seqs_dict.values():
+            seq.coinf_id = seq_group.coinf_id
 
     def abort_seq_group(self, request_id: Union[str, Iterable[str]]):
         # TODO: implement

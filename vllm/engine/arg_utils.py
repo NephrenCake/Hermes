@@ -83,6 +83,7 @@ class EngineArgs:
     scheduler_delay_factor: float = 0.0
     enable_chunked_prefill: bool = False
     num_disk_blocks: int = 1000
+    preemption_mode: str = "swap"
 
     guided_decoding_backend: str = 'outlines'
     # Speculative decoding configuration.
@@ -282,6 +283,11 @@ class EngineArgs:
                             type=int,
                             default=EngineArgs.num_disk_blocks,
                             help='total num disk blocks')
+        parser.add_argument('--preemption-mode',
+                            type=str,
+                            choices=["recompute", "swap"],
+                            default=EngineArgs.preemption_mode,
+                            help='preemption mode')
 
         parser.add_argument('--disable-sliding-window',
                             action='store_true',
@@ -615,7 +621,8 @@ class EngineArgs:
                                    model_config.get_sliding_window(),
                                    self.enable_prefix_caching,
                                    self.num_disk_blocks,
-                                   self.disk_dir_path)
+                                   self.disk_dir_path,
+                                   self.preemption_mode)
         parallel_config = ParallelConfig(
             self.pipeline_parallel_size,
             self.tensor_parallel_size,

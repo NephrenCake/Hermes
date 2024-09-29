@@ -113,10 +113,13 @@ class CachedBlockAllocator(BlockAllocatorBase):
         if self.current_num_blocks == self.num_blocks:
             block = self.evictor.evict()  # evict a block which has no reference
 
-            if self.next_level_cache is not None and not self.next_level_cache.contains_block(block.block_hash):
+            if (self.next_level_cache is not None
+                    and not self.next_level_cache.contains_block(block.block_hash)
+                    and self.next_level_cache.get_num_free_blocks() != 0):
                 # logger.info(f"[KVC Debug] > [{self.device}->{self.next_level_cache.device}] "
                 #             f"Evict {block.block_hash} to allocate {block_hash}")
                 next_level_block = self.next_level_cache.allocate(block.block_hash, block.num_hashed_tokens)
+                next_level_block.computed = True
                 if self.device == Device.GPU:  # gpu allocator, swap out to cpu
                     self.cache_swap_mapping.gpu2cpu.append((block.block_number,
                                                             next_level_block.block_number))
@@ -179,6 +182,7 @@ class CachedBlockAllocator(BlockAllocatorBase):
                 #             f"{block.device}:{block.block_number} <- "
                 #             f"{self.next_level_cache.device}:{next_level_block.block_number}")
                 self.next_level_cache.free(next_level_block)
+                block.computed = True
 
         block = self.cached_blocks[block_hash]
         assert block.block_hash == block_hash
@@ -273,8 +277,7 @@ class UncachedBlockAllocator(BlockAllocatorBase):
         return self.num_blocks
 
     def contains_block(self, block_hash: int) -> bool:
-        raise NotImplementedError(
-            "Invalid codepath for uncached block allocator.")
+        return False
 
     def update_hash(self, block_hash: int, block: PhysicalTokenBlock):
         raise NotImplementedError(
@@ -321,7 +324,8 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             logger.info("Automatic prefix caching is enabled.")
             self.disk_allocator: CachedBlockAllocator = CachedBlockAllocator(
                 device=Device.DISK, block_size=block_size, num_blocks=num_disk_blocks,
-                next_level_cache=None, cache_swap_mapping=self.cache_swap_mapping) if num_disk_blocks else None
+                next_level_cache=None, cache_swap_mapping=self.cache_swap_mapping) \
+                if num_disk_blocks else None
             self.cpu_allocator: CachedBlockAllocator = CachedBlockAllocator(
                 device=Device.CPU, block_size=block_size, num_blocks=num_cpu_blocks,
                 next_level_cache=self.disk_allocator, cache_swap_mapping=self.cache_swap_mapping)
@@ -340,6 +344,9 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         # Note that each SequenceGroup has a unique
         # request ID
         self.cross_block_tables: Dict[str, BlockTable] = {}
+
+    def get_cache_swap_mapping(self) -> CacheSwapMapping:
+        return self.cache_swap_mapping
 
     def _get_seq_num_required_blocks(self, seq: Sequence) -> int:
         return 0 if seq is None \
@@ -657,10 +664,8 @@ class BlockSpaceManagerV1(BlockSpaceManager):
 
     def can_swap_out(self, seq_group: SequenceGroup) -> bool:
         blocks = self._get_physical_blocks(seq_group)
-        if len(blocks) <= self.cpu_allocator.get_num_free_blocks():  # TODO can't swap out
-            logger.warning("CPU blocks are not enough to swap out.")
-        return (len(blocks) <= self.cpu_allocator.get_num_free_blocks() +
-                (self.disk_allocator.get_num_free_blocks() if self.enable_caching else 0))
+        blocks = [b for b in blocks if not self.gpu_allocator.contains_block(b.block_hash)]
+        return len(blocks) <= self.cpu_allocator.get_num_free_blocks()
 
     def swap_out(self, seq_group: SequenceGroup) -> List[Tuple[int, int]]:
         request_id = seq_group.request_id
@@ -762,8 +767,8 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         if max_full_block == -1:
             return
         for i in reversed(range(max_full_block)):
-            if block_table[i].computed:
-                break
+            # if block_table[i].computed:
+            #     break
             block_table[i].computed = True
 
     def get_all_computed_blocks(self, seq: Sequence) -> List[int]:

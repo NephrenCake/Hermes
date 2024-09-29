@@ -177,7 +177,7 @@ class CoInference:
         # logger.info(f"CoInfer {self.coinf_id} starts a new stage: {stage_name}, "
         #             f"following_stages_info: {self.following_stages_info}.")
 
-    def add_req(self, seq_group: SequenceGroup, stage_name: str, use_mean):
+    def add_req(self, seq_group: SequenceGroup, stage_name: Union[str, None], use_mean):
         if self.current_stage_id == len(self.stages):
             self.add_stage(stage_name, use_mean)
             self.finish_status = FinishType.UnFinished

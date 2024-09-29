@@ -59,12 +59,14 @@ class CacheEngine:
         self.cpu_cache = self._allocate_kv_cache(self.num_cpu_blocks, "cpu")
 
         self.disk_dir_path = self.cache_config.disk_dir_path
-        logger.info(f"Disk dir path: {self.disk_dir_path}")
-        os.system(f"rm -rf {self.disk_dir_path}")
-        os.makedirs(self.disk_dir_path)
+        if self.disk_dir_path is not None:
+            logger.info(f"Disk dir path: {self.disk_dir_path}")
+            os.system(f"rm -rf {self.disk_dir_path}")
+            os.makedirs(self.disk_dir_path)
 
     def __del__(self):
-        os.system(f"rm -rf {self.disk_dir_path}")
+        if self.disk_dir_path is not None:
+            os.system(f"rm -rf {self.disk_dir_path}")
 
     def _allocate_kv_cache(
             self,
@@ -102,6 +104,7 @@ class CacheEngine:
 
     def save_to_disk(self, src_to_dst: torch.Tensor) -> None:
         # kv_cache_shape: (2, num_blocks, block_size * num_kv_heads * head_size)
+        assert self.disk_dir_path is not None
         src_to_dst = src_to_dst.tolist()
         # for i in range(self.num_layers):
         #     for src, dst in src_to_dst:
@@ -118,6 +121,7 @@ class CacheEngine:
             torch.save(tensor_to_save, file_name)
 
     def load_from_disk(self, src_to_dst: torch.Tensor) -> None:
+        assert self.disk_dir_path is not None
         src_to_dst = src_to_dst.tolist()
         # for i in range(self.num_layers):
         #     for src, dst in src_to_dst:

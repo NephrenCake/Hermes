@@ -358,6 +358,7 @@ class CacheConfig:
         enable_prefix_caching: bool = False,
         num_disk_blocks: int = None,
         disk_dir_path: str = None,
+        preemption_mode: str = "swap",
     ) -> None:
         self.block_size = block_size
         self.gpu_memory_utilization = gpu_memory_utilization
@@ -369,6 +370,8 @@ class CacheConfig:
         self._verify_args()
         self._verify_cache_dtype()
         self._verify_prefix_caching()
+
+        self.preemption_mode = preemption_mode
 
         # Will be set after profiling.
         self.num_gpu_blocks = None
