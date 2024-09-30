@@ -35,6 +35,14 @@ class BlockAllocatorBase(ABC):
         pass
 
     @abstractmethod
+    def export_statistics(self) -> Tuple[int, int, int]:
+        pass
+
+    @abstractmethod
+    def inc_read(self, block_hash=None):
+        pass
+
+    @abstractmethod
     def allocate(self,
                  block_hash: Optional[int] = None,
                  num_hashed_tokens: int = 0) -> PhysicalTokenBlock:
@@ -107,6 +115,23 @@ class CachedBlockAllocator(BlockAllocatorBase):
 
         self.next_level_cache: 'CachedBlockAllocator' = next_level_cache
         self.cache_swap_mapping: CacheSwapMapping = cache_swap_mapping
+
+        self.nr_access = 0
+        self.nr_miss = 0
+
+    def export_statistics(self) -> Tuple[int, int, int]:
+        """
+        Returns:
+            Tuple[int, int, int]: Number of hits, misses, and total
+        """
+        return (self.nr_access - self.nr_miss), self.nr_miss, self.nr_access
+
+    def inc_read(self, block_hash=None):
+        self.nr_access += 1
+        if block_hash is None or (block_hash not in self.cached_blocks and block_hash not in self.evictor):
+            self.nr_miss += 1
+            if self.next_level_cache is not None:
+                self.next_level_cache.inc_read(block_hash)
 
     def _allocate_block(self, block_hash: int,
                         num_hashed_tokens: int) -> PhysicalTokenBlock:
@@ -251,6 +276,18 @@ class UncachedBlockAllocator(BlockAllocatorBase):
                                        num_hashed_tokens=0)
             self.free_blocks.append(block)
 
+        self.nr_access = 0
+
+    def export_statistics(self) -> Tuple[int, int, int]:
+        """
+        Returns:
+            Tuple[int, int, int]: Number of hits, misses, and total
+        """
+        return 0, self.nr_access, self.nr_access
+
+    def inc_read(self, block_hash=None):
+        self.nr_access += 1
+
     def allocate(self,
                  block_hash: Optional[int] = None,
                  num_hashed_tokens: int = 0) -> PhysicalTokenBlock:
@@ -324,8 +361,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             logger.info("Automatic prefix caching is enabled.")
             self.disk_allocator: CachedBlockAllocator = CachedBlockAllocator(
                 device=Device.DISK, block_size=block_size, num_blocks=num_disk_blocks,
-                next_level_cache=None, cache_swap_mapping=self.cache_swap_mapping) \
-                if num_disk_blocks else None
+                next_level_cache=None, cache_swap_mapping=self.cache_swap_mapping)
             self.cpu_allocator: CachedBlockAllocator = CachedBlockAllocator(
                 device=Device.CPU, block_size=block_size, num_blocks=num_cpu_blocks,
                 next_level_cache=self.disk_allocator, cache_swap_mapping=self.cache_swap_mapping)
@@ -396,10 +432,12 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                 # Set the reference counts of the token blocks.
                 block.ref_count = ref_count
             elif not is_encoder_decoder and self.enable_caching:
+                self.gpu_allocator.inc_read(seq.hash_of_block(logical_idx))
                 block = self.gpu_allocator.allocate(
                     seq.hash_of_block(logical_idx),
                     seq.num_hashed_tokens_of_block(logical_idx))
             else:
+                self.gpu_allocator.inc_read()
                 block = self.gpu_allocator.allocate()
                 # Set the reference counts of the token blocks.
                 block.ref_count = ref_count
@@ -631,6 +669,8 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             #             f"{to_block.device}:{to_block.block_number}")
             # Free the source block swapped in to destination.
             src_allocator.free(from_block)
+            if src_allocator.device == Device.CPU:
+                src_allocator.inc_read(to_block.block_hash)
 
         return new_block_table
 
@@ -767,8 +807,8 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         if max_full_block == -1:
             return
         for i in reversed(range(max_full_block)):
-            # if block_table[i].computed:
-            #     break
+            if block_table[i].computed:
+                break
             block_table[i].computed = True
 
     def get_all_computed_blocks(self, seq: Sequence) -> List[int]:

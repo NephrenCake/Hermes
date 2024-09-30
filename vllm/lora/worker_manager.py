@@ -1,3 +1,4 @@
+import subprocess
 import time
 from abc import ABC, abstractmethod, abstractproperty
 from contextlib import contextmanager
@@ -154,6 +155,7 @@ class WorkerLoRAManager(AbstractWorkerLoRAManager):
                         packed_modules_mapping[module])
                 else:
                     expected_lora_modules.append(module)
+            # timer = time.time()
             lora = self._lora_model_cls.from_local_checkpoint(
                 lora_request.lora_local_path,
                 expected_lora_modules,
@@ -166,6 +168,8 @@ class WorkerLoRAManager(AbstractWorkerLoRAManager):
                 embedding_modules=self.embedding_modules,
                 embedding_padding_modules=self.embedding_padding_modules,
             )
+            # time.sleep(max(0., timer + 0.3 - time.time()))
+            subprocess.Popen(f"echo 3 > /proc/sys/vm/drop_caches", shell=True)
         except Exception as e:
             raise RuntimeError(
                 f"Loading lora {lora_request.lora_local_path} failed") from e

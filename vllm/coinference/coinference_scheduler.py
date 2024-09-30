@@ -177,6 +177,7 @@ class CoInferenceScheduler:
 
         self.used_prefix_block = 0
         self.all_prefill_block = 0
+        self.next_log_prefix = 0
 
     @property
     def lora_enabled(self) -> bool:
@@ -226,16 +227,27 @@ class CoInferenceScheduler:
                 if (token_chunk_size + seqs[0].data.get_num_computed_tokens() <
                         seqs[0].data.get_len()):
                     do_sample = False
-                if len(common_computed_block_nums) > 0:
-                    self.used_prefix_block += len(common_computed_block_nums)
-                    self.all_prefill_block += len(block_tables[seqs[0].seq_id])
-                    # logger.info(
-                    #     f"[KVC Debug] > {seq_group.request_id} prefill with prefix: "
-                    #     f"{len(common_computed_block_nums)}/{len(block_tables[seqs[0].seq_id])}"
-                    # )
+
+                self.used_prefix_block += len(common_computed_block_nums)
+                self.all_prefill_block += len(block_tables[seqs[0].seq_id])
+                if self.all_prefill_block > self.next_log_prefix * 1000:
+                    self.next_log_prefix = self.all_prefill_block // 1000 + 1
                     logger.info(f"[KVC Debug] > prefix utilization: "
                                 f"{self.used_prefix_block} / {self.all_prefill_block} = "
                                 f"{self.used_prefix_block / self.all_prefill_block:.2f}")
+                    if self.cache_config.enable_prefix_caching:
+                        g_hit, g_miss, g_total = self.block_manager.gpu_allocator.export_statistics()
+                        c_hit, c_miss, c_total = self.block_manager.cpu_allocator.export_statistics()
+                        d_hit, d_miss, d_total = self.block_manager.disk_allocator.export_statistics()
+                        logger.info(f"[KVC Debug] > "
+                                    f"GPU: {g_hit} / {g_total} = {(g_hit / g_total) if g_total else 0.:.2f}, "
+                                    f"CPU: {c_hit} / {g_total} = {(c_hit / g_total) if g_total else 0.:.2f}, "
+                                    f"Disk: {d_hit} / {g_total} = {(d_hit / g_total) if g_total else 0.:.2f}")
+                # if len(common_computed_block_nums) > 0:
+                #     logger.info(
+                #         f"[KVC Debug] > {seq_group.request_id} prefill with prefix: "
+                #         f"{len(common_computed_block_nums)}/{len(block_tables[seqs[0].seq_id])}"
+                #     )
 
             # It assumes the scheduled_seq_groups is ordered by
             # prefill < decoding.

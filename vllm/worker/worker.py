@@ -323,11 +323,11 @@ class Worker(WorkerBase):
         broadcast_tensor_dict(data, src=0)
 
         load_start_time = time.time()
-        self.cache_save_load(blocks_to_save, blocks_to_load)
+        # self.cache_save_load(blocks_to_save, blocks_to_load)
         load_time = time.time() - load_start_time
 
         timer = time.time()
-        self.cache_swap(blocks_to_swap_in, blocks_to_swap_out, blocks_to_copy)
+        # self.cache_swap(blocks_to_swap_in, blocks_to_swap_out, blocks_to_copy)
         swap_time = time.time() - timer
 
         # If there is no input, we don't need to execute the model.
@@ -370,9 +370,9 @@ class Worker(WorkerBase):
         blocks_to_save = data.get("blocks_to_save")
         blocks_to_load = data.get("blocks_to_load")
 
-        self.cache_save_load(blocks_to_save, blocks_to_load)
+        # self.cache_save_load(blocks_to_save, blocks_to_load)
 
-        self.cache_swap(blocks_to_swap_in, blocks_to_swap_out, blocks_to_copy)
+        # self.cache_swap(blocks_to_swap_in, blocks_to_swap_out, blocks_to_copy)
 
         # If there is no input, we don't need to execute the model.
         if num_seq_groups == 0:
