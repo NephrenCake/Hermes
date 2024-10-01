@@ -230,19 +230,18 @@ class CoInferenceScheduler:
 
                 self.used_prefix_block += len(common_computed_block_nums)
                 self.all_prefill_block += len(block_tables[seqs[0].seq_id])
-                if self.all_prefill_block > self.next_log_prefix * 1000:
+                if self.cache_config.enable_prefix_caching and self.all_prefill_block > self.next_log_prefix * 1000:
                     self.next_log_prefix = self.all_prefill_block // 1000 + 1
                     logger.info(f"[KVC Debug] > prefix utilization: "
                                 f"{self.used_prefix_block} / {self.all_prefill_block} = "
                                 f"{self.used_prefix_block / self.all_prefill_block:.2f}")
-                    if self.cache_config.enable_prefix_caching:
-                        g_hit, g_miss, g_total = self.block_manager.gpu_allocator.export_statistics()
-                        c_hit, c_miss, c_total = self.block_manager.cpu_allocator.export_statistics()
-                        d_hit, d_miss, d_total = self.block_manager.disk_allocator.export_statistics()
-                        logger.info(f"[KVC Debug] > "
-                                    f"GPU: {g_hit} / {g_total} = {(g_hit / g_total) if g_total else 0.:.2f}, "
-                                    f"CPU: {c_hit} / {g_total} = {(c_hit / g_total) if g_total else 0.:.2f}, "
-                                    f"Disk: {d_hit} / {g_total} = {(d_hit / g_total) if g_total else 0.:.2f}")
+                    g_hit, g_miss, g_total = self.block_manager.gpu_allocator.export_statistics()
+                    c_hit, c_miss, c_total = self.block_manager.cpu_allocator.export_statistics()
+                    d_hit, d_miss, d_total = self.block_manager.disk_allocator.export_statistics()
+                    logger.info(f"[KVC Debug] > "
+                                f"GPU: {g_hit} / {g_total} = {(g_hit / g_total) if g_total else 0.:.2f}, "
+                                f"CPU: {c_hit} / {g_total} = {(c_hit / g_total) if g_total else 0.:.2f}, "
+                                f"Disk: {d_hit} / {g_total} = {(d_hit / g_total) if g_total else 0.:.2f}")
                 # if len(common_computed_block_nums) > 0:
                 #     logger.info(
                 #         f"[KVC Debug] > {seq_group.request_id} prefill with prefix: "
@@ -328,6 +327,7 @@ class CoInferenceScheduler:
     def _schedule_default(self) -> SchedulerOutputs:
         now = time.time()
 
+        t_sort = time.time()
         policy: CoInferencePolicy = PolicyFactory.get_policy(policy_name=self.scheduling_policy)
         if self.scheduling_policy in ["Hermes", "Idealized-SRJF", "Mean-SRJF"]:
             for coinf in self.coinferences_dict.values():
@@ -335,6 +335,7 @@ class CoInferenceScheduler:
                                               self.decode_recorder.time_per_token,
                                               use_mean=self.scheduling_policy == "Mean-SRJF")
         self.coinferences_queue = policy.sort_by_priority(now, self.coinferences_queue)
+        t_sort = (time.time() - t_sort) * 1000
 
         # split coinference to running_queue and waiting_queue
         split_outputs = self.split_seq_groups(self.coinferences_queue)
@@ -342,17 +343,26 @@ class CoInferenceScheduler:
         self.block_manager.cache_swap_mapping.clear()
 
         # swap out all seq_group in waiting_queue
+        t_preempt = time.time()
         schedule_swapout_outputs = self.schedule_swapout(split_outputs.swapout_queue)
+        t_preempt = (time.time() - t_preempt) * 1000
 
         # prefill if there is seq_group need to prefill in running_queue
+        t_prefill = time.time()
         schedule_prefill_outputs = self.schedule_prefill(split_outputs.prefill_queue)
+        t_prefill = (time.time() - t_prefill) * 1000
+        # if t_prefill > 10:
+        #     logger.info(f"t_prefill: {t_prefill:.2f}")
 
         # decode and swap in
+        t_decode = time.time()
         schedule_decode_outputs = SchedulerDecodeOutputs.create_empty()
         if schedule_prefill_outputs.is_empty():
             schedule_decode_outputs = self.schedule_decode(split_outputs.decode_queue,
                                                            split_outputs.swapin_queue)
+        t_decode = (time.time() - t_decode) * 1000
 
+        t_lora = time.time()
         # get lora preference
         advised_lora = set()
         if self.lora_enabled and self.scheduler_config.lora_policy in ["Hermes", "EPWQ"]:
@@ -370,6 +380,10 @@ class CoInferenceScheduler:
             #     # f"advised_lora: {[i.lora_int_id for i in advised_lora]}, "
             #     f"WaitingQueue: {[i.lora_int_id for i in lora_preference_[:10]]}, "
             # )
+        t_lora = (time.time() - t_lora) * 1000
+
+        # logger.info(f"t_sort: {t_sort:.2f}, t_preempt: {t_preempt:.2f}, t_prefill: {t_prefill:.2f}, "
+        #             f"t_decode: {t_decode:.2f}, t_lora: {t_lora:.2f}, total = {time.time() - now:.2f}")
 
         # update num of seq_groups in different status
         self.num_waiting_seq_groups = (len(split_outputs.waiting_queue) + len(split_outputs.prefill_queue)
@@ -386,6 +400,7 @@ class CoInferenceScheduler:
         # logger.info(f"\tswapout_queue: {split_outputs.swapout_queue}")
         # logger.info(f"\tswapped_queue: {split_outputs.swapped_queue}")
         # logger.info(f"\twaiting_queue: {split_outputs.waiting_queue}")
+        self.block_manager.clean_to_watermark()
         swap_mapping = self.block_manager.get_cache_swap_mapping()
         schedule_outputs = SchedulerOutputs(
             scheduled_seq_groups=(schedule_prefill_outputs.seq_groups +

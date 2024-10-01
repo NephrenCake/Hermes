@@ -155,7 +155,6 @@ class WorkerLoRAManager(AbstractWorkerLoRAManager):
                         packed_modules_mapping[module])
                 else:
                     expected_lora_modules.append(module)
-            # timer = time.time()
             lora = self._lora_model_cls.from_local_checkpoint(
                 lora_request.lora_local_path,
                 expected_lora_modules,
@@ -168,8 +167,6 @@ class WorkerLoRAManager(AbstractWorkerLoRAManager):
                 embedding_modules=self.embedding_modules,
                 embedding_padding_modules=self.embedding_padding_modules,
             )
-            # time.sleep(max(0., timer + 0.3 - time.time()))
-            subprocess.Popen(f"echo 3 > /proc/sys/vm/drop_caches", shell=True)
         except Exception as e:
             raise RuntimeError(
                 f"Loading lora {lora_request.lora_local_path} failed") from e
@@ -329,17 +326,17 @@ class LRUCacheWorkerLoRAManagerWithPrefetch(WorkerLoRAManager):
 
         # 1. Load LoRA simultaneously.
         for lora in loras_map.values():
-            hit = self.add_lora(lora)
-            # if not hit:
-            #     logger.info(f"[LoRA Debug] > "
-            #                 f"Miss LoRA {lora.lora_int_id}")
-            self.lora_hit_num += hit
-            self.lora_request_num += 1
+            self.add_lora(lora)
 
         # 2. Wait for all LoRA to be loaded, and move them to GPU memory.
         for lora in loras_map.values():
             with self._lora_manager_lock:
                 loaded = self._lora_manager.get_lora(lora.lora_int_id) is not None
+
+            self.lora_hit_num += loaded
+            # if not loaded:
+            #     logger.info(f"[LoRA Debug] > "
+            #                 f"Miss LoRA {lora.lora_int_id}")
 
             if not loaded:
                 timer = time.time()
@@ -351,9 +348,7 @@ class LRUCacheWorkerLoRAManagerWithPrefetch(WorkerLoRAManager):
                 assert loaded, f"Failed to load LoRA {lora.lora_int_id}"
                 self.io_time_disk += time.time() - timer
 
-            with self._lora_manager_lock:
-                self._lora_manager.activate_lora(lora.lora_int_id)
-
+            self.lora_request_num += 1
             if self.lora_request_num % 100 == 0:
                 logger.info(
                     f"CHR: {self.lora_hit_num / self.lora_request_num:.2f}, "
@@ -361,6 +356,9 @@ class LRUCacheWorkerLoRAManagerWithPrefetch(WorkerLoRAManager):
                     f"({(self.io_time_disk / (self.lora_request_num - self.lora_hit_num)) * 1000:.2f} ms/miss "
                     f"{self.lora_request_num - self.lora_hit_num} miss)"
                 )
+
+            with self._lora_manager_lock:
+                self._lora_manager.activate_lora(lora.lora_int_id)
 
     def remove_lora(self, lora_id: int) -> bool:
         with self._io_futures_lock:

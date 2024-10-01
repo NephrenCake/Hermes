@@ -226,20 +226,21 @@ class Worker(WorkerBase):
         if blocks_to_copy.numel() > 0:
             self.cache_engine.copy(blocks_to_copy)
 
-    def do_lora_prefetch(self, execute_model_req):
+    def set_loras(self, seq_group_metadata_list, execute_model_req):
         if not self.lora_config:
             return
 
-        if not isinstance(self.model_runner.lora_manager, LRUCacheWorkerLoRAManagerWithPrefetch):
+        _, _, _, _, lora_requests, lora_mapping, _ = self.model_runner.prepare_input_tensors(seq_group_metadata_list)
+        if self.scheduler_config.lora_policy == "LRU":
+            self.model_runner.set_active_loras(lora_requests, lora_mapping)
             return
 
-        timer = time.time()
         assert execute_model_req.advised_lora is not None
         assert len(execute_model_req.advised_lora) <= self.model_runner.lora_config.max_cpu_loras, \
             (f"Number of advised LoRAs ({len(execute_model_req.advised_lora)}) exceeds the "
              f"maximum number of CPU LoRAs ({self.model_runner.lora_config.max_cpu_loras}).")
-        advised_lora_map = {i.lora_int_id: i for i in execute_model_req.advised_lora}
 
+        advised_lora_map = {i.lora_int_id: i for i in execute_model_req.advised_lora}
         loading_lora = {i for i, f in self.model_runner.lora_manager.io_futures.items() if not f.done()}
         exist_lora = self.list_loras() | loading_lora
         lora_to_remove = exist_lora - advised_lora_map.keys()
@@ -252,10 +253,11 @@ class Worker(WorkerBase):
 
         for lora_id in lora_to_remove:
             self.remove_lora(lora_id)  # remove all unnecessary loras before triggering LRU
-        for lora_id in lora_to_add:
+        self.model_runner.set_active_loras(lora_requests, lora_mapping)
+
+        lora_to_prefetch = lora_to_add - self.list_loras()
+        for lora_id in lora_to_prefetch:
             self.add_lora(advised_lora_map[lora_id])
-        pre_lora_time = time.time() - timer
-        # logger.info(f"Pre Lora Time: {pre_lora_time * 1000:.2f} ms")
 
     def cache_save_load(
             self,
@@ -272,9 +274,6 @@ class Worker(WorkerBase):
             self,
             execute_model_req: Optional[ExecuteModelRequest] = None
     ) -> List[Union[SamplerOutput, PoolerOutput]]:
-        # TODO yfliu: Consider distributed inference.
-        self.do_lora_prefetch(execute_model_req)  # trigger processes to (pre)fetch loras
-
         if not self.is_driver_worker:
             self._execute_model_non_driver()
             return []
@@ -330,13 +329,18 @@ class Worker(WorkerBase):
         # self.cache_swap(blocks_to_swap_in, blocks_to_swap_out, blocks_to_copy)
         swap_time = time.time() - timer
 
+        # TODO yfliu: Consider distributed inference.
+        timer = time.time()
+        self.set_loras(seq_group_metadata_list, execute_model_req)  # trigger processes to (pre)fetch loras
+        lora_time = time.time() - timer
+
         # If there is no input, we don't need to execute the model.
         if num_seq_groups == 0:
             return []
 
         timer = time.time()
         output = self.model_runner.execute_model(seq_group_metadata_list,
-                                                 self.gpu_cache)
+                                                 self.gpu_cache, set_lora=False)
         execute_time = time.time() - timer
 
         # Worker only supports single-step execution. Wrap the output in a list
