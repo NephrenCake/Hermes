@@ -68,7 +68,7 @@ class CoInferenceStage:
     def get_all_decode_tokens(self) -> List:
         return [sum(seq.get_output_len() for seq in seq_group.get_seqs()) for seq_group in self.parallel_requests]
 
-    def get_remaining_tokens(self, predictor: AppPredictor, use_mean: bool = False) -> Tuple[float, float]:
+    def get_remaining_tokens(self, predictor: AppPredictor, use_mean: bool = False, use_bayes: bool = False) -> Tuple[float, float]:
         if self.hint is not None:
             fin_prompt_tokens, fin_decode_tokens = 0, 0
             for seq_group in self.parallel_requests:
@@ -133,7 +133,7 @@ class CoInference:
     def create(self, coinference_info_dict: Optional[Dict]):
         raise NotImplementedError
 
-    def add_stage(self, stage_name, use_mean):
+    def add_stage(self, stage_name, use_mean, use_bayes):
         if self.app_name is None:  # support online request level fifo, don't suggest
             self.stages.append(CoInferenceStage())
             return
@@ -168,6 +168,7 @@ class CoInference:
             looped=looped,
             evidence=evidence,
             use_mean=use_mean,
+            use_bayes=use_bayes,
         )
         self.following_stages_info = {
             "prompt_tokens": prompt_tokens,
@@ -177,9 +178,9 @@ class CoInference:
         # logger.info(f"CoInfer {self.coinf_id} starts a new stage: {stage_name}, "
         #             f"following_stages_info: {self.following_stages_info}.")
 
-    def add_req(self, seq_group: SequenceGroup, stage_name: Union[str, None], use_mean):
+    def add_req(self, seq_group: SequenceGroup, stage_name: Union[str, None], use_mean, use_bayes):
         if self.current_stage_id == len(self.stages):
-            self.add_stage(stage_name, use_mean)
+            self.add_stage(stage_name, use_mean, use_bayes)
             self.finish_status = FinishType.UnFinished
             self.finish_time = None
         self.stages[self.current_stage_id].add_req(seq_group)
@@ -200,11 +201,13 @@ class CoInference:
                 return False  # new requests were added
             elif now - self.finish_time > self.time_out:
                 self.finish_status = FinishType.CoInfFinished
+                logger.info(f"the PREDICTED REMAINING TIME OF stage {self.coinf_id}: {self.remaining_time}")
                 return True  # no more requests will arrive
             else:
                 return False  # keep waiting for new requests
 
         if self.finish_status == FinishType.CoInfFinished:
+            logger.info(f"the PREDICTED REMAINING TIME OF stage {self.coinf_id}: {self.remaining_time}")
             return True
 
     def estimate_remaining_time(
@@ -212,6 +215,7 @@ class CoInference:
             prefill_time_per_token: float,
             decode_time_per_token: float,
             use_mean: bool = False,
+            use_bayes: bool = False,
     ):
         """
         Estimate the avg number of remaining tokens in the condition of the finished tokens
@@ -222,7 +226,7 @@ class CoInference:
             self.remaining_time = 0  # ms
             return
 
-        prompt_tokens, decode_tokens = self.current_stage.get_remaining_tokens(self.predictor, use_mean) \
+        prompt_tokens, decode_tokens = self.current_stage.get_remaining_tokens(self.predictor, use_mean, use_bayes) \
             if self.current_stage_id < len(self.stages) else (0, 0)
         prompt_tokens += self.following_stages_info["prompt_tokens"]
         decode_tokens += self.following_stages_info["decode_tokens"]

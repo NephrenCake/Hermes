@@ -36,8 +36,12 @@ class Bayes_predictor:
             # Update beliefs from a given information
             for i, var in enumerate(stages[:current_stage_id]):
                 try:
-                    label = str(row[i])
-                    idx = bayesNet.variable(var).index(label)
+                    choice = [int(i) for i in list(self.bn[var].labels())]
+                    if row[i]<np.min(choice):
+                        row[i] = np.min(choice) 
+                    if row[i]>np.max(choice):
+                        row[i] = np.max(choice) 
+                    idx = bayesNet.variable(var).index(str(row[i]))
                     engine.chgEvidence(var, idx)
                 except gum.NotFound:
                     # this can happend when value is missing is the test base.
