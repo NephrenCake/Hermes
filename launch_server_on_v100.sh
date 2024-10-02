@@ -8,6 +8,8 @@ CUDA_VISIBLE_DEVICES=2,3 python -m vllm.entrypoints.openai.api_server \
   --max-model-len 16000 \
   --coinference-scheduler \
   --scheduling-policy Hermes \
-  --chat-template ./examples/template_alpaca.jinja
+  --chat-template ./examples/template_alpaca.jinja \
+  --bayes-prediction True
 #  --proactive-reservation \
   # --scheduling-policy Hermes  \
+  #  \

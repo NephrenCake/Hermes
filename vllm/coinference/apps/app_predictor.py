@@ -166,7 +166,11 @@ class AppPredictor:
                 },
             } for stage_name in self.model_dict["stage_list"]
         }
-
+        if app_name in ['got_docmerge', 'factool_code','factool_kbqa','factool_math']:
+            self.bayes_predictor = Bayes_predictors[app_name]
+            logger.info(f'bayes net of {app_name} is loaded')
+        else:
+            self.bayes_predictor = None
         # prior_distribution = {
         #     stage_name: {
         #         "stage_gap": self.distribution[stage_name]["stage_gap"].get_mean(),
@@ -191,13 +195,12 @@ class AppPredictor:
                 "next_stage": self.distribution[stage_name]["next_stage"],
             } for stage_name in self.model_dict["stage_list"]
         }
-        logger.info(f"AppPredictor {app_name} initialized. Prior distribution: {prior_distribution}")
+        profiling_distribution["stage_list"] = self.model_dict["stage_list"]
+        json_file = f"{self.app_name}.json"
+        with open(json_file, 'w') as f:
+            json.dump(profiling_distribution, f)
 
-        if app_name in ['got_docmerge', 'factool_code','factool_kbqa','factool_math']:
-            self.bayes_predictor = Bayes_predictors[app_name]
-            logger.info(f'bayes net of {app_name} is loaded')
-        else:
-            self.bayes_predictor = None
+
 
     def set_seed(self, seed):
         random.seed(seed)
@@ -209,13 +212,14 @@ class AppPredictor:
             looped: Dict,
             evidence: Dict = None,
             use_mean: bool = False,
+            use_bayes: bool = False,
     ) -> Tuple[float, float, float]:
         if evidence is None:
             evidence = {}
 
         prompt_tokens, decode_tokens, stage_gap = 0, 0, 0
         bayes_result = []
-        if self.bayes_predictor != None:     ### use bayes prediction for no-loop apps
+        if use_bayes and self.bayes_predictor != None:     ### use bayes prediction for no-loop apps
             row = []
             for stage_name in self.model_dict["stage_list"]:
                 try:
@@ -225,8 +229,9 @@ class AppPredictor:
                     break
             assert len(row)==2*len(list(evidence.keys())), "bayes predict input wrong"
             bayes_result = self.bayes_predictor.following_predict(row, int(len(row)/2))
-            logger.info(f'{self.app_name} result: {bayes_result}')
-
+            tag = list(bayes_result.keys())[0][:-2]
+            logger.info(f' {tag}  {self.app_name} result: {bayes_result}')
+            
         follow_up = False
         for stage_name in self.model_dict["stage_list"]:
             if not follow_up:
@@ -243,16 +248,19 @@ class AppPredictor:
             parallelism = self.distribution[stage_name]["parallelism"].get_posterior_mean_with_bayesian(
                 new_samples=evidence.get(stage_name, {}).get("parallelism", []), weight=10
             )
-            if bayes_result == []:
+
+            # if bayes_result != [] :
+            if bayes_result != [] and stage_name == tag :
+                prompt_tokens += bayes_result[f'{stage_name}_p'] * parallelism * loops
+                decode_tokens += bayes_result[f'{stage_name}_c'] * parallelism * loops
+            else:
                 prompt_tokens += self.distribution[stage_name]["prompt"].get_posterior_mean_with_bayesian(
                     new_samples=evidence.get(stage_name, {}).get("prompt", []), weight=10
                 ) * parallelism * loops
                 decode_tokens += self.distribution[stage_name]["decode"].get_posterior_mean_with_bayesian(
                     new_samples=evidence.get(stage_name, {}).get("decode", []), weight=10
                 ) * parallelism * loops
-            else:
-                prompt_tokens += bayes_result[f'{stage_name}_p'] * parallelism * loops
-                decode_tokens += bayes_result[f'{stage_name}_c'] * parallelism * loops
+                
             stage_gap += self.distribution[stage_name]["stage_gap"].get_posterior_mean_with_bayesian(
                 new_samples=evidence.get(stage_name, {}).get("stage_gap", []), weight=10
             ) * loops

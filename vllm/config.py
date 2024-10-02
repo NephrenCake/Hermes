@@ -659,6 +659,7 @@ class SchedulerConfig:
         coinference_scheduler: bool = False, 
         proactive_reservation: bool = False,
         scheduling_policy: str = "Hermes",
+        bayes_prediction: bool = False,
         lora_policy: str = "Hermes",
     ) -> None:
         if max_num_batched_tokens is not None:
@@ -690,6 +691,7 @@ class SchedulerConfig:
         # coinference
         self.coinference_scheduler = coinference_scheduler
         self.proactive_reservation = proactive_reservation
+        self.bayes_prediction = bayes_prediction
         self.scheduling_policy = scheduling_policy
         self.lora_policy = lora_policy
 
