@@ -1,8 +1,12 @@
 import enum
+import time
 from abc import ABC, abstractmethod, abstractproperty
-from typing import OrderedDict
+from typing import OrderedDict, Dict
 
 from vllm.block import PhysicalTokenBlock
+from vllm.logger import init_logger
+
+logger = init_logger(__name__)
 
 
 class EvictionPolicy(enum.Enum):
@@ -60,6 +64,11 @@ class LRUEvictor(Evictor):
     def __init__(self):
         self.free_table: OrderedDict[int, PhysicalTokenBlock] = OrderedDict()
 
+        self.add_cnt = 0
+        self.rm_cnt = 0
+        self.add_time = 0
+        self.rm_time = 0
+
     def __contains__(self, block_hash: int) -> bool:
         return block_hash in self.free_table
 
@@ -67,6 +76,8 @@ class LRUEvictor(Evictor):
         if len(self.free_table) == 0:
             raise ValueError("No usable cache memory left")
 
+        self.rm_cnt += 1
+        timer = time.time()
         evicted_block = next(iter(self.free_table.values()))
         # The blocks with the lowest timestamps should be placed consecutively
         # at the start of OrderedDict. Loop through all these blocks to
@@ -78,19 +89,35 @@ class LRUEvictor(Evictor):
                 evicted_block = block
 
         self.free_table.pop(evicted_block.block_hash)
+        self.rm_time += (time.time() - timer) * 1000
+        # if self.rm_cnt % 1000 == 0:
+        #     logger.info(f"Evictor: rm_cnt={self.rm_cnt:.2f}, rm_time={self.rm_time:.2f}, "
+        #                 f"{self.rm_time / self.rm_cnt:.2f} ms/rm")
 
         evicted_block.computed = False
         return evicted_block
 
     def add(self, block: PhysicalTokenBlock):
+        self.add_cnt += 1
+        timer = time.time()
         self.free_table[block.block_hash] = block
+        self.add_time += (time.time() - timer) * 1000
+        # if self.add_cnt % 1000 == 0:
+        #     logger.info(f"Evictor: add_cnt={self.add_cnt:.2f}, add_time={self.add_time:.2f}, "
+        #                 f"{self.add_time / self.add_cnt:.2f} ms/add")
 
     def remove(self, block_hash: int) -> PhysicalTokenBlock:
         if block_hash not in self.free_table:
             raise ValueError(
                 "Attempting to remove block that's not in the evictor")
+        self.rm_cnt += 1
+        timer = time.time()
         block: PhysicalTokenBlock = self.free_table[block_hash]
         self.free_table.pop(block_hash)
+        self.rm_time += (time.time() - timer) * 1000
+        # if self.rm_cnt % 1000 == 0:
+        #     logger.info(f"Evictor: rm_cnt={self.rm_cnt:.2f}, rm_time={self.rm_time:.2f}, "
+        #                 f"{self.rm_time / self.rm_cnt:.2f} ms/rm")
         return block
 
     @property
