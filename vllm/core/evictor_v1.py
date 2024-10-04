@@ -1,7 +1,7 @@
 import enum
 import time
 from abc import ABC, abstractmethod, abstractproperty
-from typing import OrderedDict, Dict
+from typing import OrderedDict, Dict, List, Union
 
 from vllm.block import PhysicalTokenBlock
 from vllm.logger import init_logger
@@ -123,6 +123,61 @@ class LRUEvictor(Evictor):
     @property
     def num_blocks(self) -> int:
         return len(self.free_table)
+
+
+class CoInfEvictor(Evictor):
+    def __init__(self, preference="LRU"):
+        self.preference = preference
+        dict_type = OrderedDict if self.preference == "LRU" else Dict
+
+        # free_table: coinf_id -> {block_hash -> PhysicalTokenBlock}
+        self.free_table: dict_type[str, Dict[int, PhysicalTokenBlock]] = dict_type()
+
+    def __contains__(self, block_hash: (str, int)) -> bool:
+        coinf_id, block_hash = block_hash
+        if coinf_id not in self.free_table.keys():
+            return False
+        return block_hash in self.free_table[coinf_id].keys()
+
+    def set_priority(self, queue: List[str]):
+        pass
+
+    def evict(self, coinf_id=None) -> List[PhysicalTokenBlock]:
+        if self.num_blocks == 0:
+            raise ValueError("No usable cache memory left")
+
+        if coinf_id is None:
+            evicted_coinf: Dict[int, PhysicalTokenBlock] = next(iter(self.free_table.values()))
+        else:
+            if coinf_id not in self.free_table.keys():
+                return []
+            evicted_coinf: Dict[int, PhysicalTokenBlock] = self.free_table[coinf_id]
+        evicted_blocks: List[PhysicalTokenBlock] = [b for b in evicted_coinf.values()]
+        for b in evicted_blocks:
+            b.computed = False
+        self.free_table.pop(evicted_blocks[0].block_hash[0])
+        return evicted_blocks
+
+    def add(self, block: PhysicalTokenBlock):
+        coinf_id, block_hash = block.block_hash
+        if coinf_id not in self.free_table.keys():
+            self.free_table[coinf_id] = {}
+        self.free_table[coinf_id][block_hash] = block
+
+    def remove(self, block_hash: (str, int)) -> PhysicalTokenBlock:
+        if block_hash not in self:
+            raise ValueError(
+                "Attempting to remove block that's not in the evictor")
+        coinf_id, block_hash = block_hash
+        block: PhysicalTokenBlock = self.free_table[coinf_id][block_hash]
+        self.free_table[coinf_id].pop(block_hash)
+        if len(self.free_table[coinf_id]) == 0:
+            del self.free_table[coinf_id]
+        return block
+
+    @property
+    def num_blocks(self) -> int:
+        return sum(len(v) for v in self.free_table.values())
 
 
 def make_evictor(eviction_policy: EvictionPolicy) -> Evictor:
