@@ -272,7 +272,7 @@ class Sequence:
         return self.output_text[:-buffer_length] if truncate else (
             self.output_text)
 
-    def hash_of_block(self, logical_idx: int) -> int:
+    def hash_of_block(self, logical_idx: int) -> Union[int, Tuple[str, int]]:
         # TODO This can produce incorrect hash when block size > prompt size
 
         # Compute the number of tokens in the sequence
@@ -280,7 +280,7 @@ class Sequence:
         # this in the future.
         num_tokens = self.num_hashed_tokens_of_block(logical_idx)
         hashed_tokens = self.data.get_prefix_token_ids(num_tokens)
-        return hash((hashed_tokens, self.lora_int_id, self.coinf_id))
+        return self.coinf_id, hash((hashed_tokens, self.lora_int_id))
 
     def num_hashed_tokens_of_block(self, logical_idx: int):
         return logical_idx * self.block_size + self.block_size

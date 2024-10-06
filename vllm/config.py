@@ -359,6 +359,7 @@ class CacheConfig:
         num_disk_blocks: int = None,
         disk_dir_path: str = None,
         preemption_mode: str = "swap",
+        cache_policy: str = "Hermes",
     ) -> None:
         self.block_size = block_size
         self.gpu_memory_utilization = gpu_memory_utilization
@@ -380,6 +381,7 @@ class CacheConfig:
         # support for disk offloading
         self.num_disk_blocks = num_disk_blocks if enable_prefix_caching else None
         self.disk_dir_path = disk_dir_path if enable_prefix_caching else None
+        self.cache_policy = cache_policy
 
     def metrics_info(self):
         # convert cache_config to dict(key: str, value: str) for prometheus

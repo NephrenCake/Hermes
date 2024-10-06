@@ -144,7 +144,10 @@ class AppPredictor:
         self.distribution: Dict[str, Dict[str, Distribution]] = {
             stage_name: {
                 "stage_gap": Distribution(window_size).add_samples(
-                    [i for i in self.model_dict[stage_name]["stage_gap"]]  # ms
+                    [(
+                        i + 150 if stage_name not in ["verifies", "thought"] else i + 150 + 10000
+                    )
+                     for i in self.model_dict[stage_name]["stage_gap"]]  # ms
                 ).update_cache(),
                 "parallelism": Distribution(window_size).add_samples(
                     self.model_dict[stage_name]["parallelism"]

@@ -5,13 +5,13 @@ import math
 from abc import ABC, abstractmethod
 from itertools import count, takewhile
 from os.path import commonprefix
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 from typing import Sequence as GenericSequence
 from typing import Set, Tuple
 
 from vllm.block import BlockTable, PhysicalTokenBlock
 from vllm.core.block.utils import check_no_caching_or_swa_for_blockmgr_encdec
-from vllm.core.evictor_v1 import EvictionPolicy, Evictor, make_evictor
+from vllm.core.evictor_v1 import EvictionPolicy, Evictor, make_evictor, CoInfEvictor
 from vllm.core.interfaces import AllocStatus, BlockSpaceManager
 from vllm.logger import init_logger
 from vllm.sequence import Sequence, SequenceGroup, SequenceStatus
@@ -130,17 +130,25 @@ class CachedBlockAllocator(BlockAllocatorBase):
 
     def inc_read(self, block_hash=None):
         self.nr_access += 1
-        if block_hash is None or (block_hash not in self.cached_blocks and block_hash not in self.evictor):
+        if not (
+                block_hash is not None and
+                (
+                        block_hash in self.cached_blocks and self.cached_blocks[block_hash].computed or
+                        block_hash in self.evictor and self.evictor.free_table[block_hash[0]][block_hash[1]].computed
+                )
+        ):
             self.nr_miss += 1
             if self.next_level_cache is not None:
                 self.next_level_cache.inc_read(block_hash)
 
     def _try_swap_out(self, block: PhysicalTokenBlock):
-        if (self.next_level_cache is not None
-                and not self.next_level_cache.contains_block(block.block_hash)
-                and self.next_level_cache.get_num_free_blocks() != 0):
+        if (
+                self.next_level_cache is not None and
+                not self.next_level_cache.contains_block(block.block_hash, recursion=True) and
+                self.next_level_cache.get_num_free_blocks() != 0
+        ):
             # logger.info(f"[KVC Debug] > [{self.device}->{self.next_level_cache.device}] "
-            #             f"Evict {block.block_hash} to allocate {block_hash}")
+            #             f"Evict {block.block_hash}")
             next_level_block = self.next_level_cache.allocate(block.block_hash, block.num_hashed_tokens)
             next_level_block.computed = True
             if self.device == Device.GPU:  # gpu allocator, swap out to cpu
@@ -158,8 +166,8 @@ class CachedBlockAllocator(BlockAllocatorBase):
             return True
         return False
 
-    def clean_to_watermark(self):
-        while (len(self.free_block_ids) <= self.num_blocks * 0.2
+    def clean_to_watermark(self, watermark):
+        while (len(self.free_block_ids) <= self.num_blocks * (1 - watermark)
                and self.evictor.num_blocks):
             block = self.evictor.evict()
             self._try_swap_out(block)
@@ -202,7 +210,7 @@ class CachedBlockAllocator(BlockAllocatorBase):
 
         if block_hash not in self.cached_blocks:
             next_level_block = None  # lock the next level block to prevent eviction
-            if self.next_level_cache is not None and self.next_level_cache.contains_block(block_hash):
+            if self.next_level_cache is not None and self.next_level_cache.contains_block(block_hash, recursion=True):
                 next_level_block = self.next_level_cache.allocate(block_hash, num_hashed_tokens)
 
             block = self.allocate_block(block_hash, num_hashed_tokens)
@@ -250,9 +258,14 @@ class CachedBlockAllocator(BlockAllocatorBase):
     def get_num_total_blocks(self) -> int:
         return self.num_blocks
 
-    def contains_block(self, block_hash: int) -> bool:
-        return (block_hash in self.cached_blocks or block_hash in self.evictor or
-                self.next_level_cache is not None and self.next_level_cache.contains_block(block_hash))
+    def contains_block(self, block_hash: int, recursion=False) -> bool:
+        return ((
+                        block_hash in self.cached_blocks or block_hash in self.evictor
+                ) or (
+                        recursion and
+                        self.next_level_cache is not None and
+                        self.next_level_cache.contains_block(block_hash, recursion=True)
+                ))
 
     def update_hash(self, block_hash: int, block: PhysicalTokenBlock):
         # Update the hash of block and the cached_blocks dictionary.
@@ -268,27 +281,27 @@ class CoInferCachedBlockAllocator(BlockAllocatorBase):
                  device: Device,
                  block_size: int,
                  num_blocks: int,
-                 eviction_policy: EvictionPolicy = EvictionPolicy.LRU,
+                 cache_policy: Union[EvictionPolicy, str] = EvictionPolicy.LRU,
                  next_level_cache: 'CoInferCachedBlockAllocator' = None,
-                 cache_swap_mapping: CacheSwapMapping = None) -> None:
+                 cache_swap_mapping: CacheSwapMapping = None,
+                 look_down: bool = True) -> None:
         self.device = device
         self.block_size = block_size
         self.num_blocks = num_blocks
+        self.look_down = look_down
 
         self.free_block_ids = deque([i for i in range(num_blocks)])
-        self.cached_blocks: Dict[int, PhysicalTokenBlock] = {}
+        self.cached_blocks: Dict[Tuple[str, int], PhysicalTokenBlock] = {}
 
-        self.evictor: Evictor = make_evictor(eviction_policy)  # 靠 coinfer 分区
+        self.evictor: CoInfEvictor = CoInfEvictor(cache_policy)
 
         self.default_hash_ctr = count()
 
-        self.next_level_cache: 'CachedBlockAllocator' = next_level_cache
+        self.next_level_cache: 'CoInferCachedBlockAllocator' = next_level_cache
         self.cache_swap_mapping: CacheSwapMapping = cache_swap_mapping
 
         self.nr_access = 0
         self.nr_miss = 0
-
-        # 1. 按coinfer级别预取/驱逐
 
     def export_statistics(self) -> Tuple[int, int, int]:
         """
@@ -297,21 +310,61 @@ class CoInferCachedBlockAllocator(BlockAllocatorBase):
         """
         return (self.nr_access - self.nr_miss), self.nr_miss, self.nr_access
 
-    def inc_read(self, block_hash=None):
+    def inc_read(self, block_hash: Optional[Tuple[str, int]] = None):
         self.nr_access += 1
-        if block_hash is None or (block_hash not in self.cached_blocks and block_hash not in self.evictor):
+        if not (
+                block_hash is not None and
+                (
+                        block_hash in self.cached_blocks and self.cached_blocks[block_hash].computed or
+                        block_hash in self.evictor and self.evictor.free_table[block_hash[0]][block_hash[1]].computed
+                )
+        ):
             self.nr_miss += 1
             if self.next_level_cache is not None:
                 self.next_level_cache.inc_read(block_hash)
 
+    def prefetch_coinf(self, coinf_id):
+        low_level_cache = {(b.block_hash, b.num_hashed_tokens)
+                           for b in self.next_level_cache.evictor.free_table.get(coinf_id, {}).values()}
+        cur_level_cache = {(b.block_hash, b.num_hashed_tokens)
+                           for b in self.evictor.free_table.get(coinf_id, {}).values()}
+        blocks_to_prefetch = low_level_cache - cur_level_cache
+        for (block_hash, num_hashed_tokens) in blocks_to_prefetch:
+            b = self.allocate(block_hash, num_hashed_tokens)
+            b.computed = True
+            self.free(b)
+        # if blocks_to_prefetch:
+        #     logger.info(f"[KVC Debug] > [{self.device}<-{self.next_level_cache.device}] "
+        #                 f"Prefetch {len(blocks_to_prefetch)} = "
+        #                 f"{len(low_level_cache)} - {len(cur_level_cache)} blocks for {coinf_id}: ")
+        return len(blocks_to_prefetch)
+
+    def drop_coinf(self, coinf_id=None, swap_out=True):
+        evicted_blocks: list[PhysicalTokenBlock] = self.evictor.evict(coinf_id)
+        # if not swap_out:
+        #     logger.info(f"[KVC Debug] > Destroy {len(evicted_blocks)} blocks for {coinf_id}: ")
+        # elif coinf_id is not None:
+        #     logger.info(f"[KVC Debug] > [{self.device}->{self.next_level_cache.device}] "
+        #                 f"Evict {len(evicted_blocks)} blocks for {coinf_id}: ")
+        # elif coinf_id is None:
+        #     logger.info(f"[KVC Debug] > [{self.device}->{self.next_level_cache.device}] "
+        #                 f"Evict {len(evicted_blocks)} blocks")
+        for block in evicted_blocks:
+            if swap_out:
+                self._try_swap_out(block)
+            self.free_block_ids.append(block.block_number)
+
     def _try_swap_out(self, block: PhysicalTokenBlock):
-        if (self.next_level_cache is not None
-                and not self.next_level_cache.contains_block(block.block_hash)
-                and self.next_level_cache.get_num_free_blocks() != 0):
+        if (
+                self.next_level_cache is not None and
+                not self.next_level_cache.contains_block(block.block_hash, recursion=True) and
+                self.next_level_cache.get_num_free_blocks() != 0
+        ):
             # logger.info(f"[KVC Debug] > [{self.device}->{self.next_level_cache.device}] "
-            #             f"Evict {block.block_hash} to allocate {block_hash}")
+            #             f"Evict {block.block_hash}")
             next_level_block = self.next_level_cache.allocate(block.block_hash, block.num_hashed_tokens)
             next_level_block.computed = True
+
             if self.device == Device.GPU:  # gpu allocator, swap out to cpu
                 self.cache_swap_mapping.gpu2cpu.append((block.block_number,
                                                         next_level_block.block_number))
@@ -327,26 +380,47 @@ class CoInferCachedBlockAllocator(BlockAllocatorBase):
             return True
         return False
 
-    def clean_to_watermark(self):
-        while (len(self.free_block_ids) <= self.num_blocks * 0.2
-               and self.evictor.num_blocks):
-            block = self.evictor.evict()
-            self._try_swap_out(block)
-            self.free_block_ids.append(block.block_number)
+    def _try_swap_in(self, block_hash: Tuple[str, int], num_hashed_tokens: int):
+        if not self.look_down or self.next_level_cache is None:
+            block = self.allocate_block(block_hash, num_hashed_tokens)
+            self.cached_blocks[block_hash] = block
+            return
 
-    def allocate_block(self, block_hash: int,
+        next_level_block = None  # lock the next level block to prevent eviction
+        if self.next_level_cache.contains_block(block_hash, recursion=None):
+            next_level_block = self.next_level_cache.allocate(block_hash, num_hashed_tokens)
+
+        block = self.allocate_block(block_hash, num_hashed_tokens)
+        self.cached_blocks[block_hash] = block
+
+        if next_level_block is not None:
+            # logger.info(f"[KVC Debug] > [{block.device}<-{self.next_level_cache.device}] "
+            #             f"Fetch {block_hash}")
+            if self.device == Device.GPU:  # gpu allocator, swap in from cpu
+                self.cache_swap_mapping.cpu2gpu.append((next_level_block.block_number,
+                                                        block.block_number))
+            elif self.device == Device.CPU:  # cpu allocator, swap in from disk
+                self.cache_swap_mapping.disk2cpu.append((next_level_block.block_number,
+                                                         block.block_number))
+            else:
+                raise NotImplementedError("DiskBlockAllocator does not support swap in.")
+            # logger.info(f"[KVC Debug] > [{block.device}<-{self.next_level_cache.device}] "
+            #             f"{block.device}:{block.block_number} <- "
+            #             f"{self.next_level_cache.device}:{next_level_block.block_number}")
+            self.next_level_cache.free(next_level_block)
+            block.computed = True
+
+    def clean_to_watermark(self, watermark):
+        while (len(self.free_block_ids) <= self.num_blocks * (1 - watermark)
+               and self.evictor.num_blocks):
+            self.drop_coinf()
+
+    def allocate_block(self, block_hash: Tuple[str, int],
                        num_hashed_tokens: int) -> PhysicalTokenBlock:
         if len(self.free_block_ids) == 0:
             if self.device == Device.CPU:
                 logger.warning("Out of memory at runtime!")
-
-            block = self.evictor.evict()  # evict a block which has no reference
-
-            self._try_swap_out(block)
-
-            block.block_hash = block_hash
-            block.num_hashed_tokens = num_hashed_tokens
-            return block
+            self.drop_coinf()
         block = PhysicalTokenBlock(device=self.device,
                                    block_number=self.free_block_ids.popleft(),
                                    block_size=self.block_size,
@@ -355,10 +429,10 @@ class CoInferCachedBlockAllocator(BlockAllocatorBase):
         return block
 
     def allocate(self,
-                 block_hash: Optional[int] = None,
+                 block_hash: Optional[Tuple[str, int]] = None,
                  num_hashed_tokens: int = 0) -> PhysicalTokenBlock:
         if block_hash is None:
-            block_hash = next(self.default_hash_ctr)
+            block_hash = (None, next(self.default_hash_ctr))
 
         if block_hash in self.evictor:
             assert block_hash not in self.cached_blocks
@@ -370,29 +444,7 @@ class CoInferCachedBlockAllocator(BlockAllocatorBase):
             return block
 
         if block_hash not in self.cached_blocks:
-            next_level_block = None  # lock the next level block to prevent eviction
-            if self.next_level_cache is not None and self.next_level_cache.contains_block(block_hash):
-                next_level_block = self.next_level_cache.allocate(block_hash, num_hashed_tokens)
-
-            block = self.allocate_block(block_hash, num_hashed_tokens)
-            self.cached_blocks[block_hash] = block
-
-            if next_level_block is not None:
-                # logger.info(f"[KVC Debug] > [{block.device}<-{self.next_level_cache.device}] "
-                #             f"Allocate {block_hash} from {next_level_block.block_hash}")
-                if self.device == Device.GPU:  # gpu allocator, swap in from cpu
-                    self.cache_swap_mapping.cpu2gpu.append((next_level_block.block_number,
-                                                            block.block_number))
-                elif self.device == Device.CPU:  # cpu allocator, swap in from disk
-                    self.cache_swap_mapping.disk2cpu.append((next_level_block.block_number,
-                                                             block.block_number))
-                else:
-                    raise NotImplementedError("DiskBlockAllocator does not support swap in.")
-                # logger.info(f"[KVC Debug] > [{block.device}<-{self.next_level_cache.device}] "
-                #             f"{block.device}:{block.block_number} <- "
-                #             f"{self.next_level_cache.device}:{next_level_block.block_number}")
-                self.next_level_cache.free(next_level_block)
-                block.computed = True
+            self._try_swap_in(block_hash, num_hashed_tokens)
 
         block = self.cached_blocks[block_hash]
         assert block.block_hash == block_hash
@@ -419,11 +471,23 @@ class CoInferCachedBlockAllocator(BlockAllocatorBase):
     def get_num_total_blocks(self) -> int:
         return self.num_blocks
 
-    def contains_block(self, block_hash: int) -> bool:
-        return (block_hash in self.cached_blocks or block_hash in self.evictor or
-                self.next_level_cache is not None and self.next_level_cache.contains_block(block_hash))
+    def contains_block(self, block_hash: Tuple[str, int], recursion: Optional[bool] = False) -> bool:
+        """
+        To check if block_hash is in the cache or the evictor.
+        To check this layer, use recursion=False.
+        To check all lower layers, use recursion=True.
+        To behave in the same way as self.look_down, use recursion=None.
+        """
+        do_recursion = self.look_down if recursion is None else recursion
+        return ((
+                        block_hash in self.cached_blocks or block_hash in self.evictor
+                ) or (
+                        do_recursion and
+                        self.next_level_cache is not None and
+                        self.next_level_cache.contains_block(block_hash, recursion=recursion)
+                ))
 
-    def update_hash(self, block_hash: int, block: PhysicalTokenBlock):
+    def update_hash(self, block_hash: Tuple[str, int], block: PhysicalTokenBlock):
         # Update the hash of block and the cached_blocks dictionary.
         assert not self.contains_block(block_hash)
         old_hash = block.block_hash
@@ -517,6 +581,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             watermark: float = 0.01,
             sliding_window: Optional[int] = None,
             enable_caching: bool = False,
+            cache_policy: str = "LRU",
     ) -> None:
         self.block_size = block_size
         self.num_total_gpu_blocks = num_gpu_blocks
@@ -542,16 +607,16 @@ class BlockSpaceManagerV1(BlockSpaceManager):
 
         self.cache_swap_mapping = CacheSwapMapping()
         if self.enable_caching:
-            logger.info("Automatic prefix caching is enabled.")
+            logger.info(f"Using automatic prefix caching with {cache_policy}.")
             self.disk_allocator: CoInferCachedBlockAllocator = CoInferCachedBlockAllocator(
-                device=Device.DISK, block_size=block_size, num_blocks=num_disk_blocks,
-                next_level_cache=None, cache_swap_mapping=self.cache_swap_mapping)
+                device=Device.DISK, block_size=block_size, num_blocks=num_disk_blocks, cache_policy=cache_policy,
+                next_level_cache=None, cache_swap_mapping=self.cache_swap_mapping, look_down=False)
             self.cpu_allocator: CoInferCachedBlockAllocator = CoInferCachedBlockAllocator(
-                device=Device.CPU, block_size=block_size, num_blocks=num_cpu_blocks,
-                next_level_cache=self.disk_allocator, cache_swap_mapping=self.cache_swap_mapping)
+                device=Device.CPU, block_size=block_size, num_blocks=num_cpu_blocks, cache_policy=cache_policy,
+                next_level_cache=self.disk_allocator, cache_swap_mapping=self.cache_swap_mapping, look_down=False)
             self.gpu_allocator: CoInferCachedBlockAllocator = CoInferCachedBlockAllocator(
-                device=Device.GPU, block_size=block_size, num_blocks=num_gpu_blocks,
-                next_level_cache=self.cpu_allocator, cache_swap_mapping=self.cache_swap_mapping)
+                device=Device.GPU, block_size=block_size, num_blocks=num_gpu_blocks, cache_policy=cache_policy,
+                next_level_cache=self.cpu_allocator, cache_swap_mapping=self.cache_swap_mapping, look_down=True)
             # self.disk_allocator: CachedBlockAllocator = CachedBlockAllocator(
             #     device=Device.DISK, block_size=block_size, num_blocks=num_disk_blocks,
             #     next_level_cache=None, cache_swap_mapping=self.cache_swap_mapping)
@@ -574,41 +639,18 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         # request ID
         self.cross_block_tables: Dict[str, BlockTable] = {}
 
-    def clean_to_watermark(self):
+    def destroy_cache(self, coinfer_id):
         if self.enable_caching:
-            self.disk_allocator.clean_to_watermark()
-            self.cpu_allocator.clean_to_watermark()
+            assert isinstance(self.gpu_allocator, CoInferCachedBlockAllocator)
+            assert isinstance(self.cpu_allocator, CoInferCachedBlockAllocator)
+            assert isinstance(self.disk_allocator, CoInferCachedBlockAllocator)
+            self.gpu_allocator.drop_coinf(coinfer_id, False)
+            self.cpu_allocator.drop_coinf(coinfer_id, False)
+            self.disk_allocator.drop_coinf(coinfer_id, False)
 
-        num_total_gpu = self.num_total_gpu_blocks
-        gpu_cache_usage_sys = 0.
-        gpu_cached_cache_usage_sys = 0.
-        if num_total_gpu is not None:
-            num_free_gpu = self.get_num_free_gpu_blocks()
-            num_cached_gpu = self.gpu_allocator.get_num_cached_blocks()
-            gpu_cache_usage_sys = 1.0 - (num_free_gpu / num_total_gpu)
-            gpu_cached_cache_usage_sys = num_cached_gpu / num_total_gpu
-
-        num_total_cpu = self.num_total_cpu_blocks
-        cpu_cache_usage_sys = 0.
-        cpu_cached_cache_usage_sys = 0.
-        if num_total_cpu is not None and num_total_cpu > 0:
-            num_free_cpu = self.get_num_free_cpu_blocks()
-            num_cached_cpu = self.cpu_allocator.get_num_cached_blocks()
-            cpu_cache_usage_sys = 1.0 - (num_free_cpu / num_total_cpu)
-            cpu_cached_cache_usage_sys = num_cached_cpu / num_total_cpu
-
-        num_total_disk = self.num_total_disk_blocks
-        disk_cache_usage_sys = 0.
-        disk_cached_cache_usage_sys = 0.
-        if num_total_disk is not None and num_total_disk > 0:
-            num_free_disk = self.disk_allocator.get_num_free_blocks()
-            num_cached_disk = self.disk_allocator.get_num_cached_blocks()
-            disk_cache_usage_sys = 1.0 - (num_free_disk / num_total_disk)
-            disk_cached_cache_usage_sys = num_cached_disk / num_total_disk
-
-        # logger.info(f"GPU cache usage: {gpu_cache_usage_sys:.2f}({gpu_cached_cache_usage_sys:.2f}), "
-        #             f"CPU cache usage: {cpu_cache_usage_sys:.2f}({cpu_cached_cache_usage_sys:.2f}), "
-        #             f"Disk cache usage: {disk_cache_usage_sys:.2f}({disk_cached_cache_usage_sys:.2f})")
+    def clean_to_watermark(self, watermark):
+        if self.enable_caching:
+            self.cpu_allocator.clean_to_watermark(watermark)
 
     def get_cache_swap_mapping(self) -> CacheSwapMapping:
         return self.cache_swap_mapping
@@ -662,6 +704,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                 block.ref_count = ref_count
             elif not is_encoder_decoder and self.enable_caching:
                 self.gpu_allocator.inc_read(seq.hash_of_block(logical_idx))
+                assert isinstance(self.gpu_allocator, CoInferCachedBlockAllocator)
                 block = self.gpu_allocator.allocate(
                     seq.hash_of_block(logical_idx),
                     seq.num_hashed_tokens_of_block(logical_idx))
@@ -898,8 +941,8 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             #             f"{to_block.device}:{to_block.block_number}")
             # Free the source block swapped in to destination.
             src_allocator.free(from_block)
-            if src_allocator.device == Device.CPU:
-                src_allocator.inc_read(to_block.block_hash)
+            # if src_allocator.device == Device.CPU:
+            #     src_allocator.inc_read(to_block.block_hash)
 
         return new_block_table
 
@@ -933,7 +976,6 @@ class BlockSpaceManagerV1(BlockSpaceManager):
 
     def can_swap_out(self, seq_group: SequenceGroup) -> bool:
         blocks = self._get_physical_blocks(seq_group)
-        blocks = [b for b in blocks if not self.gpu_allocator.contains_block(b.block_hash)]
         return len(blocks) <= self.cpu_allocator.get_num_free_blocks()
 
     def swap_out(self, seq_group: SequenceGroup) -> List[Tuple[int, int]]:

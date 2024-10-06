@@ -276,7 +276,7 @@ class Worker(WorkerBase):
     ) -> List[Union[SamplerOutput, PoolerOutput]]:
         if not self.is_driver_worker:
             self._execute_model_non_driver()
-            return []
+            return [], 0, 0, 0, 0
 
         if execute_model_req is None:
             # This signals that there's no more requests to process for now.
@@ -285,7 +285,7 @@ class Worker(WorkerBase):
             # Send an empty input to notify all other workers to stop their
             # execution loop.
             broadcast_tensor_dict({}, src=0)
-            return []
+            return [], 0, 0, 0, 0
 
         seq_group_metadata_list = execute_model_req.seq_group_metadata_list
         num_seq_groups = len(seq_group_metadata_list)
@@ -336,7 +336,7 @@ class Worker(WorkerBase):
 
         # If there is no input, we don't need to execute the model.
         if num_seq_groups == 0:
-            return []
+            return [], load_time, swap_time, lora_time, 0
 
         timer = time.time()
         output = self.model_runner.execute_model(seq_group_metadata_list,
@@ -345,7 +345,7 @@ class Worker(WorkerBase):
 
         # Worker only supports single-step execution. Wrap the output in a list
         # to conform to interface.
-        return [output], swap_time, execute_time, load_time
+        return [output], load_time, swap_time, lora_time, execute_time
 
     @torch.inference_mode()
     def start_worker_execution_loop(self) -> None:

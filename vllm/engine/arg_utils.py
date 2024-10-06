@@ -99,6 +99,7 @@ class EngineArgs:
     proactive_reservation: bool = False
     scheduling_policy: str = "Hermes"
     lora_policy: str = "Hermes"
+    cache_policy: str = "Hermes"
 
     # disk kv cache dir path
     disk_dir_path: str = "/workspace/kv_cache/"
@@ -588,6 +589,13 @@ class EngineArgs:
             # "Hermes", "LRU", "Evict/Prefetch on Waiting Queue", "No-Cache", "Full-Cache"
             help="use which lora management")
         parser.add_argument(
+            "--cache-policy",
+            type=str,
+            default=EngineArgs.cache_policy,
+            choices=["Hermes", "LRU", "EPWQ"],
+            # "Hermes", "LRU", "Evict/Prefetch on Waiting Queue", "No-Cache", "Full-Cache"
+            help="use which kv cache management")
+        parser.add_argument(
             "--disk-dir-path",
             type=str,
             default=EngineArgs.disk_dir_path
@@ -622,7 +630,8 @@ class EngineArgs:
                                    self.enable_prefix_caching,
                                    self.num_disk_blocks,
                                    self.disk_dir_path,
-                                   self.preemption_mode)
+                                   self.preemption_mode,
+                                   self.cache_policy)
         parallel_config = ParallelConfig(
             self.pipeline_parallel_size,
             self.tensor_parallel_size,

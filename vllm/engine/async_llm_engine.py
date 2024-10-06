@@ -245,10 +245,11 @@ class _AsyncLLMEngine(LLMEngine):
                 running_queue_size=scheduler_outputs.running_queue_size,
                 advised_lora=scheduler_outputs.advised_lora,
             )
-            output, swap_time, execute_time, load_time = await self.model_executor.execute_model_async(
+            output, load_time, swap_time, lora_time, execute_time = await self.model_executor.execute_model_async(
                 execute_model_req)
+            # logger.info(f"{swap_time}, {execute_time}, {load_time}")
         else:
-            output, swap_time, execute_time, load_time = [], 0, 0, 0
+            output, load_time, swap_time, lora_time, execute_time = [], 0, 0, 0, 0
 
         request_outputs = self._process_model_outputs(
             output, scheduler_outputs.scheduled_seq_groups,

@@ -922,10 +922,6 @@ class LLMEngine:
             disk_cache_usage_sys = 1.0 - (num_free_disk / num_total_disk)
             disk_cached_cache_usage_sys = num_cached_disk / num_total_disk
 
-        num_load_blocks = 0
-        if scheduler_outputs is not None:
-            num_load_blocks = len(scheduler_outputs.blocks_to_load)
-
         # Iteration stats
         num_prompt_tokens_iter = 0
         num_generation_tokens_iter = 0
@@ -1038,7 +1034,6 @@ class LLMEngine:
             gpu_cached_cache_usage_sys=gpu_cached_cache_usage_sys,
             cpu_cached_cache_usage_sys=cpu_cached_cache_usage_sys,
             disk_cached_cache_usage_sys=disk_cached_cache_usage_sys,
-            num_load_blocks=num_load_blocks,
 
             # Iteration stats
             num_prompt_tokens_iter=num_prompt_tokens_iter,

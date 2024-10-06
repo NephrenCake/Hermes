@@ -1,7 +1,8 @@
 import enum
 import time
 from abc import ABC, abstractmethod, abstractproperty
-from typing import OrderedDict, Dict, List, Union
+from collections import OrderedDict
+from typing import Dict, List, Union, Tuple
 
 from vllm.block import PhysicalTokenBlock
 from vllm.logger import init_logger
@@ -126,36 +127,54 @@ class LRUEvictor(Evictor):
 
 
 class CoInfEvictor(Evictor):
-    def __init__(self, preference="LRU"):
-        self.preference = preference
-        dict_type = OrderedDict if self.preference == "LRU" else Dict
-
+    def __init__(self, cache_policy="LRU"):
         # free_table: coinf_id -> {block_hash -> PhysicalTokenBlock}
-        self.free_table: dict_type[str, Dict[int, PhysicalTokenBlock]] = dict_type()
+        self.free_table: Dict[str, Dict[int, PhysicalTokenBlock]] = OrderedDict() if cache_policy == "LRU" else {}
+        self.priority_queue: List[str] = []  # To hold the priority of coinf_ids
 
-    def __contains__(self, block_hash: (str, int)) -> bool:
+    def __contains__(self, block_hash: Tuple[str, int]) -> bool:
         coinf_id, block_hash = block_hash
         if coinf_id not in self.free_table.keys():
             return False
         return block_hash in self.free_table[coinf_id].keys()
 
     def set_priority(self, queue: List[str]):
-        pass
+        # Set the priority queue to the given list of coinf_ids
+        self.priority_queue = queue
 
     def evict(self, coinf_id=None) -> List[PhysicalTokenBlock]:
         if self.num_blocks == 0:
+            if coinf_id is not None:
+                return []
             raise ValueError("No usable cache memory left")
 
         if coinf_id is None:
-            evicted_coinf: Dict[int, PhysicalTokenBlock] = next(iter(self.free_table.values()))
-        else:
-            if coinf_id not in self.free_table.keys():
-                return []
-            evicted_coinf: Dict[int, PhysicalTokenBlock] = self.free_table[coinf_id]
-        evicted_blocks: List[PhysicalTokenBlock] = [b for b in evicted_coinf.values()]
-        for b in evicted_blocks:
-            b.computed = False
-        self.free_table.pop(evicted_blocks[0].block_hash[0])
+            # If no coinf_id is provided, use the priority queue or fall back to LRU
+            if self.priority_queue:
+                no_use = self.free_table.keys() - set(self.priority_queue)
+                if no_use:
+                    coinf_id = next(iter(no_use))
+                else:
+                    priority_queue = [i for i in self.priority_queue if i in self.free_table]
+                    for prio_coinf_id in reversed(priority_queue):
+                        if prio_coinf_id in self.free_table:
+                            coinf_id = prio_coinf_id
+                            break
+                    else:
+                        # If no valid coinf_id is found in the priority queue, use the default behavior
+                        logger.warning("No valid coinf_id found in the priority queue?")
+                        coinf_id = next(iter(self.free_table.keys()))
+            else:
+                coinf_id = next(iter(self.free_table.keys()))
+
+        if coinf_id not in self.free_table.keys():
+            return []
+
+        evicted_coinf: Dict[int, PhysicalTokenBlock] = self.free_table[coinf_id]
+        evicted_blocks: List[PhysicalTokenBlock] = list(evicted_coinf.values())
+
+        # Remove the evicted blocks
+        self.free_table.pop(coinf_id)
         return evicted_blocks
 
     def add(self, block: PhysicalTokenBlock):
@@ -178,6 +197,9 @@ class CoInfEvictor(Evictor):
     @property
     def num_blocks(self) -> int:
         return sum(len(v) for v in self.free_table.values())
+
+    def num_blocks_of(self, coinf_id: str) -> int:
+        return len(self.free_table.get(coinf_id, {}))
 
 
 def make_evictor(eviction_policy: EvictionPolicy) -> Evictor:

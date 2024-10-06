@@ -183,7 +183,6 @@ class Stats:
     gpu_cached_cache_usage_sys: float
     cpu_cached_cache_usage_sys: float
     disk_cached_cache_usage_sys: float
-    num_load_blocks: int
 
     # Iteration stats (should have _iter suffix)
     num_prompt_tokens_iter: int
@@ -238,7 +237,6 @@ class StatLogger:
         self.swap_time_list: List[float] = []
         self.execute_time_list: List[float] = []
         self.cur_step_time_list: List[float] = []
-        self.total_blocks_have_load: int = 0
 
         # Prometheus metrics
         self.labels = labels
@@ -382,7 +380,6 @@ class StatLogger:
         self.swap_time_list.append(stats.swap_time)
         self.execute_time_list.append(stats.execute_time)
         self.cur_step_time_list.append(stats.cur_step_time)
-        self.total_blocks_have_load += stats.num_load_blocks
 
         # Log locally every local_interval seconds.
         if self._local_interval_elapsed(stats.now):
@@ -405,8 +402,7 @@ class StatLogger:
                 "Pending: %d reqs, Num CoInferences: %d, "
                 "GPU usage: %.1f%%(%.1f%%), "
                 "CPU usage: %.1f%%(%.1f%%), "
-                "DISK usage: %.1f%%(%.1f%%), "
-                "CPU Miss: %d, ",
+                "DISK usage: %.1f%%(%.1f%%), ",
                 prompt_throughput,
                 generation_throughput,
                 stats.num_running_sys,
@@ -419,7 +415,6 @@ class StatLogger:
                 stats.cpu_cached_cache_usage_sys * 100,
                 stats.disk_cache_usage_sys * 100,
                 stats.disk_cached_cache_usage_sys * 100,
-                self.total_blocks_have_load,
             )
             logger.info(
                 f"schedule: {avg_val['schedule_time']:.2f}ms (avg {avg_proportion['schedule_time']:.2f}% p95 {p95_proportion['schedule_time']:.2f}%), "
