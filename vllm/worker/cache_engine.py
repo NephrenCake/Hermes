@@ -54,6 +54,12 @@ class CacheEngine:
             self.block_size,
         )
 
+        # Initialize the stream for caching operations.
+        self.cache_stream = torch.cuda.Stream()
+        assert self.cache_stream != torch.cuda.current_stream()
+        # Initialize the events for stream synchronization.
+        self.cache_events = [torch.cuda.Event() for _ in range(self.num_layers)]
+
         # Initialize the cache.
         self.gpu_cache = self._allocate_kv_cache(self.num_gpu_blocks, "cuda")
         self.cpu_cache = self._allocate_kv_cache(self.num_cpu_blocks, "cpu")

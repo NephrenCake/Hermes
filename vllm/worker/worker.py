@@ -226,6 +226,37 @@ class Worker(WorkerBase):
         if blocks_to_copy.numel() > 0:
             self.cache_engine.copy(blocks_to_copy)
 
+    def cache_swap_layer_wise(
+            self,
+            blocks_to_swap_in: torch.Tensor,
+            blocks_to_swap_out: torch.Tensor,
+            blocks_to_copy: torch.Tensor,
+    ) -> Union[None, list[torch.cuda.Event]]:
+        issued_cache_op = False
+        if blocks_to_copy.numel() > 0:
+            self.cache_engine.copy(blocks_to_copy)
+        with torch.cuda.stream(self.cache_engine.cache_stream):
+            for i in range(self.cache_engine.num_layers):
+                if blocks_to_swap_out.numel() > 0:
+                    self.cache_engine.attn_backend.swap_blocks(
+                        self.cache_engine.gpu_cache[i],
+                        self.cache_engine.cpu_cache[i],
+                        blocks_to_swap_out
+                    )
+                    issued_cache_op = True
+                if blocks_to_swap_in.numel() > 0:
+                    self.cache_engine.attn_backend.swap_blocks(
+                        self.cache_engine.cpu_cache[i],
+                        self.cache_engine.gpu_cache[i],
+                        blocks_to_swap_in
+                    )
+                    issued_cache_op = True
+                if issued_cache_op:
+                    self.cache_engine.cache_events[i].record(stream=self.cache_engine.cache_stream)
+        if issued_cache_op:
+            return self.cache_engine.cache_events
+        return None
+
     def set_loras(self, seq_group_metadata_list, execute_model_req):
         if not self.lora_config:
             return
@@ -321,13 +352,24 @@ class Worker(WorkerBase):
         }
         broadcast_tensor_dict(data, src=0)
 
+        # 先 load 再 save，先 swap out 再 swap in
+
         load_start_time = time.time()
         # self.cache_save_load(blocks_to_save, blocks_to_load)
         load_time = time.time() - load_start_time
 
         timer = time.time()
-        # self.cache_swap(blocks_to_swap_in, blocks_to_swap_out, blocks_to_copy)
+        # cache_events = self.cache_swap(blocks_to_swap_in, blocks_to_swap_out, blocks_to_copy)
+        cache_events = self.cache_swap_layer_wise(blocks_to_swap_in, blocks_to_swap_out, blocks_to_copy)
         swap_time = time.time() - timer
+        # if cache_events is not None:
+        #     for event in cache_events:
+        #         event.synchronize()
+        # torch.cuda.synchronize()
+        # cache_events = None
+        # swap_time2 = time.time() - timer
+        # if swap_time * 1000 > 1:
+        #     logger.info(f"swap_time1: {swap_time * 1000:.2f}, swap_time2: {swap_time2 * 1000:.2f}")
 
         # TODO yfliu: Consider distributed inference.
         timer = time.time()
@@ -340,7 +382,9 @@ class Worker(WorkerBase):
 
         timer = time.time()
         output = self.model_runner.execute_model(seq_group_metadata_list,
-                                                 self.gpu_cache, set_lora=False)
+                                                 self.gpu_cache,
+                                                 set_lora=False,
+                                                 cache_events=cache_events)
         execute_time = time.time() - timer
 
         # Worker only supports single-step execution. Wrap the output in a list
@@ -377,6 +421,7 @@ class Worker(WorkerBase):
         # self.cache_save_load(blocks_to_save, blocks_to_load)
 
         # self.cache_swap(blocks_to_swap_in, blocks_to_swap_out, blocks_to_copy)
+        self.cache_swap_layer_wise(blocks_to_swap_in, blocks_to_swap_out, blocks_to_copy)
 
         # If there is no input, we don't need to execute the model.
         if num_seq_groups == 0:
