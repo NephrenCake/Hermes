@@ -98,7 +98,7 @@ class EngineArgs:
     coinference_scheduler: bool = False
     proactive_reservation: bool = False
     scheduling_policy: str = "Hermes"
-    bayes_prediction: bool = False
+    bayes_prediction: bool = True
     lora_policy: str = "Hermes"
     cache_policy: str = "Hermes"
 

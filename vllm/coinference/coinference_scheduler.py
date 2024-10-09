@@ -174,7 +174,8 @@ class CoInferenceScheduler:
         self.proactive_reservation = scheduler_config.proactive_reservation
         self.scheduling_policy = scheduler_config.scheduling_policy
         self.bayes_prediction = scheduler_config.bayes_prediction
-        logger.info(f"use bayes: {self.bayes_prediction}")
+        if self.bayes_prediction:
+            logger.info(f"[Bayesian Debug] > Enable Bayesian Prediction")
 
         self.prefill_recorder = TimeRecorder(record_window_size=10, default_time_per_token=0.1)
         self.decode_recorder = TimeRecorder(record_window_size=50, default_time_per_token=3)
@@ -339,8 +340,7 @@ class CoInferenceScheduler:
             for coinf in self.coinferences_dict.values():
                 coinf.estimate_remaining_time(self.prefill_recorder.time_per_token,
                                               self.decode_recorder.time_per_token,
-                                              use_mean=self.scheduling_policy == "Mean-SRJF",
-                                              use_bayes=self.bayes_prediction)
+                                              use_mean=self.scheduling_policy == "Mean-SRJF")
         self.coinferences_queue = policy.sort_by_priority(now, self.coinferences_queue)
 
         # split coinference to running_queue and waiting_queue
@@ -633,7 +633,9 @@ class CoInferenceScheduler:
 
             # logger.info(f"Add coinference {seq_group.coinf_id} to scheduler")
 
-        self.coinferences_dict[seq_group.coinf_id].add_req(seq_group, stage_name, self.scheduling_policy == "Mean-SRJF", self.bayes_prediction)
+        self.coinferences_dict[seq_group.coinf_id].add_req(seq_group, stage_name,
+                                                           use_mean=self.scheduling_policy == "Mean-SRJF",
+                                                           use_bayes=self.bayes_prediction)
 
         for seq in seq_group.seqs_dict.values():
             seq.coinf_id = seq_group.coinf_id

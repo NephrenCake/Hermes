@@ -68,7 +68,7 @@ class CoInferenceStage:
     def get_all_decode_tokens(self) -> List:
         return [sum(seq.get_output_len() for seq in seq_group.get_seqs()) for seq_group in self.parallel_requests]
 
-    def get_remaining_tokens(self, predictor: AppPredictor, use_mean: bool = False, use_bayes: bool = False) -> Tuple[float, float]:
+    def get_remaining_tokens(self, predictor: AppPredictor, use_mean: bool = False) -> Tuple[float, float]:
         if self.hint is not None:
             fin_prompt_tokens, fin_decode_tokens = 0, 0
             for seq_group in self.parallel_requests:
@@ -201,13 +201,11 @@ class CoInference:
                 return False  # new requests were added
             elif now - self.finish_time > self.time_out:
                 self.finish_status = FinishType.CoInfFinished
-                logger.info(f"the PREDICTED REMAINING TIME OF stage {self.coinf_id}: {self.remaining_time}")
                 return True  # no more requests will arrive
             else:
                 return False  # keep waiting for new requests
 
         if self.finish_status == FinishType.CoInfFinished:
-            logger.info(f"the PREDICTED REMAINING TIME OF stage {self.coinf_id}: {self.remaining_time}")
             return True
 
     def estimate_remaining_time(
@@ -215,7 +213,6 @@ class CoInference:
             prefill_time_per_token: float,
             decode_time_per_token: float,
             use_mean: bool = False,
-            use_bayes: bool = False,
     ):
         """
         Estimate the avg number of remaining tokens in the condition of the finished tokens
@@ -226,7 +223,7 @@ class CoInference:
             self.remaining_time = 0  # ms
             return
 
-        prompt_tokens, decode_tokens = self.current_stage.get_remaining_tokens(self.predictor, use_mean, use_bayes) \
+        prompt_tokens, decode_tokens = self.current_stage.get_remaining_tokens(self.predictor, use_mean) \
             if self.current_stage_id < len(self.stages) else (0, 0)
         prompt_tokens += self.following_stages_info["prompt_tokens"]
         decode_tokens += self.following_stages_info["decode_tokens"]
