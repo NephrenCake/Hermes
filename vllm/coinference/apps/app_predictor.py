@@ -229,8 +229,6 @@ class AppPredictor:
                     break
             assert len(row) == 2 * len(list(evidence.keys())), "bayes predict input wrong"
             bayes_result = self.bayes_predictor.following_predict(row, int(len(row) / 2))
-            tag = list(bayes_result.keys())[0][:-2]
-            # logger.info(f' {tag}  {self.app_name} result: {bayes_result}')
 
         follow_up = False
         for stage_name in self.model_dict["stage_list"]:
@@ -249,7 +247,7 @@ class AppPredictor:
                 new_samples=evidence.get(stage_name, {}).get("parallelism", []), weight=10
             )
 
-            if bayes_result is not None and stage_name == tag:
+            if bayes_result is not None:
                 prompt_tokens += bayes_result[f'{stage_name}_p'] * parallelism * loops
                 decode_tokens += bayes_result[f'{stage_name}_c'] * parallelism * loops
             else:
