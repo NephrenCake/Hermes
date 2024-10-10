@@ -28,9 +28,10 @@ def create_coinference(
     app_name: Union[None, str],
     coinf_id: str, 
     arrival_time: float,
-    hint: Optional[Dict]
+    hint: Optional[Dict],
+    slo
     ) -> CoInference:
     if app_name not in AppLib:
         raise NameError("Unrecognized app_name: %s", app_name)
     else:
-        return AppLib[app_name](app_name, coinf_id, arrival_time, hint)
+        return AppLib[app_name](app_name, coinf_id, arrival_time, hint, slo)

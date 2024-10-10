@@ -271,6 +271,8 @@ class _AsyncLLMEngine(LLMEngine):
         }
         self.do_log_stats(scheduler_outputs, output, runtime_inspect)
 
+        self.scheduler.update_queue_time(scheduler_outputs.scheduled_seq_groups, cur_step_time)
+
         if not request_outputs:
             # Stop the execute model loop in parallel workers until there are
             # more requests to process. This avoids waiting indefinitely in

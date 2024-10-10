@@ -8,6 +8,7 @@ from vllm.config import (CacheConfig, DecodingConfig, DeviceConfig,
                          EngineConfig, LoadConfig, LoRAConfig, ModelConfig,
                          ParallelConfig, SchedulerConfig, SpeculativeConfig,
                          TokenizerPoolConfig, VisionLanguageConfig)
+from vllm.core.policy import PolicyFactory
 from vllm.model_executor.layers.quantization import QUANTIZATION_METHODS
 from vllm.utils import str_to_int_tuple
 
@@ -96,7 +97,7 @@ class EngineArgs:
     
     # coinference
     coinference_scheduler: bool = False
-    proactive_reservation: bool = False
+    non_preempt: bool = False
     scheduling_policy: str = "Hermes"
     bayes_prediction: bool = True
     lora_policy: str = "Hermes"
@@ -573,14 +574,14 @@ class EngineArgs:
             action='store_true',
             help="if use coinference scheduler")
         parser.add_argument(
-            "--proactive-reservation",
+            "--non-preempt",
             action='store_true',
             help="if use proactive reservation")
         parser.add_argument(
             "--scheduling-policy",
             type=str,
             default=EngineArgs.scheduling_policy,
-            choices=["Hermes", "Idealized-SRJF", "Mean-SRJF", "Request-Level-FIFO", "CoInference-Level-FIFO"],
+            choices=PolicyFactory.get_all_policy(),
             help="use which scheduling policy")
         parser.add_argument(
             "--bayes-prediction",
@@ -679,7 +680,7 @@ class EngineArgs:
             enable_chunked_prefill=self.enable_chunked_prefill,
             embedding_mode=model_config.embedding_mode,
             coinference_scheduler=self.coinference_scheduler,
-            proactive_reservation=self.proactive_reservation,
+            non_preempt=self.non_preempt,
             scheduling_policy=self.scheduling_policy,
             bayes_prediction=self.bayes_prediction,
             lora_policy=self.lora_policy,

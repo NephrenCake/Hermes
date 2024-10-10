@@ -668,7 +668,7 @@ class SchedulerConfig:
         enable_chunked_prefill: bool = False,
         embedding_mode: Optional[bool] = False,
         coinference_scheduler: bool = False, 
-        proactive_reservation: bool = False,
+        non_preempt: bool = False,
         scheduling_policy: str = "Hermes",
         bayes_prediction: bool = False,
         lora_policy: str = "Hermes",
@@ -701,7 +701,7 @@ class SchedulerConfig:
         
         # coinference
         self.coinference_scheduler = coinference_scheduler
-        self.proactive_reservation = proactive_reservation
+        self.non_preempt = non_preempt
         self.bayes_prediction = bayes_prediction
         self.scheduling_policy = scheduling_policy
         self.lora_policy = lora_policy

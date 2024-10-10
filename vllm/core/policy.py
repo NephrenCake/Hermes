@@ -53,8 +53,15 @@ class CoInferencePolicy:
         return sorted(
             coinferences,
             key=lambda coinference: self.get_priority(now, coinference),
-            reverse=True,
         )
+
+    def update_priority(
+            self,
+            coinferences_dict=None,
+            prefill_time_per_token=None,
+            decode_time_per_token=None,
+    ):
+        raise NotImplementedError
 
 
 class CoInferenceFCFS(CoInferencePolicy):
@@ -63,29 +70,91 @@ class CoInferenceFCFS(CoInferencePolicy):
             now: float,
             coinference: CoInference,
     ) -> float:
-        return now - coinference.arrival_time
+        return coinference.arrival_time
 
-
-class CoInferenceSRCF(CoInferencePolicy):
-    def __init__(
+    def update_priority(
             self,
-    ) -> None:
-        super().__init__()
+            coinferences_dict=None,
+            prefill_time_per_token=None,
+            decode_time_per_token=None,
+    ):
+        pass
 
-    def sort_by_priority(
+
+class CoInferenceGittins(CoInferencePolicy):
+    def get_priority(
             self,
             now: float,
-            coinferences: List[CoInference],
-    ) -> List[CoInference]:
-        return sorted(coinferences)
+            coinference: CoInference,
+    ) -> float:
+        return coinference.remaining_time
+
+    def update_priority(
+            self,
+            coinferences_dict=None,
+            prefill_time_per_token=None,
+            decode_time_per_token=None,
+    ):
+        assert coinferences_dict is not None
+        assert prefill_time_per_token is not None
+        assert decode_time_per_token is not None
+        for coinf in coinferences_dict.values():
+            coinf.estimate_remaining_time(prefill_time_per_token,
+                                          decode_time_per_token,
+                                          use_mean=False)
+
+
+class CoInferenceMeanSRCF(CoInferencePolicy):
+    def get_priority(
+            self,
+            now: float,
+            coinference: CoInference,
+    ) -> float:
+        return coinference.remaining_time
+
+    def update_priority(
+            self,
+            coinferences_dict=None,
+            prefill_time_per_token=None,
+            decode_time_per_token=None,
+    ):
+        assert coinferences_dict is not None
+        assert prefill_time_per_token is not None
+        assert decode_time_per_token is not None
+        for coinf in coinferences_dict.values():
+            coinf.estimate_remaining_time(prefill_time_per_token,
+                                          decode_time_per_token,
+                                          use_mean=True)
+
+
+class CoInferenceMakespan(CoInferenceMeanSRCF):
+    def get_priority(
+            self,
+            now: float,
+            coinference: CoInference,
+    ) -> float:
+        return -coinference.remaining_time
+
+
+class CoInferenceSLO(CoInferenceMeanSRCF):
+    def get_priority(
+            self,
+            now: float,
+            coinference: CoInference,
+    ) -> float:
+        # return coinference.ddl
+        return coinference.ddl - (coinference.remaining_time / 1000 + now)
 
 
 class PolicyFactory:
     _POLICY_REGISTRY = {
         'fcfs': FCFS,
-        'Hermes': CoInferenceSRCF,  # use distribution
-        'Idealized-SRJF': CoInferenceSRCF,  # use hint
-        'Mean-SRJF': CoInferenceSRCF,  # use average remaining time
+
+        'Hermes': CoInferenceGittins,  # use distribution
+        'Hermes-Makespan': CoInferenceMakespan,
+        'Hermes-SLO': CoInferenceSLO,
+        'Idealized-SRJF': CoInferenceGittins,  # use hint
+        'Mean-SRJF': CoInferenceMeanSRCF,  # use average remaining time
         'Request-Level-FIFO': CoInferenceFCFS,  # each request is a co-infer
         'CoInference-Level-FIFO': CoInferenceFCFS,
     }
@@ -93,3 +162,7 @@ class PolicyFactory:
     @classmethod
     def get_policy(cls, policy_name: str, **kwargs) -> Union[Policy, CoInferencePolicy]:
         return cls._POLICY_REGISTRY[policy_name](**kwargs)
+
+    @staticmethod
+    def get_all_policy():
+        return list(PolicyFactory._POLICY_REGISTRY.keys())
