@@ -283,9 +283,6 @@ class CoInference:
             return 0
         return self.current_stage.get_num_unfinished_seq_groups()
 
-    def __lt__(self, other) -> bool:
-        return self.remaining_time < other.remaining_time
-
     def __repr__(self) -> str:
         # return (f"CoInference(app_name={self.app_name}, "
         #         f"coinf_id={self.coinf_id}, "

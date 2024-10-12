@@ -220,7 +220,6 @@ class AppPredictor:
         if evidence is None:
             evidence = {}
 
-        prompt_tokens, decode_tokens, stage_gap = 0, 0, 0
         bayes_result = None
         if use_bayes and self.bayes_predictor is not None:  # use bayes prediction for no-loop apps
             row = []
@@ -233,6 +232,7 @@ class AppPredictor:
             assert len(row) == 2 * len(list(evidence.keys())), "bayes predict input wrong"
             bayes_result = self.bayes_predictor.following_predict(row, int(len(row) / 2))
 
+        prompt_tokens, decode_tokens, stage_gap = 0, 0, 0
         follow_up = False
         for stage_name in self.model_dict["stage_list"]:
             if not follow_up:
