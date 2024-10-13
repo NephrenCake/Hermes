@@ -43,7 +43,7 @@ class CoInferencePolicy:
             now: float,
             coinference: CoInference,
     ) -> float:
-        raise NotImplementedError
+        return coinference.priority
 
     def sort_by_priority(
             self,
@@ -85,9 +85,10 @@ class CoInferenceGittins(CoInferencePolicy):
     def get_priority(
             self,
             now: float,
-            coinference: CoInference,
+            coinf: CoInference,
     ) -> float:
-        return coinference.remaining_time
+        coinf.priority = coinf.remaining_time
+        return coinf.priority
 
     def update_priority(
             self,
@@ -108,9 +109,10 @@ class CoInferenceMeanSRCF(CoInferencePolicy):
     def get_priority(
             self,
             now: float,
-            coinference: CoInference,
+            coinf: CoInference,
     ) -> float:
-        return coinference.remaining_time
+        coinf.priority = coinf.remaining_time
+        return coinf.priority
 
     def update_priority(
             self,
@@ -127,32 +129,84 @@ class CoInferenceMeanSRCF(CoInferencePolicy):
                                           use_mean=True)
 
 
-class CoInferenceMakespan(CoInferenceMeanSRCF):
+class CoInferenceMakespan(CoInferenceGittins):  # deprecated
     def get_priority(
             self,
             now: float,
-            coinference: CoInference,
+            coinf: CoInference,
     ) -> float:
-        return -coinference.remaining_time
+        coinf.priority = -coinf.remaining_time
+        return coinf.priority
 
 
-class CoInferenceSLO(CoInferenceMeanSRCF):
+class CoInferenceSLO(CoInferenceGittins):  # deprecated
     def get_priority(
             self,
             now: float,
-            coinference: CoInference,
+            coinf: CoInference,
     ) -> float:
-        # return coinference.ddl
-        return coinference.ddl - (coinference.remaining_time / 1000 + now)
+        worst_finish_time = now + coinf.worst_case_remaining_time / 1000
+        worst_slo_violation = (worst_finish_time - coinf.arrival_time) / coinf.stat.slo
+        if worst_slo_violation > 1:
+            coinf.priority = (1, -worst_slo_violation)
+        else:
+            coinf.priority = (2, coinf.remaining_time / 1000)
+
+        # coinference.priority = (coinference.remaining_time / 1000) / worst_slo_violation
+        return coinf.priority
+
+
+class CoInferenceTPT(CoInferenceGittins):  # deprecated
+    def get_priority(
+            self,
+            now: float,
+            coinf: CoInference,
+    ) -> float:
+        worst_tpt_violation = (coinf.stat.running_time / coinf.stat.output_tokens) / coinf.stat.tpt
+        if worst_tpt_violation > 1:
+            coinf.priority = (1, -worst_tpt_violation)
+        else:
+            coinf.priority = (2, coinf.remaining_time / 1000)
+        return coinf.priority
+
+
+class Hermes(CoInferenceGittins):
+    def get_priority(
+            self,
+            now: float,
+            coinf: CoInference,
+    ) -> float:
+        if coinf.stat.tpt is not None:
+            if coinf.stat.output_tokens == 0:
+                coinf.worst_tpt_violation = 1 << 16
+            else:
+                coinf.worst_tpt_violation = (coinf.stat.running_time / coinf.stat.output_tokens) / coinf.stat.tpt * 1.25
+        else:
+            coinf.worst_tpt_violation = None
+
+        if coinf.stat.slo is not None:
+            worst_finish_time = now + coinf.worst_case_remaining_time / 1000
+            coinf.worst_slo_violation = (worst_finish_time - coinf.arrival_time) / coinf.stat.slo * 1.25
+        else:
+            coinf.worst_slo_violation = None
+
+        if coinf.worst_tpt_violation is not None and coinf.worst_tpt_violation > 1:
+            coinf.priority = (1, -coinf.worst_tpt_violation)
+        elif coinf.worst_slo_violation is not None and coinf.worst_slo_violation > 1:
+            coinf.priority = (2, (coinf.remaining_time / 1000) / coinf.worst_slo_violation)
+        else:
+            coinf.priority = (3, coinf.remaining_time / 1000)
+        return coinf.priority
 
 
 class PolicyFactory:
     _POLICY_REGISTRY = {
         'fcfs': FCFS,
 
-        'Hermes': CoInferenceGittins,  # use distribution
-        'Hermes-Makespan': CoInferenceMakespan,
-        'Hermes-SLO': CoInferenceSLO,
+        'Hermes': Hermes,
+        # 'Hermes-TPT': CoInferenceTPT,
+        # 'Hermes-SLO': CoInferenceSLO,
+        'Hermes-Gittins': CoInferenceGittins,  # use distribution
         'Idealized-SRJF': CoInferenceGittins,  # use hint
         'Mean-SRJF': CoInferenceMeanSRCF,  # use average remaining time
         'Request-Level-FIFO': CoInferenceFCFS,  # each request is a co-infer
