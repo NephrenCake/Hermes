@@ -119,6 +119,7 @@ class TimeRecorder:
             record_window_size: int,
             default_time_per_token: float = 0.1,
             ema_alpha: float = 0.7,
+            token_type: str = "prefill"
     ) -> None:
         ''' ms '''
         self.time_per_token = default_time_per_token
@@ -126,6 +127,7 @@ class TimeRecorder:
         self.num_tokens_recorder = []
         self.record_window_size = record_window_size
         self.ema_alpha = ema_alpha
+        self.token_type = token_type
 
     def update(
             self,
@@ -139,6 +141,11 @@ class TimeRecorder:
             self.time_recorder = []
             self.num_tokens_recorder = []
             self.time_per_token = self.time_per_token * self.ema_alpha + time_per_token * (1 - self.ema_alpha)
+
+        # with open(os.path.join(os.path.dirname(__file__), f"{self.token_type}.json"), "w") as f:
+        #     json.dump({
+        #         "time_per_token": self.time_per_token,
+        #     }, f)
 
 
 class CoInferenceScheduler:
@@ -179,8 +186,8 @@ class CoInferenceScheduler:
         if self.bayes_prediction:
             logger.info(f"[Bayesian Debug] > Enable Bayesian Prediction")
 
-        self.prefill_recorder = TimeRecorder(record_window_size=10, default_time_per_token=0.33)
-        self.decode_recorder = TimeRecorder(record_window_size=50, default_time_per_token=3.16)
+        self.prefill_recorder = TimeRecorder(record_window_size=100, default_time_per_token=0.33, token_type="prefill")
+        self.decode_recorder = TimeRecorder(record_window_size=1000, default_time_per_token=3.16, token_type="decode")
 
         self.used_prefix_block = 0
         self.all_prefill_block = 0
@@ -338,6 +345,9 @@ class CoInferenceScheduler:
 
         return lora_preference, advised_lora
 
+    next_log_round = 0
+    log_round = 0
+
     def _schedule_default(self) -> SchedulerOutputs:
         now = time.time()
 
@@ -345,6 +355,15 @@ class CoInferenceScheduler:
                                     self.prefill_recorder.time_per_token,
                                     self.decode_recorder.time_per_token)
         self.coinferences_queue = self.policy.sort_by_priority(now, self.coinferences_queue)
+
+        self.log_round += 1
+        if self.log_round > self.next_log_round * 100 and self.scheduling_policy == "Hermes":
+            self.next_log_round += 1
+            queue = [(coinf.coinf_id, f"({coinf.priority[0]}, {coinf.priority[1]:.2f})",
+                      f"{coinf.worst_slo_violation:.2f}" if coinf.worst_slo_violation else None,
+                      f"{coinf.worst_tpt_violation:.2f}" if coinf.worst_tpt_violation else None)
+                     for coinf in self.coinferences_queue]
+            logger.info(f"Priority Queue: {queue}")
 
         # split coinference to running_queue and waiting_queue
         split_outputs = self.split_seq_groups(self.coinferences_queue)
@@ -645,9 +664,10 @@ class CoInferenceScheduler:
         self.free_finished_seq_groups()
 
         coinference_info_dict = coinference_info_dict if coinference_info_dict is not None else {}
-        hint = coinference_info_dict.get("hint", None) if self.scheduling_policy == "Idealized-SRJF" else None
-        stage_name = coinference_info_dict.get("stage_name", None)
-        slo = coinference_info_dict.get("slo", None)
+        hint: Union[Dict, None] = coinference_info_dict["hint"] if self.scheduling_policy == "Idealized-SRJF" else None
+        stage_name: Union[str, None] = coinference_info_dict["stage_name"]
+        slo: Union[float, None] = coinference_info_dict["slo"]
+        tpt: Union[float, None] = coinference_info_dict["tpt"]
 
         if self.scheduling_policy == "Request-Level-FIFO":
             seq_group.app_name = None
@@ -658,7 +678,7 @@ class CoInferenceScheduler:
             new_coinf = create_coinference(seq_group.app_name,
                                            seq_group.coinf_id,
                                            seq_group.metrics.arrival_time,
-                                           hint, slo)
+                                           hint=hint, slo=slo, tpt=tpt)
             self.coinferences_dict[seq_group.coinf_id] = new_coinf
             self.coinferences_queue.append(new_coinf)
 
@@ -722,27 +742,49 @@ class CoInferenceScheduler:
 
             for coinf_id in finished_coinf:
                 coinf = self.coinferences_dict.pop(coinf_id)
-                if self.scheduling_policy in ["Hermes", "Mean-SRJF"]:
+                if self.scheduling_policy not in ["Idealized-SRJF", "Request-Level-FIFO", "CoInference-Level-FIFO"]:
                     coinf.update_online_profiling()
                 self.coinferences_queue.remove(coinf)
+
                 statistic = {
-                    coinf.coinf_id: {
-                        "queue_time": coinf.queue_time
+                    coinf.stat.coinf_id: {
+                        "queue_time": coinf.stat.queuing_time,
+                        "slo_ratio": ((coinf.finish_time - coinf.arrival_time) / coinf.stat.slo,
+                                      coinf.finish_time - coinf.stat.ddl)
+                        if coinf.stat.slo else None,
+                        "tpt_ratio": ((coinf.stat.running_time / coinf.stat.output_tokens) / coinf.stat.tpt,
+                                      coinf.stat.running_time / coinf.stat.output_tokens - coinf.stat.tpt)
+                        if coinf.stat.tpt else None,
                     }
                 }
-                logger.info(f"{json.dumps(statistic)}")
+                coinf.stat.cnt -= 1
+                if not coinf.stat.cnt:
+                    logger.info(f"{json.dumps(statistic)}")
                 self.block_manager.destroy_cache(coinf_id)
 
     def update_queue_time(self,
                           scheduled_seq_groups: Iterable[ScheduledSequenceGroup],
                           cur_step_time: float):
+        # each request is seen as a coinf when using request-level-fcfs,
+        # and the coinf.stat maintain the real coinf-level info
         scheduled_coinfer = {
-            scheduled_seq_group.seq_group.coinf_id
-            for scheduled_seq_group in scheduled_seq_groups
+            self.coinferences_dict[sg.seq_group.coinf_id].stat.coinf_id
+            for sg in scheduled_seq_groups
         }
-        for coinf in self.coinferences_queue:
-            if coinf.coinf_id not in scheduled_coinfer:
-                coinf.queue_time += cur_step_time
+        for sg in scheduled_seq_groups:
+            self.coinferences_dict[sg.seq_group.coinf_id].stat.output_tokens += 1
+        # queue_coinfer = set()
+        running_coinfer_stats = {
+            self.coinferences_dict[coinf.coinf_id].stat
+            for coinf in self.coinferences_queue
+            if coinf.finish_status == FinishType.UnFinished
+        }
+        for coinf_stat in running_coinfer_stats:
+            if coinf_stat.coinf_id not in scheduled_coinfer:
+                coinf_stat.queuing_time += cur_step_time
+                # queue_coinfer.add(coinf.true_coinf_id)
+            coinf_stat.running_time += cur_step_time
+        # logger.info(f"Scheduled coinfer: {scheduled_coinfer}, queue_coinfer: {queue_coinfer}")
 
     def _allocate_and_set_running(self, seq_group: SequenceGroup) -> None:
         self.block_manager.allocate(seq_group)

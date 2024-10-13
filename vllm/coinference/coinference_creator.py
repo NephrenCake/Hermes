@@ -29,9 +29,10 @@ def create_coinference(
     coinf_id: str, 
     arrival_time: float,
     hint: Optional[Dict],
-    slo
+    slo,
+    tpt
     ) -> CoInference:
     if app_name not in AppLib:
         raise NameError("Unrecognized app_name: %s", app_name)
     else:
-        return AppLib[app_name](app_name, coinf_id, arrival_time, hint, slo)
+        return AppLib[app_name](app_name, coinf_id, arrival_time, hint=hint, slo=slo, tpt=tpt)

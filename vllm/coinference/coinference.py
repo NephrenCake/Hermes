@@ -68,7 +68,7 @@ class CoInferenceStage:
     def get_all_decode_tokens(self) -> List:
         return [sum(seq.get_output_len() for seq in seq_group.get_seqs()) for seq_group in self.parallel_requests]
 
-    def get_remaining_tokens(self, predictor: AppPredictor, use_mean: bool = False) -> Tuple[float, float]:
+    def get_remaining_tokens(self, predictor: AppPredictor, use_mean: bool = False) -> Tuple[float, float, float, float]:
         if self.hint is not None:
             fin_prompt_tokens, fin_decode_tokens = 0, 0
             for seq_group in self.parallel_requests:
@@ -83,9 +83,9 @@ class CoInferenceStage:
             #             f" - {fin_prompt_tokens} = {prompt_tokens}, "
             #             f"decode_tokens: {self.hint.parallelism * self.hint.num_output_tokens}"
             #             f" - {fin_decode_tokens} = {decode_tokens}.")
-            return prompt_tokens, decode_tokens
+            return prompt_tokens, decode_tokens, prompt_tokens, decode_tokens
 
-        predict_prompt_tokens, predict_decode_tokens = 0, 0
+        predict_prompt_tokens, predict_decode_tokens, worst_decode_tokens = 0, 0, 0
         for seq_group in self.parallel_requests:
             # 1. Prompt is known.
             sq_prompt_tokens = min(len(seq_group.prompt_token_ids),
@@ -93,10 +93,48 @@ class CoInferenceStage:
             predict_prompt_tokens += len(seq_group.prompt_token_ids) - sq_prompt_tokens
             # 2. Decode is unknown. Use truncated distribution.
             sq_decode_tokens = sum(seq.get_output_len() for seq in seq_group.get_seqs())
-            predict_decode_tokens += predictor.distribution[self.stage_name]["decode"].get_mean(
-                sq_decode_tokens, set_mode="mean" if use_mean else "gittins") - sq_decode_tokens
+            dist = predictor.distribution[self.stage_name]["decode"]
+            if use_mean:
+                predict_decode_tokens += dist.get_mean() - sq_decode_tokens
+            else:
+                predict_decode_tokens += dist.get_mean_with_gittins(sq_decode_tokens) - sq_decode_tokens
 
-        return predict_prompt_tokens, predict_decode_tokens
+            worst_decode_tokens += dist.get_worst() - sq_decode_tokens
+
+        return predict_prompt_tokens, predict_decode_tokens, predict_prompt_tokens, worst_decode_tokens
+
+
+all_coinf_statistics: Dict[str, 'CoInferenceStatistics'] = {}
+
+
+class CoInferenceStatistics:
+    def __init__(self, coinf_id, arrival_time, slo, tpt):
+        self.coinf_id = coinf_id  # real coinf id
+        self.arrival_time = arrival_time
+
+        self.slo: Union[float, None] = slo
+        self.ddl: Union[float, None] = self.arrival_time + slo if slo else None
+
+        self.tpt: Union[float, None] = tpt
+        self.running_time: float = 0
+        self.output_tokens: int = 0  # real_tpt = attained_service_time / output_tokens
+
+        self.violation_monitor_left = 30
+        self.violation_monitor_reset = 30
+        self.priority = None
+
+        self.queuing_time = 0
+        self.cnt = 0
+
+    @staticmethod
+    def get_statistics(coinf_id, arrival_time=None, slo=None, tpt=None):
+        if len(coinf_id.split("--")) == 3:
+            coinf_id = "--".join(coinf_id.split("--")[:2])
+        global all_coinf_statistics
+        if coinf_id not in all_coinf_statistics:
+            assert arrival_time is not None
+            all_coinf_statistics[coinf_id] = CoInferenceStatistics(coinf_id, arrival_time, slo, tpt)
+        return all_coinf_statistics[coinf_id]
 
 
 class CoInference:
@@ -106,8 +144,9 @@ class CoInference:
             coinf_id: str,
             arrival_time: float,
             hint: Optional[Dict],
-            slo,  # s
-            time_out: float = 30,
+            slo: Union[float, None] = None,  # s
+            tpt: Union[float, None] = None,  # s/token
+            time_out: float = 90,
     ) -> None:
         self.predictor: AppPredictor = APPLICATION[app_name] if app_name else None
         self.app_name = app_name
@@ -121,7 +160,10 @@ class CoInference:
         self.finish_status = FinishType.UnFinished
         self.time_out = time_out
 
-        self.remaining_time: float = 0
+        self.remaining_time = 0.
+        # self.full_speed_remaining_time = 0.
+        self.worst_case_remaining_time = 0.
+        self.token_per_time = 0.
 
         self.stage_gap_timer = time.time()
 
@@ -129,9 +171,14 @@ class CoInference:
             "prompt_tokens": 0,
             "decode_tokens": 0,
             "stage_gap": 0,
+            "worst_prompt_tokens": 0,
+            "worst_decode_tokens": 0,
+            "worst_stage_gap": 0,
         }
-        self.ddl = self.arrival_time + slo
-        self.queue_time = 0
+
+        self.stat = CoInferenceStatistics.get_statistics(coinf_id, arrival_time, slo, tpt)
+        self.stat.cnt += 1
+        self.priority = None
 
     def create(self, coinference_info_dict: Optional[Dict]):
         raise NotImplementedError
@@ -166,17 +213,19 @@ class CoInference:
                 "stage_gap": evidence.get(stage.stage_name, {}).get("stage_gap", []) + stage_gap,
             }
 
-        prompt_tokens, decode_tokens, stage_gap = self.predictor.get_following_stage_info_with_bayesian(
-            cur_stage=stage_name,
-            looped=looped,
-            evidence=evidence,
-            use_mean=use_mean,
-            use_bayes=use_bayes,
-        )
+        prompt_tokens, decode_tokens, stage_gap, worst_prompt_tokens, worst_decode_tokens, worst_stage_gap \
+            = self.predictor.get_following_stage_info_with_bayesian(cur_stage=stage_name,
+                                                                    looped=looped,
+                                                                    evidence=evidence,
+                                                                    use_mean=use_mean,
+                                                                    use_bayes=use_bayes)
         self.following_stages_info = {
             "prompt_tokens": prompt_tokens,
             "decode_tokens": decode_tokens,
             "stage_gap": stage_gap,
+            "worst_prompt_tokens": worst_prompt_tokens,
+            "worst_decode_tokens": worst_decode_tokens,
+            "worst_stage_gap": worst_stage_gap,
         }
         # logger.info(f"CoInfer {self.coinf_id} starts a new stage: {stage_name}, "
         #             f"following_stages_info: {self.following_stages_info}.")
@@ -224,22 +273,33 @@ class CoInference:
         """
         if self.current_stage_id == len(self.stages) and self.following_stages_info["prompt_tokens"] == 0:
             self.remaining_time = 0  # ms
+            self.worst_case_remaining_time = 0
             return
 
-        prompt_tokens, decode_tokens = self.current_stage.get_remaining_tokens(self.predictor, use_mean) \
-            if self.current_stage_id < len(self.stages) else (0, 0)
+        prompt_tokens, decode_tokens, worst_prompt_tokens, worst_decode_tokens \
+            = self.current_stage.get_remaining_tokens(self.predictor, use_mean) \
+            if self.current_stage_id < len(self.stages) else (0, 0, 0, 0)
         prompt_tokens += self.following_stages_info["prompt_tokens"]
         decode_tokens += self.following_stages_info["decode_tokens"]
+        worst_prompt_tokens += self.following_stages_info["worst_prompt_tokens"]
+        worst_decode_tokens += self.following_stages_info["worst_decode_tokens"]
 
         if self.hint is not None:  # only used to test theoretical values
             for stage in self.stages[self.current_stage_id + 1:]:
-                stage_prompt_tokens, stage_decode_tokens = stage.get_remaining_tokens(self.predictor)
+                stage_prompt_tokens, stage_decode_tokens, _, _ = stage.get_remaining_tokens(self.predictor)
                 prompt_tokens += stage_prompt_tokens
                 decode_tokens += stage_decode_tokens
+            worst_prompt_tokens, worst_decode_tokens = prompt_tokens, decode_tokens
 
-        # self.remaining_time = (prefill_time_per_token * prompt_tokens + decode_time_per_token * decode_tokens
-        #                        + self.following_stages_info["stage_gap"])
-        self.remaining_time = prefill_time_per_token * prompt_tokens + decode_time_per_token * decode_tokens
+        prefill_time_per_token = 0.0004922265654677384 * 1000
+        decode_time_per_token = 0.028794578005115085 * 1000
+        self.remaining_time = (prefill_time_per_token * prompt_tokens + decode_time_per_token * decode_tokens
+                               + self.following_stages_info["stage_gap"])
+        self.worst_case_remaining_time = (prefill_time_per_token * worst_prompt_tokens
+                                          + decode_time_per_token * worst_decode_tokens
+                                          + self.following_stages_info["worst_stage_gap"])
+        # self.remaining_time = prefill_time_per_token * prompt_tokens + decode_time_per_token * decode_tokens
+        # self.worst_case_remaining_time = prefill_time_per_token * worst_prompt_tokens + decode_time_per_token * worst_decode_tokens
 
         # logger.info(f"coinf_id: {self.coinf_id}, stages {self.current_stage_id + 1}/{len(self.stages)}, "
         #             f"prefill_token {prompt_tokens}, decode_token {decode_tokens}.")
