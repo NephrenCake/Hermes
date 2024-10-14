@@ -280,5 +280,7 @@ APPLICATION = {
     "react_alfw": AppPredictor("react_alfw"),
     "got_docmerge": AppPredictor("got_docmerge"),
     "langchain_mapreduce": AppPredictor("langchain_mapreduce"),
-    "multiturn_conversations": AppPredictor("multiturn_conversations")
+    "multiturn_conversations": AppPredictor("multiturn_conversations"),
+    "code_feedback": AppPredictor("code_feedback"),
+    "hugginggpt": AppPredictor("hugginggpt"),
 }

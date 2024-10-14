@@ -472,6 +472,8 @@ class SequenceGroup:
         self.embeddings = embeddings
         self.pooling_params = pooling_params
         self.encoder_seq = encoder_seq
+        
+        self.coinf_remaining_time: float = 0
 
     @property
     def prompt(self) -> Optional[str]:

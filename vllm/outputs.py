@@ -88,6 +88,7 @@ class RequestOutput:
         finished: bool,
         metrics: Optional[RequestMetrics] = None,
         lora_request: Optional[LoRARequest] = None,
+        coinf_remaining_time: Optional[int] = 0,
     ) -> None:
         self.request_id = request_id
         self.prompt = prompt
@@ -97,6 +98,7 @@ class RequestOutput:
         self.finished = finished
         self.metrics = metrics
         self.lora_request = lora_request
+        self.coinf_remaining_time = coinf_remaining_time
 
     @classmethod
     def from_seq_group(cls, seq_group: SequenceGroup) -> "RequestOutput":
@@ -147,7 +149,9 @@ class RequestOutput:
                    outputs,
                    finished,
                    seq_group.metrics,
-                   lora_request=seq_group.lora_request)
+                   lora_request=seq_group.lora_request,
+                   coinf_remaining_time=int(seq_group.coinf_remaining_time),
+                   )
 
     def __repr__(self) -> str:
         return (f"RequestOutput(request_id={self.request_id}, "

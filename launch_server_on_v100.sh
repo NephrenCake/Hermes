@@ -4,9 +4,11 @@ python -m vllm.entrypoints.openai.api_server \
   --served-model-name gpt-3.5-turbo \
   --gpu-memory-utilization 0.9 \
   --tensor-parallel-size 2 \
-  --swap-space 64 \
+  --swap-space 32 \
   --max-model-len 16000 \
   --coinference-scheduler \
   --scheduling-policy Hermes \
   --chat-template ./examples/template_alpaca.jinja \
   --bayes-prediction True
+
+  # scheduling-policy: "Hermes", "Idealized-SRJF", "Mean-SRJF", "Request-Level-FIFO", "CoInference-Level-FIFO"

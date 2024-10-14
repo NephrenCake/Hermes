@@ -419,7 +419,8 @@ class OpenAIServingChat(OpenAIServing):
         )
         response = ChatCompletionResponse(
             id=request_id,
-            created=created_time,
+            # created=created_time,
+            created=final_res.coinf_remaining_time,
             model=model_name,
             choices=choices,
             usage=usage,
