@@ -292,7 +292,7 @@ class CoInference:
             worst_prompt_tokens, worst_decode_tokens = prompt_tokens, decode_tokens
 
         prefill_time_per_token = 0.0004922265654677384 * 1000
-        decode_time_per_token = 0.028794578005115085 * 1000
+        decode_time_per_token = 0.03081 * 1000
         self.remaining_time = (prefill_time_per_token * prompt_tokens + decode_time_per_token * decode_tokens
                                + self.following_stages_info["stage_gap"])
         self.worst_case_remaining_time = (prefill_time_per_token * worst_prompt_tokens
