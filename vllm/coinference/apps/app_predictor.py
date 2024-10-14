@@ -249,8 +249,8 @@ class AppPredictor:
                 new_samples=evidence.get(stage_name, {}).get("parallelism", []), weight=10
             )
 
-            # if bayes_result != [] :
-            if bayes_result != [] and stage_name == tag :
+            if bayes_result != [] :
+            # if bayes_result != [] and stage_name == tag :
                 prompt_tokens += bayes_result[f'{stage_name}_p'] * parallelism * loops
                 decode_tokens += bayes_result[f'{stage_name}_c'] * parallelism * loops
             else:
@@ -288,4 +288,5 @@ APPLICATION = {
     "react_alfw": AppPredictor("react_alfw"),
     "got_docmerge": AppPredictor("got_docmerge"),
     "langchain_mapreduce": AppPredictor("langchain_mapreduce"),
+    "multiturn_conversations": AppPredictor("multiturn_conversations")
 }
