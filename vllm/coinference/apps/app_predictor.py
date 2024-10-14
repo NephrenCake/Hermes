@@ -6,7 +6,7 @@ import random
 import numpy as np
 from scipy.stats import skewnorm
 from vllm.logger import init_logger
-from vllm.coinference.Bayes.bayes_coinfer import Bayes_predictors, Bayes_predictor
+from vllm.coinference.Bayes.bayes_coinfer import Bayes_predictors
 
 logger = init_logger(__name__)
 
@@ -280,4 +280,5 @@ APPLICATION = {
     "react_alfw": AppPredictor("react_alfw"),
     "got_docmerge": AppPredictor("got_docmerge"),
     "langchain_mapreduce": AppPredictor("langchain_mapreduce"),
+    "multiturn_conversations": AppPredictor("multiturn_conversations")
 }
