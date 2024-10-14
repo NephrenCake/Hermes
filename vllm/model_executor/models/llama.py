@@ -154,11 +154,12 @@ class LlamaAttention(nn.Module):
         hidden_states: torch.Tensor,
         kv_cache: torch.Tensor,
         attn_metadata: AttentionMetadata,
+        cache_event: Optional[torch.cuda.Event],
     ) -> torch.Tensor:
         qkv, _ = self.qkv_proj(hidden_states)
         q, k, v = qkv.split([self.q_size, self.kv_size, self.kv_size], dim=-1)
         q, k = self.rotary_emb(positions, q, k)
-        attn_output = self.attn(q, k, v, kv_cache, attn_metadata)
+        attn_output = self.attn(q, k, v, kv_cache, attn_metadata, cache_event)
         output, _ = self.o_proj(attn_output)
         return output
 
@@ -216,6 +217,7 @@ class LlamaDecoderLayer(nn.Module):
         kv_cache: torch.Tensor,
         attn_metadata: AttentionMetadata,
         residual: Optional[torch.Tensor],
+        cache_event: Optional[torch.cuda.Event],
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         # Self Attention
         if residual is None:
@@ -229,6 +231,7 @@ class LlamaDecoderLayer(nn.Module):
             hidden_states=hidden_states,
             kv_cache=kv_cache,
             attn_metadata=attn_metadata,
+            cache_event=cache_event,
         )
 
         # Fully Connected
@@ -277,6 +280,7 @@ class LlamaModel(nn.Module):
         kv_caches: List[torch.Tensor],
         attn_metadata: AttentionMetadata,
         inputs_embeds: Optional[torch.Tensor] = None,
+        cache_events: Optional[List[torch.cuda.Event]] = None,
     ) -> torch.Tensor:
         if inputs_embeds is not None:
             hidden_states = inputs_embeds
@@ -284,6 +288,10 @@ class LlamaModel(nn.Module):
             hidden_states = self.get_input_embeddings(input_ids)
         residual = None
         for i in range(len(self.layers)):
+            if cache_events is None:
+                cache_event = None
+            else:
+                cache_event = cache_events[i]
             layer = self.layers[i]
             hidden_states, residual = layer(
                 positions,
@@ -291,6 +299,7 @@ class LlamaModel(nn.Module):
                 kv_caches[i],
                 attn_metadata,
                 residual,
+                cache_event,
             )
         hidden_states, _ = self.norm(hidden_states, residual)
         return hidden_states
@@ -359,9 +368,10 @@ class LlamaForCausalLM(nn.Module):
         positions: torch.Tensor,
         kv_caches: List[torch.Tensor],
         attn_metadata: AttentionMetadata,
+        cache_events: List[torch.cuda.Event] = None
     ) -> torch.Tensor:
         hidden_states = self.model(input_ids, positions, kv_caches,
-                                   attn_metadata)
+                                   attn_metadata, cache_events=cache_events)
         return hidden_states
 
     def compute_logits(self, hidden_states: torch.Tensor,

@@ -175,7 +175,7 @@ class RequestTracker:
 
         self._request_streams[request_id].finish()
         self._request_streams.pop(request_id, None)
-        
+
 
     def get_new_and_finished_requests(self) -> Tuple[List[Dict], Set[str]]:
         """Get the new requests and finished requests to be
@@ -239,14 +239,17 @@ class _AsyncLLMEngine(LLMEngine):
                 blocks_to_swap_in=scheduler_outputs.blocks_to_swap_in,
                 blocks_to_swap_out=scheduler_outputs.blocks_to_swap_out,
                 blocks_to_copy=scheduler_outputs.blocks_to_copy,
+                blocks_to_save=scheduler_outputs.blocks_to_save,
+                blocks_to_load=scheduler_outputs.blocks_to_load,
                 num_lookahead_slots=scheduler_outputs.num_lookahead_slots,
                 running_queue_size=scheduler_outputs.running_queue_size,
                 advised_lora=scheduler_outputs.advised_lora,
             )
-            output, swap_time, execute_time = await self.model_executor.execute_model_async(
+            output, load_time, swap_time, lora_time, execute_time = await self.model_executor.execute_model_async(
                 execute_model_req)
+            # logger.info(f"{swap_time}, {execute_time}, {load_time}")
         else:
-            output, swap_time, execute_time = [], 0, 0
+            output, load_time, swap_time, lora_time, execute_time = [], 0, 0, 0, 0
 
         request_outputs = self._process_model_outputs(
             output, scheduler_outputs.scheduled_seq_groups,
@@ -267,6 +270,8 @@ class _AsyncLLMEngine(LLMEngine):
             "cur_step_time": cur_step_time * 1000,
         }
         self.do_log_stats(scheduler_outputs, output, runtime_inspect)
+
+        self.scheduler.update_queue_time(scheduler_outputs.scheduled_seq_groups, cur_step_time)
 
         if not request_outputs:
             # Stop the execute model loop in parallel workers until there are
@@ -291,6 +296,22 @@ class _AsyncLLMEngine(LLMEngine):
         #     f"execute: {(execute_time * 1000):.2f}ms({(execute_time / cur_step_time * 100):.2f}%), "
         #     f"cur_step: {(cur_step_time * 1000):.2f}ms"
         # )
+        if not scheduler_outputs.swap_info_empty():
+            pass
+            # logger.info(f"[KVC Debug] > num_blocks: (GPU->CPU: {scheduler_outputs.blocks_to_swap_out}, "
+            #             f"CPU->DISK: {scheduler_outputs.blocks_to_save}, "
+            #             f"DISK->CPU: {scheduler_outputs.blocks_to_load}, "
+            #             f"CPU->GPU: {scheduler_outputs.blocks_to_swap_in}), "
+            #             f"execute_time: {execute_time * 1000:.2f} ms, "
+            #             f"swap_time: {swap_time * 1000:.2f} ms, "
+            #             f"load_time: {load_time * 1000:.2f} ms, ")
+            # logger.info(f"[KVC Debug] > num_blocks: (GPU->CPU: {len(scheduler_outputs.blocks_to_swap_out)}, "
+            #             f"CPU->DISK: {len(scheduler_outputs.blocks_to_save)}, "
+            #             f"DISK->CPU: {len(scheduler_outputs.blocks_to_load)}, "
+            #             f"CPU->GPU: {len(scheduler_outputs.blocks_to_swap_in)}), "
+            #             f"execute_time: {execute_time * 1000:.2f} ms, "
+            #             f"swap_time: {swap_time * 1000:.2f} ms, "
+            #             f"load_time: {load_time * 1000:.2f} ms, ")
         return request_outputs
 
     async def process_model_inputs_async(

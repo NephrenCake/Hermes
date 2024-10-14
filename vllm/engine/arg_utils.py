@@ -8,6 +8,7 @@ from vllm.config import (CacheConfig, DecodingConfig, DeviceConfig,
                          EngineConfig, LoadConfig, LoRAConfig, ModelConfig,
                          ParallelConfig, SchedulerConfig, SpeculativeConfig,
                          TokenizerPoolConfig, VisionLanguageConfig)
+from vllm.core.policy import PolicyFactory
 from vllm.model_executor.layers.quantization import QUANTIZATION_METHODS
 from vllm.utils import str_to_int_tuple
 
@@ -82,6 +83,8 @@ class EngineArgs:
     image_feature_size: Optional[int] = None
     scheduler_delay_factor: float = 0.0
     enable_chunked_prefill: bool = False
+    num_disk_blocks: int = 1000
+    preemption_mode: str = "swap"
 
     guided_decoding_backend: str = 'outlines'
     # Speculative decoding configuration.
@@ -94,10 +97,14 @@ class EngineArgs:
     
     # coinference
     coinference_scheduler: bool = False
-    proactive_reservation: bool = False
+    non_preempt: bool = False
     scheduling_policy: str = "Hermes"
-    bayes_prediction: bool = False
+    bayes_prediction: bool = True
     lora_policy: str = "Hermes"
+    cache_policy: str = "Hermes"
+
+    # disk kv cache dir path
+    disk_dir_path: str = "/workspace/kv_cache/"
 
     def __post_init__(self):
         if self.tokenizer is None:
@@ -275,6 +282,16 @@ class EngineArgs:
         parser.add_argument('--enable-prefix-caching',
                             action='store_true',
                             help='Enables automatic prefix caching.')
+        parser.add_argument('--num-disk-blocks',
+                            type=int,
+                            default=EngineArgs.num_disk_blocks,
+                            help='total num disk blocks')
+        parser.add_argument('--preemption-mode',
+                            type=str,
+                            choices=["recompute", "swap"],
+                            default=EngineArgs.preemption_mode,
+                            help='preemption mode')
+
         parser.add_argument('--disable-sliding-window',
                             action='store_true',
                             help='Disables sliding window, '
@@ -557,14 +574,14 @@ class EngineArgs:
             action='store_true',
             help="if use coinference scheduler")
         parser.add_argument(
-            "--proactive-reservation",
+            "--non-preempt",
             action='store_true',
             help="if use proactive reservation")
         parser.add_argument(
             "--scheduling-policy",
             type=str,
             default=EngineArgs.scheduling_policy,
-            choices=["Hermes", "Idealized-SRJF", "Mean-SRJF", "Request-Level-FIFO", "CoInference-Level-FIFO"],
+            choices=PolicyFactory.get_all_policy(),
             help="use which scheduling policy")
         parser.add_argument(
             "--bayes-prediction",
@@ -578,6 +595,18 @@ class EngineArgs:
             choices=["Hermes", "LRU", "EPWQ"],
             # "Hermes", "LRU", "Evict/Prefetch on Waiting Queue", "No-Cache", "Full-Cache"
             help="use which lora management")
+        parser.add_argument(
+            "--cache-policy",
+            type=str,
+            default=EngineArgs.cache_policy,
+            choices=["Hermes", "LRU", "EPWQ"],
+            # "Hermes", "LRU", "Evict/Prefetch on Waiting Queue", "No-Cache", "Full-Cache"
+            help="use which kv cache management")
+        parser.add_argument(
+            "--disk-dir-path",
+            type=str,
+            default=EngineArgs.disk_dir_path
+        )
 
         return parser
 
@@ -605,7 +634,11 @@ class EngineArgs:
                                    self.swap_space, self.kv_cache_dtype,
                                    self.num_gpu_blocks_override,
                                    model_config.get_sliding_window(),
-                                   self.enable_prefix_caching)
+                                   self.enable_prefix_caching,
+                                   self.num_disk_blocks,
+                                   self.disk_dir_path,
+                                   self.preemption_mode,
+                                   self.cache_policy)
         parallel_config = ParallelConfig(
             self.pipeline_parallel_size,
             self.tensor_parallel_size,
@@ -647,7 +680,7 @@ class EngineArgs:
             enable_chunked_prefill=self.enable_chunked_prefill,
             embedding_mode=model_config.embedding_mode,
             coinference_scheduler=self.coinference_scheduler,
-            proactive_reservation=self.proactive_reservation,
+            non_preempt=self.non_preempt,
             scheduling_policy=self.scheduling_policy,
             bayes_prediction=self.bayes_prediction,
             lora_policy=self.lora_policy,

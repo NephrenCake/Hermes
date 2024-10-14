@@ -10,6 +10,3 @@ CUDA_VISIBLE_DEVICES=2,3 python -m vllm.entrypoints.openai.api_server \
   --scheduling-policy Hermes \
   --chat-template ./examples/template_alpaca.jinja \
   --bayes-prediction True
-#  --proactive-reservation \
-  # --scheduling-policy Hermes  \
-  #  \

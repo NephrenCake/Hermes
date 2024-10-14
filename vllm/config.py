@@ -356,6 +356,10 @@ class CacheConfig:
         num_gpu_blocks_override: Optional[int] = None,
         sliding_window: Optional[int] = None,
         enable_prefix_caching: bool = False,
+        num_disk_blocks: int = None,
+        disk_dir_path: str = None,
+        preemption_mode: str = "swap",
+        cache_policy: str = "Hermes",
     ) -> None:
         self.block_size = block_size
         self.gpu_memory_utilization = gpu_memory_utilization
@@ -368,9 +372,16 @@ class CacheConfig:
         self._verify_cache_dtype()
         self._verify_prefix_caching()
 
+        self.preemption_mode = preemption_mode
+
         # Will be set after profiling.
         self.num_gpu_blocks = None
         self.num_cpu_blocks = None
+
+        # support for disk offloading
+        self.num_disk_blocks = num_disk_blocks if enable_prefix_caching else None
+        self.disk_dir_path = disk_dir_path if enable_prefix_caching else None
+        self.cache_policy = cache_policy
 
     def metrics_info(self):
         # convert cache_config to dict(key: str, value: str) for prometheus
@@ -657,7 +668,7 @@ class SchedulerConfig:
         enable_chunked_prefill: bool = False,
         embedding_mode: Optional[bool] = False,
         coinference_scheduler: bool = False, 
-        proactive_reservation: bool = False,
+        non_preempt: bool = False,
         scheduling_policy: str = "Hermes",
         bayes_prediction: bool = False,
         lora_policy: str = "Hermes",
@@ -690,7 +701,7 @@ class SchedulerConfig:
         
         # coinference
         self.coinference_scheduler = coinference_scheduler
-        self.proactive_reservation = proactive_reservation
+        self.non_preempt = non_preempt
         self.bayes_prediction = bayes_prediction
         self.scheduling_policy = scheduling_policy
         self.lora_policy = lora_policy

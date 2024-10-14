@@ -22,7 +22,7 @@ prompts = [
 sampling_params = SamplingParams(temperature=0.0)
 
 # Create an LLM.
-llm = LLM(model="/home/zgan/Models/opt-125m", enable_prefix_caching=True)
+llm = LLM(model="/workspace/Models/opt-125m", enable_prefix_caching=True, gpu_memory_utilization=0.1)
 
 generating_prompts = [prefix + prompt for prompt in prompts]
 
@@ -37,10 +37,10 @@ for output in outputs:
 
 print("-" * 80)
 
-# The llm.generate call will batch all prompts and send the batch at once
-# if resources allow. The prefix will only be cached after the first batch
-# is processed, so we need to call generate once to calculate the prefix
-# and cache it.
+# # The llm.generate call will batch all prompts and send the batch at once
+# # if resources allow. The prefix will only be cached after the first batch
+# # is processed, so we need to call generate once to calculate the prefix
+# # and cache it.
 outputs = llm.generate(generating_prompts[0], sampling_params)
 
 # Subsequent batches can leverage the cached prefix

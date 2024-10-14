@@ -6,7 +6,7 @@ import random
 import numpy as np
 from scipy.stats import skewnorm
 from vllm.logger import init_logger
-from vllm.coinference.Bayes.bayes_coinfer import Bayes_predictors, Bayes_predictor
+from vllm.coinference.Bayes.bayes_coinfer import Bayes_predictors
 
 logger = init_logger(__name__)
 
@@ -146,8 +146,14 @@ class AppPredictor:
         self.distribution: Dict = {
             stage_name: {
                 "stage_gap": Distribution(window_size).add_samples(
-                    [i for i in self.model_dict[stage_name]["stage_gap"]]  # ms
+                    self.model_dict[stage_name]["stage_gap"]  # ms
                 ).update_cache(),
+                # "stage_gap": Distribution(window_size).add_samples(
+                #     [(
+                #         i + 150 if stage_name not in ["verifies", "thought"] else i + 150 + 10000
+                #     )
+                #      for i in self.model_dict[stage_name]["stage_gap"]]  # ms
+                # ).update_cache(),
                 "parallelism": Distribution(window_size).add_samples(
                     self.model_dict[stage_name]["parallelism"]
                 ).update_cache(),
@@ -166,7 +172,7 @@ class AppPredictor:
                 },
             } for stage_name in self.model_dict["stage_list"]
         }
-        if app_name in ['got_docmerge', 'factool_code','factool_kbqa','factool_math']:
+        if app_name in ['got_docmerge', 'factool_code', 'factool_kbqa', 'factool_math']:
             self.bayes_predictor = Bayes_predictors[app_name]
             logger.info(f'bayes net of {app_name} is loaded')
         else:
@@ -218,8 +224,8 @@ class AppPredictor:
             evidence = {}
 
         prompt_tokens, decode_tokens, stage_gap = 0, 0, 0
-        bayes_result = []
-        if use_bayes and self.bayes_predictor != None:     ### use bayes prediction for no-loop apps
+        bayes_result = None
+        if use_bayes and self.bayes_predictor is not None:  # use bayes prediction for no-loop apps
             row = []
             for stage_name in self.model_dict["stage_list"]:
                 try:
@@ -227,11 +233,9 @@ class AppPredictor:
                     row.append(np.mean(evidence[stage_name]['decode']))
                 except:
                     break
-            assert len(row)==2*len(list(evidence.keys())), "bayes predict input wrong"
-            bayes_result = self.bayes_predictor.following_predict(row, int(len(row)/2))
-            tag = list(bayes_result.keys())[0][:-2]
-            logger.info(f' {tag}  {self.app_name} result: {bayes_result}')
-            
+            assert len(row) == 2 * len(list(evidence.keys())), "bayes predict input wrong"
+            bayes_result = self.bayes_predictor.following_predict(row, int(len(row) / 2))
+
         follow_up = False
         for stage_name in self.model_dict["stage_list"]:
             if not follow_up:
@@ -249,8 +253,7 @@ class AppPredictor:
                 new_samples=evidence.get(stage_name, {}).get("parallelism", []), weight=10
             )
 
-            if bayes_result != [] :
-            # if bayes_result != [] and stage_name == tag :
+            if bayes_result is not None:
                 prompt_tokens += bayes_result[f'{stage_name}_p'] * parallelism * loops
                 decode_tokens += bayes_result[f'{stage_name}_c'] * parallelism * loops
             else:
@@ -260,7 +263,7 @@ class AppPredictor:
                 decode_tokens += self.distribution[stage_name]["decode"].get_posterior_mean_with_bayesian(
                     new_samples=evidence.get(stage_name, {}).get("decode", []), weight=10
                 ) * parallelism * loops
-                
+
             stage_gap += self.distribution[stage_name]["stage_gap"].get_posterior_mean_with_bayesian(
                 new_samples=evidence.get(stage_name, {}).get("stage_gap", []), weight=10
             ) * loops

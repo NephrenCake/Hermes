@@ -36,20 +36,20 @@ class Worker(WorkerBase):
     """
 
     def __init__(
-        self,
-        model_config: ModelConfig,
-        parallel_config: ParallelConfig,
-        scheduler_config: SchedulerConfig,
-        device_config: DeviceConfig,
-        cache_config: CacheConfig,
-        load_config: LoadConfig,
-        local_rank: int,
-        rank: int,
-        distributed_init_method: str,
-        lora_config: Optional[LoRAConfig] = None,
-        vision_language_config: Optional[VisionLanguageConfig] = None,
-        speculative_config: Optional[SpeculativeConfig] = None,
-        is_driver_worker: bool = False,
+            self,
+            model_config: ModelConfig,
+            parallel_config: ParallelConfig,
+            scheduler_config: SchedulerConfig,
+            device_config: DeviceConfig,
+            cache_config: CacheConfig,
+            load_config: LoadConfig,
+            local_rank: int,
+            rank: int,
+            distributed_init_method: str,
+            lora_config: Optional[LoRAConfig] = None,
+            vision_language_config: Optional[VisionLanguageConfig] = None,
+            speculative_config: Optional[SpeculativeConfig] = None,
+            is_driver_worker: bool = False,
     ) -> None:
         self.model_config = model_config
         self.parallel_config = parallel_config
@@ -76,7 +76,7 @@ class Worker(WorkerBase):
 
         ModelRunnerClass = (EmbeddingModelRunner if
                             self.model_config.embedding_mode else ModelRunner)
-        self.model_runner = ModelRunnerClass(
+        self.model_runner: ModelRunner = ModelRunnerClass(
             model_config,
             parallel_config,
             scheduler_config,
@@ -126,10 +126,10 @@ class Worker(WorkerBase):
         self.model_runner.load_model()
 
     def save_sharded_state(
-        self,
-        path: str,
-        pattern: Optional[str] = None,
-        max_size: Optional[int] = None,
+            self,
+            path: str,
+            pattern: Optional[str] = None,
+            max_size: Optional[int] = None,
     ) -> None:
         self.model_runner.save_sharded_state(
             path,
@@ -213,10 +213,10 @@ class Worker(WorkerBase):
         set_random_seed(self.model_config.seed)
 
     def cache_swap(
-        self,
-        blocks_to_swap_in: torch.Tensor,
-        blocks_to_swap_out: torch.Tensor,
-        blocks_to_copy: torch.Tensor,
+            self,
+            blocks_to_swap_in: torch.Tensor,
+            blocks_to_swap_out: torch.Tensor,
+            blocks_to_copy: torch.Tensor,
     ) -> None:
         # Issue cache operations.
         if blocks_to_swap_out.numel() > 0:
@@ -226,20 +226,52 @@ class Worker(WorkerBase):
         if blocks_to_copy.numel() > 0:
             self.cache_engine.copy(blocks_to_copy)
 
-    def do_lora_prefetch(self, execute_model_req):
+    def cache_swap_layer_wise(
+            self,
+            blocks_to_swap_in: torch.Tensor,
+            blocks_to_swap_out: torch.Tensor,
+            blocks_to_copy: torch.Tensor,
+    ) -> Union[None, list[torch.cuda.Event]]:
+        issued_cache_op = False
+        if blocks_to_copy.numel() > 0:
+            self.cache_engine.copy(blocks_to_copy)
+        with torch.cuda.stream(self.cache_engine.cache_stream):
+            for i in range(self.cache_engine.num_layers):
+                if blocks_to_swap_out.numel() > 0:
+                    self.cache_engine.attn_backend.swap_blocks(
+                        self.cache_engine.gpu_cache[i],
+                        self.cache_engine.cpu_cache[i],
+                        blocks_to_swap_out
+                    )
+                    issued_cache_op = True
+                if blocks_to_swap_in.numel() > 0:
+                    self.cache_engine.attn_backend.swap_blocks(
+                        self.cache_engine.cpu_cache[i],
+                        self.cache_engine.gpu_cache[i],
+                        blocks_to_swap_in
+                    )
+                    issued_cache_op = True
+                if issued_cache_op:
+                    self.cache_engine.cache_events[i].record(stream=self.cache_engine.cache_stream)
+        if issued_cache_op:
+            return self.cache_engine.cache_events
+        return None
+
+    def set_loras(self, seq_group_metadata_list, execute_model_req):
         if not self.lora_config:
             return
 
-        if not isinstance(self.model_runner.lora_manager, LRUCacheWorkerLoRAManagerWithPrefetch):
+        _, _, _, _, lora_requests, lora_mapping, _ = self.model_runner.prepare_input_tensors(seq_group_metadata_list)
+        if self.scheduler_config.lora_policy == "LRU":
+            self.model_runner.set_active_loras(lora_requests, lora_mapping)
             return
 
-        timer = time.time()
         assert execute_model_req.advised_lora is not None
         assert len(execute_model_req.advised_lora) <= self.model_runner.lora_config.max_cpu_loras, \
             (f"Number of advised LoRAs ({len(execute_model_req.advised_lora)}) exceeds the "
              f"maximum number of CPU LoRAs ({self.model_runner.lora_config.max_cpu_loras}).")
-        advised_lora_map = {i.lora_int_id: i for i in execute_model_req.advised_lora}
 
+        advised_lora_map = {i.lora_int_id: i for i in execute_model_req.advised_lora}
         loading_lora = {i for i, f in self.model_runner.lora_manager.io_futures.items() if not f.done()}
         exist_lora = self.list_loras() | loading_lora
         lora_to_remove = exist_lora - advised_lora_map.keys()
@@ -252,21 +284,30 @@ class Worker(WorkerBase):
 
         for lora_id in lora_to_remove:
             self.remove_lora(lora_id)  # remove all unnecessary loras before triggering LRU
-        for lora_id in lora_to_add:
+        self.model_runner.set_active_loras(lora_requests, lora_mapping)
+
+        lora_to_prefetch = lora_to_add - self.list_loras()
+        for lora_id in lora_to_prefetch:
             self.add_lora(advised_lora_map[lora_id])
-        pre_lora_time = time.time() - timer
-        # logger.info(f"Pre Lora Time: {pre_lora_time * 1000:.2f} ms")
+
+    def cache_save_load(
+            self,
+            blocks_to_save: torch.Tensor,
+            blocks_to_load: torch.Tensor,
+    ) -> None:
+        if blocks_to_save.numel() > 0:
+            self.cache_engine.save_to_disk(blocks_to_save)
+        if blocks_to_load.numel() > 0:
+            self.cache_engine.load_from_disk(blocks_to_load)
 
     @torch.inference_mode()
     def execute_model(
-        self,
-        execute_model_req: Optional[ExecuteModelRequest] = None
+            self,
+            execute_model_req: Optional[ExecuteModelRequest] = None
     ) -> List[Union[SamplerOutput, PoolerOutput]]:
-        self.do_lora_prefetch(execute_model_req)  # trigger processes to (pre)fetch loras
-
         if not self.is_driver_worker:
             self._execute_model_non_driver()
-            return []
+            return [], 0, 0, 0, 0
 
         if execute_model_req is None:
             # This signals that there's no more requests to process for now.
@@ -275,7 +316,7 @@ class Worker(WorkerBase):
             # Send an empty input to notify all other workers to stop their
             # execution loop.
             broadcast_tensor_dict({}, src=0)
-            return []
+            return [], 0, 0, 0, 0
 
         seq_group_metadata_list = execute_model_req.seq_group_metadata_list
         num_seq_groups = len(seq_group_metadata_list)
@@ -293,30 +334,62 @@ class Worker(WorkerBase):
         blocks_to_copy = torch.tensor(execute_model_req.blocks_to_copy,
                                       device=self.device,
                                       dtype=torch.int64).view(-1, 2)
+
+        blocks_to_save = torch.tensor(execute_model_req.blocks_to_save,
+                                      device="cpu",
+                                      dtype=torch.int64).view(-1, 2)
+        blocks_to_load = torch.tensor(execute_model_req.blocks_to_load,
+                                      device="cpu",
+                                      dtype=torch.int64).view(-1, 2)
+
         data: Dict[str, Any] = {
             "num_seq_groups": num_seq_groups,
             "blocks_to_swap_in": blocks_to_swap_in,
             "blocks_to_swap_out": blocks_to_swap_out,
             "blocks_to_copy": blocks_to_copy,
+            "blocks_to_save": blocks_to_save,
+            "blocks_to_load": blocks_to_load,
         }
         broadcast_tensor_dict(data, src=0)
 
+        # 先 load 再 save，先 swap out 再 swap in
+
+        load_start_time = time.time()
+        # self.cache_save_load(blocks_to_save, blocks_to_load)
+        load_time = time.time() - load_start_time
+
         timer = time.time()
-        self.cache_swap(blocks_to_swap_in, blocks_to_swap_out, blocks_to_copy)
+        # cache_events = self.cache_swap(blocks_to_swap_in, blocks_to_swap_out, blocks_to_copy)
+        cache_events = self.cache_swap_layer_wise(blocks_to_swap_in, blocks_to_swap_out, blocks_to_copy)
         swap_time = time.time() - timer
+        # if cache_events is not None:
+        #     for event in cache_events:
+        #         event.synchronize()
+        # torch.cuda.synchronize()
+        # cache_events = None
+        # swap_time2 = time.time() - timer
+        # if swap_time * 1000 > 1:
+        #     logger.info(f"swap_time1: {swap_time * 1000:.2f}, swap_time2: {swap_time2 * 1000:.2f}")
+
+        # TODO yfliu: Consider distributed inference.
+        timer = time.time()
+        self.set_loras(seq_group_metadata_list, execute_model_req)  # trigger processes to (pre)fetch loras
+        lora_time = time.time() - timer
 
         # If there is no input, we don't need to execute the model.
         if num_seq_groups == 0:
-            return []
+            return [], load_time, swap_time, lora_time, 0
 
         timer = time.time()
         output = self.model_runner.execute_model(seq_group_metadata_list,
-                                                 self.gpu_cache)
+                                                 self.gpu_cache,
+                                                 set_lora=False,
+                                                 cache_events=cache_events)
         execute_time = time.time() - timer
 
         # Worker only supports single-step execution. Wrap the output in a list
         # to conform to interface.
-        return [output], swap_time, execute_time
+        return [output], load_time, swap_time, lora_time, execute_time
 
     @torch.inference_mode()
     def start_worker_execution_loop(self) -> None:
@@ -342,7 +415,13 @@ class Worker(WorkerBase):
         blocks_to_swap_in = data.get("blocks_to_swap_in")
         blocks_to_swap_out = data.get("blocks_to_swap_out")
         blocks_to_copy = data.get("blocks_to_copy")
-        self.cache_swap(blocks_to_swap_in, blocks_to_swap_out, blocks_to_copy)
+        blocks_to_save = data.get("blocks_to_save")
+        blocks_to_load = data.get("blocks_to_load")
+
+        # self.cache_save_load(blocks_to_save, blocks_to_load)
+
+        # self.cache_swap(blocks_to_swap_in, blocks_to_swap_out, blocks_to_copy)
+        self.cache_swap_layer_wise(blocks_to_swap_in, blocks_to_swap_out, blocks_to_copy)
 
         # If there is no input, we don't need to execute the model.
         if num_seq_groups == 0:
@@ -377,10 +456,10 @@ class Worker(WorkerBase):
 
 
 def init_worker_distributed_environment(
-    parallel_config: ParallelConfig,
-    rank: int,
-    distributed_init_method: Optional[str] = None,
-    local_rank: int = -1,
+        parallel_config: ParallelConfig,
+        rank: int,
+        distributed_init_method: Optional[str] = None,
+        local_rank: int = -1,
 ) -> None:
     """Initialize the distributed environment."""
     set_custom_all_reduce(not parallel_config.disable_custom_all_reduce)

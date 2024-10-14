@@ -9,10 +9,6 @@ logger = init_logger(__name__)
 
 
 class FactoolMath(CoInference):
-    def __init__(self, app_name: None | str, coinf_id: str, arrival_time: float,
-                 hint: Dict | None) -> None:
-        super().__init__(app_name, coinf_id, arrival_time, hint)
-
     def create(
             self,
             hint: Optional[Dict]

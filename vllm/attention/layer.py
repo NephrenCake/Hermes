@@ -1,4 +1,5 @@
 """Attention layer."""
+import time
 from typing import Any, Dict, List, Optional
 
 import torch
@@ -9,6 +10,9 @@ from vllm.attention.selector import get_attn_backend
 from vllm.config import CacheConfig
 from vllm.model_executor.layers.quantization.base_config import (
     QuantizationConfig)
+from vllm.logger import init_logger
+
+logger = init_logger(__name__)
 
 
 class Attention(nn.Module):
@@ -85,7 +89,12 @@ class Attention(nn.Module):
         value: torch.Tensor,
         kv_cache: Optional[torch.Tensor],
         attn_metadata: AttentionMetadata,
+        cache_event: Optional[torch.cuda.Event],
     ) -> torch.Tensor:
+        if cache_event is not None:
+            # t = time.time()
+            cache_event.wait()
+            # logger.info(f"Waiting for cache event for {(time.time() - t) * 1000:.2f} ms.")
         return self.impl.forward(query, key, value, kv_cache, attn_metadata,
                                  self._kv_scale)
 

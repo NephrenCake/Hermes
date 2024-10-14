@@ -179,6 +179,10 @@ class Stats:
     #   KV Cache Usage in %
     gpu_cache_usage_sys: float
     cpu_cache_usage_sys: float
+    disk_cache_usage_sys: float
+    gpu_cached_cache_usage_sys: float
+    cpu_cached_cache_usage_sys: float
+    disk_cached_cache_usage_sys: float
 
     # Iteration stats (should have _iter suffix)
     num_prompt_tokens_iter: int
@@ -392,12 +396,13 @@ class StatLogger:
 
             # Log to stdout.
             logger.info(
-                "Avg prompt throughput: %.1f tokens/s, "
-                "Avg generation throughput: %.1f tokens/s, "
+                "Prompt throughput: %.1f tokens/s, "
+                "Generation throughput: %.1f tokens/s, "
                 "Running: %d reqs, Swapped: %d reqs, "
                 "Pending: %d reqs, Num CoInferences: %d, "
-                "GPU KV cache usage: %.1f%%, "
-                "CPU KV cache usage: %.1f%%, ",
+                "GPU usage: %.1f%%(%.1f%%), "
+                "CPU usage: %.1f%%(%.1f%%), "
+                "DISK usage: %.1f%%(%.1f%%), ",
                 prompt_throughput,
                 generation_throughput,
                 stats.num_running_sys,
@@ -405,7 +410,11 @@ class StatLogger:
                 stats.num_waiting_sys,
                 stats.num_coinferences,
                 stats.gpu_cache_usage_sys * 100,
+                stats.gpu_cached_cache_usage_sys * 100,
                 stats.cpu_cache_usage_sys * 100,
+                stats.cpu_cached_cache_usage_sys * 100,
+                stats.disk_cache_usage_sys * 100,
+                stats.disk_cached_cache_usage_sys * 100,
             )
             logger.info(
                 f"schedule: {avg_val['schedule_time']:.2f}ms (avg {avg_proportion['schedule_time']:.2f}% p95 {p95_proportion['schedule_time']:.2f}%), "

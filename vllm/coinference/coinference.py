@@ -106,6 +106,7 @@ class CoInference:
             coinf_id: str,
             arrival_time: float,
             hint: Optional[Dict],
+            slo,  # s
             time_out: float = 30,
     ) -> None:
         self.predictor: AppPredictor = APPLICATION[app_name] if app_name else None
@@ -129,6 +130,8 @@ class CoInference:
             "decode_tokens": 0,
             "stage_gap": 0,
         }
+        self.ddl = self.arrival_time + slo
+        self.queue_time = 0
 
     def create(self, coinference_info_dict: Optional[Dict]):
         raise NotImplementedError
@@ -178,7 +181,7 @@ class CoInference:
         # logger.info(f"CoInfer {self.coinf_id} starts a new stage: {stage_name}, "
         #             f"following_stages_info: {self.following_stages_info}.")
 
-    def add_req(self, seq_group: SequenceGroup, stage_name: str, use_mean, use_bayes):
+    def add_req(self, seq_group: SequenceGroup, stage_name: Union[str, None], use_mean, use_bayes):
         if self.current_stage_id == len(self.stages):
             self.add_stage(stage_name, use_mean, use_bayes)
             self.finish_status = FinishType.UnFinished

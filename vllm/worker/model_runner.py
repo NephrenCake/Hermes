@@ -156,32 +156,17 @@ class ModelRunner:
             assert hasattr(self.model, "embedding_padding_modules"
                            ), "Model does not have embedding_padding_modules"
             logger.info("Using LoRA with %s policy", self.scheduler_config.lora_policy)
-            if self.scheduler_config.lora_policy == "LRU":
-                self.lora_manager = LRUCacheWorkerLoRAManager(
-                    self.scheduler_config.max_num_seqs,
-                    self.scheduler_config.max_num_batched_tokens,
-                    self.vocab_size,
-                    self.lora_config,
-                    self.device,
-                    self.model.embedding_modules,
-                    self.model.embedding_padding_modules,
-                    max_position_embeddings=self.model.config.
-                    max_position_embeddings,
-                )
-            elif self.scheduler_config.lora_policy in ["Hermes", "EPWQ"]:
-                self.lora_manager = LRUCacheWorkerLoRAManagerWithPrefetch(
-                    self.scheduler_config.max_num_seqs,
-                    self.scheduler_config.max_num_batched_tokens,
-                    self.vocab_size,
-                    self.lora_config,
-                    self.device,
-                    self.model.embedding_modules,
-                    self.model.embedding_padding_modules,
-                    max_position_embeddings=self.model.config.
-                    max_position_embeddings,
-                )
-            else:
-                assert False, f"Unsupported LoRA policy: {self.scheduler_config.lora_policy}"
+            self.lora_manager = LRUCacheWorkerLoRAManagerWithPrefetch(
+                self.scheduler_config.max_num_seqs,
+                self.scheduler_config.max_num_batched_tokens,
+                self.vocab_size,
+                self.lora_config,
+                self.device,
+                self.model.embedding_modules,
+                self.model.embedding_padding_modules,
+                max_position_embeddings=self.model.config.
+                max_position_embeddings,
+            )
             self.model = self.lora_manager.create_lora_manager(self.model)
 
         if self.kv_cache_dtype == "fp8" and is_hip():
@@ -717,12 +702,14 @@ class ModelRunner:
         self,
         seq_group_metadata_list: Optional[List[SequenceGroupMetadata]],
         kv_caches: List[torch.Tensor],
+        set_lora=True,
+        cache_events=None,
     ) -> Optional[SamplerOutput]:
         (input_tokens, input_positions, attn_metadata, sampling_metadata,
          lora_requests, lora_mapping, multi_modal_input
          ) = self.prepare_input_tensors(seq_group_metadata_list)
 
-        if self.lora_config:
+        if self.lora_config and set_lora:
             self.set_active_loras(lora_requests, lora_mapping)
 
         # Currently cuda graph is only supported by the decode phase.
@@ -738,6 +725,7 @@ class ModelRunner:
             "positions": input_positions,
             "kv_caches": kv_caches,
             "attn_metadata": attn_metadata,
+            "cache_events": cache_events,
         }
         if self.vision_language_config:
             execute_model_kwargs.update({"image_input": multi_modal_input})
