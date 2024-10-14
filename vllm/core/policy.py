@@ -60,6 +60,7 @@ class CoInferencePolicy:
             coinferences_dict=None,
             prefill_time_per_token=None,
             decode_time_per_token=None,
+            now=None,
     ):
         raise NotImplementedError
 
@@ -77,6 +78,7 @@ class CoInferenceFCFS(CoInferencePolicy):
             coinferences_dict=None,
             prefill_time_per_token=None,
             decode_time_per_token=None,
+            now=None,
     ):
         pass
 
@@ -95,6 +97,7 @@ class CoInferenceGittins(CoInferencePolicy):
             coinferences_dict=None,
             prefill_time_per_token=None,
             decode_time_per_token=None,
+            now=None,
     ):
         assert coinferences_dict is not None
         assert prefill_time_per_token is not None
@@ -119,6 +122,7 @@ class CoInferenceMeanSRCF(CoInferencePolicy):
             coinferences_dict=None,
             prefill_time_per_token=None,
             decode_time_per_token=None,
+            now=None,
     ):
         assert coinferences_dict is not None
         assert prefill_time_per_token is not None
@@ -139,64 +143,81 @@ class CoInferenceMakespan(CoInferenceGittins):  # deprecated
         return coinf.priority
 
 
-class CoInferenceSLO(CoInferenceGittins):  # deprecated
+# deprecated
+class CoInferenceSLO(CoInferenceGittins):
     def get_priority(
             self,
             now: float,
             coinf: CoInference,
     ) -> float:
         worst_finish_time = now + coinf.worst_case_remaining_time / 1000
-        worst_slo_violation = (worst_finish_time - coinf.arrival_time) / coinf.stat.slo
-        if worst_slo_violation > 1:
-            coinf.priority = (1, -worst_slo_violation)
+        ddl_violation_risk = (worst_finish_time - coinf.arrival_time) / coinf.stat.slo
+        if ddl_violation_risk > 1:
+            coinf.priority = (1, -ddl_violation_risk)
         else:
             coinf.priority = (2, coinf.remaining_time / 1000)
 
-        # coinference.priority = (coinference.remaining_time / 1000) / worst_slo_violation
+        # coinference.priority = (coinference.remaining_time / 1000) / ddl_violation_risk
         return coinf.priority
 
 
-class CoInferenceTPT(CoInferenceGittins):  # deprecated
+# deprecated
+class CoInferenceTPT(CoInferenceGittins):
     def get_priority(
             self,
             now: float,
             coinf: CoInference,
     ) -> float:
-        worst_tpt_violation = (coinf.stat.running_time / coinf.stat.output_tokens) / coinf.stat.tpt
-        if worst_tpt_violation > 1:
-            coinf.priority = (1, -worst_tpt_violation)
+        tpt_violation_risk = (coinf.stat.running_time / coinf.stat.output_tokens) / coinf.stat.tpt
+        if tpt_violation_risk > 1:
+            coinf.priority = (1, -tpt_violation_risk)
         else:
             coinf.priority = (2, coinf.remaining_time / 1000)
         return coinf.priority
 
 
-class Hermes(CoInferenceGittins):
-    def get_priority(
+class Hermes(CoInferencePolicy):
+    def update_priority(
             self,
-            now: float,
-            coinf: CoInference,
-    ) -> float:
-        if coinf.stat.tpt is not None:
-            if coinf.stat.output_tokens == 0:
-                coinf.worst_tpt_violation = 1 << 16
+            coinferences_dict=None,
+            prefill_time_per_token=None,
+            decode_time_per_token=None,
+            now=None,
+    ):
+        assert coinferences_dict is not None
+        assert prefill_time_per_token is not None
+        assert decode_time_per_token is not None
+        assert now is not None
+
+        for coinf in coinferences_dict.values():
+            coinf.estimate_remaining_time(prefill_time_per_token,
+                                          decode_time_per_token,
+                                          use_mean=False)
+
+            if coinf.stat.tpt is not None:
+                if coinf.stat.risk_monitor_left == 0:
+                    if coinf.stat.output_tokens == 0:
+                        coinf.tpt_violation_risk = 1 << 16
+                    else:
+                        coinf.tpt_violation_risk = (coinf.stat.running_time / coinf.stat.output_tokens) / coinf.stat.tpt
+                coinf.stat.risk_monitor_left = (coinf.stat.risk_monitor_left + 1) % coinf.stat.risk_monitor_reset
             else:
-                coinf.worst_tpt_violation = (coinf.stat.running_time / coinf.stat.output_tokens) / coinf.stat.tpt * 1.25
-        else:
-            coinf.worst_tpt_violation = None
+                coinf.tpt_violation_risk = None
 
-        if coinf.stat.slo is not None:
-            worst_finish_time = now + coinf.worst_case_remaining_time / 1000
-            coinf.worst_slo_violation = (worst_finish_time - coinf.arrival_time) / coinf.stat.slo * 1.25
-        else:
-            coinf.worst_slo_violation = None
+            if coinf.stat.slo is not None:
+                worst_finish_time = now + coinf.worst_case_remaining_time / 1000
+                coinf.ddl_violation_risk = (worst_finish_time - coinf.arrival_time) / coinf.stat.slo
+                # coinf.ddl_violation_risk = (coinf.worst_case_remaining_time / 1000) / (coinf.stat.ddl - now)
+            else:
+                coinf.ddl_violation_risk = None
 
-        if coinf.worst_tpt_violation is not None and coinf.worst_tpt_violation > 1:
-            coinf.priority = (1, -coinf.worst_tpt_violation)
-        elif coinf.worst_slo_violation is not None and coinf.worst_slo_violation > 1:
-            coinf.priority = (2, (coinf.remaining_time / 1000) / coinf.worst_slo_violation)
-        else:
-            coinf.priority = (3, coinf.remaining_time / 1000)
-        return coinf.priority
+            if coinf.tpt_violation_risk is not None and coinf.tpt_violation_risk > 0.8:
+                coinf.priority = (1, -coinf.tpt_violation_risk)
+            elif coinf.ddl_violation_risk is not None and coinf.ddl_violation_risk > 0.8:
+                coinf.priority = (2, coinf.remaining_time / 1000 / coinf.ddl_violation_risk)
+                # coinf.priority = (2, -coinf.ddl_violation_risk)
+            else:
+                coinf.priority = (3, coinf.remaining_time / 1000)
 
 
 class PolicyFactory:

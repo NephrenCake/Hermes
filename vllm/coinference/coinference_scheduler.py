@@ -10,7 +10,7 @@ from typing import Deque, Dict, Iterable, List, Optional, Set, Tuple, Union
 
 from vllm.config import CacheConfig, LoRAConfig, SchedulerConfig
 from vllm.core.interfaces import AllocStatus, BlockSpaceManager
-from vllm.core.policy import CoInferencePolicy, PolicyFactory
+from vllm.core.policy import CoInferencePolicy, PolicyFactory, Hermes
 from vllm.core.scheduler import (SchedulerOutputs, ScheduledSequenceGroup,
                                  PreemptionMode)
 from vllm.logger import init_logger
@@ -206,7 +206,7 @@ class CoInferenceScheduler:
         # Schedule sequence groups.
         # This function call changes the internal states of the scheduler
         # such as self.running, self.swapped, and self.waiting.
-        scheduler_outputs = self._schedule()
+        scheduler_outputs, scheduling_time = self._schedule()
         now = time.time()
 
         # Create input data structures.
@@ -299,7 +299,7 @@ class CoInferenceScheduler:
             self.block_manager.mark_blocks_as_computed(
                 scheduled_seq_group.seq_group)
 
-        return seq_group_metadata_list, scheduler_outputs
+        return seq_group_metadata_list, scheduler_outputs, scheduling_time
 
     def _schedule(self) -> SchedulerOutputs:
         return self._schedule_default()
@@ -353,16 +353,18 @@ class CoInferenceScheduler:
 
         self.policy.update_priority(self.coinferences_dict,
                                     self.prefill_recorder.time_per_token,
-                                    self.decode_recorder.time_per_token)
+                                    self.decode_recorder.time_per_token,
+                                    now)
         self.coinferences_queue = self.policy.sort_by_priority(now, self.coinferences_queue)
+        scheduling_time = time.time() - now
 
         self.log_round += 1
         if self.log_round > self.next_log_round * 100 and self.scheduling_policy == "Hermes":
             self.next_log_round += 1
-            queue = [(coinf.coinf_id, f"({coinf.priority[0]}, {coinf.priority[1]:.2f})",
-                      f"{coinf.worst_slo_violation:.2f}" if coinf.worst_slo_violation else None,
-                      f"{coinf.worst_tpt_violation:.2f}" if coinf.worst_tpt_violation else None)
-                     for coinf in self.coinferences_queue]
+            queue = [(coinf.coinf_id, f"({coinf.priority[0]}, {coinf.priority[1]:.4f})",
+                      f"{coinf.ddl_violation_risk:.2f}" if coinf.ddl_violation_risk else None,
+                      f"{coinf.tpt_violation_risk:.2f}" if coinf.tpt_violation_risk else None)
+                     for coinf in self.coinferences_queue if coinf.priority[1] != 0]
             logger.info(f"Priority Queue: {queue}")
 
         # split coinference to running_queue and waiting_queue
@@ -454,7 +456,7 @@ class CoInferenceScheduler:
             preempted=len(split_outputs.swapout_queue),
             advised_lora=advised_lora,
         )
-        return schedule_outputs
+        return schedule_outputs, scheduling_time
 
     def admission_control(self, seq_group, curr_loras, logicalbudget,
                           ignored_seq_groups, prefill_queue, decode_queue,
@@ -748,7 +750,11 @@ class CoInferenceScheduler:
 
                 statistic = {
                     coinf.stat.coinf_id: {
+                        # finish_time - arrival_time = running_time(queue_time + execute_time) + gap
                         "queue_time": coinf.stat.queuing_time,
+                        "running_time": coinf.stat.running_time,  # execute_time = running_time - queue_time
+                        "jct": coinf.finish_time - coinf.arrival_time,
+                        "slo": coinf.stat.slo,
                         "slo_ratio": ((coinf.finish_time - coinf.arrival_time) / coinf.stat.slo,
                                       coinf.finish_time - coinf.stat.ddl)
                         if coinf.stat.slo else None,
@@ -764,7 +770,8 @@ class CoInferenceScheduler:
 
     def update_queue_time(self,
                           scheduled_seq_groups: Iterable[ScheduledSequenceGroup],
-                          cur_step_time: float):
+                          cur_step_time: float,
+                          is_prefill: bool):
         # each request is seen as a coinf when using request-level-fcfs,
         # and the coinf.stat maintain the real coinf-level info
         scheduled_coinfer = {
@@ -781,7 +788,9 @@ class CoInferenceScheduler:
         }
         for coinf_stat in running_coinfer_stats:
             if coinf_stat.coinf_id not in scheduled_coinfer:
-                coinf_stat.queuing_time += cur_step_time
+                coinf_stat.queuing_time[0] += cur_step_time
+                if is_prefill:
+                    coinf_stat.queuing_time[1] += cur_step_time
                 # queue_coinfer.add(coinf.true_coinf_id)
             coinf_stat.running_time += cur_step_time
         # logger.info(f"Scheduled coinfer: {scheduled_coinfer}, queue_coinfer: {queue_coinfer}")

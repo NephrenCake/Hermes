@@ -359,8 +359,9 @@ class Worker(WorkerBase):
         load_time = time.time() - load_start_time
 
         timer = time.time()
+        cache_events = None
         # cache_events = self.cache_swap(blocks_to_swap_in, blocks_to_swap_out, blocks_to_copy)
-        cache_events = self.cache_swap_layer_wise(blocks_to_swap_in, blocks_to_swap_out, blocks_to_copy)
+        # cache_events = self.cache_swap_layer_wise(blocks_to_swap_in, blocks_to_swap_out, blocks_to_copy)
         swap_time = time.time() - timer
         # if cache_events is not None:
         #     for event in cache_events:

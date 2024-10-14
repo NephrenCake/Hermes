@@ -55,7 +55,7 @@ class Distribution:
         }
         self.gittins = {
             v: min([
-                (suffix_sum[i] - suffix_sum[j]) / (suffix_cnt[i] - suffix_cnt[j])  # E
+                ((suffix_sum[i] - suffix_sum[j]) / (suffix_cnt[i] - suffix_cnt[j]))  # E TODO a bug here:  - v
                 / ((suffix_cnt[i] - suffix_cnt[j]) / suffix_cnt[i])  # P
                 if suffix_cnt[i] - suffix_cnt[j] > 0 else 1 << 30
                 for j in range(i + 1, len(suffix_sum))
@@ -234,7 +234,7 @@ class AppPredictor:
 
             worst_loop = self.distribution[stage_name]["loops"].get_worst()
             worst_prompt_tokens += self.distribution[stage_name]["prompt"].get_worst() * parallelism * worst_loop
-            worst_decode_tokens += self.distribution[stage_name]["decode"].get_worst() * parallelism * worst_loop
+            worst_decode_tokens += self.distribution[stage_name]["decode"].get_worst() * worst_loop
             worst_stage_gap += self.distribution[stage_name]["stage_gap"].get_worst() * worst_loop
 
             if use_mean:

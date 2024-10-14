@@ -99,7 +99,7 @@ class EngineArgs:
     coinference_scheduler: bool = False
     non_preempt: bool = False
     scheduling_policy: str = "Hermes"
-    bayes_prediction: bool = True
+    bayes_prediction: bool = False
     lora_policy: str = "Hermes"
     cache_policy: str = "Hermes"
 
@@ -585,8 +585,7 @@ class EngineArgs:
             help="use which scheduling policy")
         parser.add_argument(
             "--bayes-prediction",
-            type=bool,
-            default=EngineArgs.bayes_prediction,
+            action='store_true',
             help="whether to use Bayes prediction")
         parser.add_argument(
             "--lora-policy",

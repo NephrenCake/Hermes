@@ -99,7 +99,7 @@ class CoInferenceStage:
             else:
                 predict_decode_tokens += dist.get_mean_with_gittins(sq_decode_tokens) - sq_decode_tokens
 
-            worst_decode_tokens += dist.get_worst() - sq_decode_tokens
+            worst_decode_tokens = max(dist.get_worst() - sq_decode_tokens, worst_decode_tokens)
 
         return predict_prompt_tokens, predict_decode_tokens, predict_prompt_tokens, worst_decode_tokens
 
@@ -119,11 +119,11 @@ class CoInferenceStatistics:
         self.running_time: float = 0
         self.output_tokens: int = 0  # real_tpt = attained_service_time / output_tokens
 
-        self.violation_monitor_left = 30
-        self.violation_monitor_reset = 30
+        self.risk_monitor_left = 0
+        self.risk_monitor_reset = 100
         self.priority = None
 
-        self.queuing_time = 0
+        self.queuing_time = [0, 0]  # total queue time, prefill queue time
         self.cnt = 0
 
     @staticmethod
@@ -263,7 +263,7 @@ class CoInference:
     def estimate_remaining_time(
             self,
             prefill_time_per_token: float,
-            decode_time_per_token: float,
+            decode_time_per_iter: float,
             use_mean: bool = False,
     ):
         """
@@ -291,15 +291,14 @@ class CoInference:
                 decode_tokens += stage_decode_tokens
             worst_prompt_tokens, worst_decode_tokens = prompt_tokens, decode_tokens
 
-        prefill_time_per_token = 0.0004922265654677384 * 1000
-        decode_time_per_token = 0.03081 * 1000
-        self.remaining_time = (prefill_time_per_token * prompt_tokens + decode_time_per_token * decode_tokens
+        prefill_time_per_token = 0.00009485249914667758 * 1000
+        decode_time_per_iter = 0.05862 * 1000
+        self.remaining_time = (prefill_time_per_token * prompt_tokens
+                               + decode_time_per_iter * decode_tokens
                                + self.following_stages_info["stage_gap"])
         self.worst_case_remaining_time = (prefill_time_per_token * worst_prompt_tokens
-                                          + decode_time_per_token * worst_decode_tokens
+                                          + decode_time_per_iter * worst_decode_tokens
                                           + self.following_stages_info["worst_stage_gap"])
-        # self.remaining_time = prefill_time_per_token * prompt_tokens + decode_time_per_token * decode_tokens
-        # self.worst_case_remaining_time = prefill_time_per_token * worst_prompt_tokens + decode_time_per_token * worst_decode_tokens
 
         # logger.info(f"coinf_id: {self.coinf_id}, stages {self.current_stage_id + 1}/{len(self.stages)}, "
         #             f"prefill_token {prompt_tokens}, decode_token {decode_tokens}.")

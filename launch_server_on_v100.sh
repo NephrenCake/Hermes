@@ -9,6 +9,6 @@ python -m vllm.entrypoints.openai.api_server \
   --coinference-scheduler \
   --scheduling-policy Hermes \
   --chat-template ./examples/template_alpaca.jinja \
-  --bayes-prediction True
+  --bayes-prediction
 
   # scheduling-policy: "Hermes", "Idealized-SRJF", "Mean-SRJF", "Request-Level-FIFO", "CoInference-Level-FIFO"
