@@ -409,7 +409,7 @@ class CoInferenceScheduler:
             # set priority for eviction
             priority = [
                 coinf.coinf_id for coinf in self.coinferences_queue
-                if self.coinf_filter(coinf, self.cache_config.cache_policy, 0.1, 0.9, 1, 1)
+                if self.coinf_filter(coinf, self.cache_config.cache_policy, 0.1, 0.9, 1, 10)
             ]
             self.block_manager.gpu_allocator.evictor.set_priority(priority)
             self.block_manager.cpu_allocator.evictor.set_priority(priority)
@@ -764,8 +764,8 @@ class CoInferenceScheduler:
                     }
                 }
                 coinf.stat.cnt -= 1
-                if not coinf.stat.cnt:
-                    logger.info(f"{json.dumps(statistic)}")
+                # if not coinf.stat.cnt:
+                #     logger.info(f"{json.dumps(statistic)}")
                 self.block_manager.destroy_cache(coinf_id)
 
     def update_queue_time(self,

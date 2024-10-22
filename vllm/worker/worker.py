@@ -421,14 +421,15 @@ class Worker(WorkerBase):
 
         # self.cache_save_load(blocks_to_save, blocks_to_load)
 
+        cache_events = None
         # self.cache_swap(blocks_to_swap_in, blocks_to_swap_out, blocks_to_copy)
-        self.cache_swap_layer_wise(blocks_to_swap_in, blocks_to_swap_out, blocks_to_copy)
+        # self.cache_swap_layer_wise(blocks_to_swap_in, blocks_to_swap_out, blocks_to_copy)
 
         # If there is no input, we don't need to execute the model.
         if num_seq_groups == 0:
             return False
 
-        self.model_runner.execute_model(None, self.gpu_cache)
+        self.model_runner.execute_model(None, self.gpu_cache, cache_events=cache_events)
         return True
 
     def add_lora(self, lora_request: LoRARequest) -> bool:
