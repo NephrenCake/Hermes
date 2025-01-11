@@ -8,9 +8,12 @@ from dataclasses import dataclass, field
 from threading import Lock
 from typing import Deque, Dict, Iterable, List, Optional, Set, Tuple, Union
 
+import numpy as np
+
 from vllm.config import CacheConfig, LoRAConfig, SchedulerConfig
 from vllm.core.interfaces import AllocStatus, BlockSpaceManager
-from vllm.core.policy import CoInferencePolicy, PolicyFactory, Hermes
+from vllm.core.policy import CoInferencePolicy, PolicyFactory, Hermes, CoInferenceVTC, CoInferenceIdeal, RequestFCFS, \
+    CoInferenceMeanSRCF
 from vllm.core.scheduler import (SchedulerOutputs, ScheduledSequenceGroup,
                                  PreemptionMode)
 from vllm.logger import init_logger
@@ -113,39 +116,39 @@ class TokenBudget:
         return self._num_batched_tokens
 
 
-class TimeRecorder:
-    def __init__(
-            self,
-            record_window_size: int,
-            default_time_per_token: float = 0.1,
-            ema_alpha: float = 0.7,
-            token_type: str = "prefill"
-    ) -> None:
-        ''' ms '''
-        self.time_per_token = default_time_per_token
-        self.time_recorder = []
-        self.num_tokens_recorder = []
-        self.record_window_size = record_window_size
-        self.ema_alpha = ema_alpha
-        self.token_type = token_type
-
-    def update(
-            self,
-            num_tokens: int,
-            time: float
-    ):
-        self.time_recorder.append(time)
-        self.num_tokens_recorder.append(num_tokens)
-        if len(self.num_tokens_recorder) >= self.record_window_size:
-            time_per_token = sum(self.time_recorder) / sum(self.num_tokens_recorder)
-            self.time_recorder = []
-            self.num_tokens_recorder = []
-            self.time_per_token = self.time_per_token * self.ema_alpha + time_per_token * (1 - self.ema_alpha)
-
-        # with open(os.path.join(os.path.dirname(__file__), f"{self.token_type}.json"), "w") as f:
-        #     json.dump({
-        #         "time_per_token": self.time_per_token,
-        #     }, f)
+# class TimeRecorder:
+#     def __init__(
+#             self,
+#             record_window_size: int,
+#             default_time_per_token: float = 0.1,
+#             ema_alpha: float = 0.7,
+#             token_type: str = "prefill"
+#     ) -> None:
+#         ''' ms '''
+#         self.time_per_token = default_time_per_token
+#         self.time_recorder = []
+#         self.num_tokens_recorder = []
+#         self.record_window_size = record_window_size
+#         self.ema_alpha = ema_alpha
+#         self.token_type = token_type
+#
+#     def update(
+#             self,
+#             num_tokens: int,
+#             time: float
+#     ):
+#         self.time_recorder.append(time)
+#         self.num_tokens_recorder.append(num_tokens)
+#         if len(self.num_tokens_recorder) >= self.record_window_size:
+#             time_per_token = sum(self.time_recorder) / sum(self.num_tokens_recorder)
+#             self.time_recorder = []
+#             self.num_tokens_recorder = []
+#             self.time_per_token = self.time_per_token * self.ema_alpha + time_per_token * (1 - self.ema_alpha)
+#
+#         # with open(os.path.join(os.path.dirname(__file__), f"{self.token_type}.json"), "w") as f:
+#         #     json.dump({
+#         #         "time_per_token": self.time_per_token,
+#         #     }, f)
 
 
 class CoInferenceScheduler:
@@ -194,6 +197,8 @@ class CoInferenceScheduler:
         self.next_log_prefix = 0
 
         self.policy: CoInferencePolicy = PolicyFactory.get_policy(policy_name=self.scheduling_policy)
+        if isinstance(self.policy, CoInferenceVTC):
+            self.scheduler_config.non_preempt = True
 
         self.last_running = []
 
@@ -355,6 +360,11 @@ class CoInferenceScheduler:
                                     self.prefill_recorder.time_per_token,
                                     self.decode_recorder.time_per_token,
                                     now)
+
+        for coinf in self.coinferences_dict.values():
+            for i in coinf.stages[-1].parallel_requests:
+                i.coinf_remaining_time = coinf.remaining_time if isinstance(self.policy, Hermes) else 0
+
         self.coinferences_queue = self.policy.sort_by_priority(now, self.coinferences_queue)
         scheduling_time = time.time() - now
 
@@ -363,7 +373,8 @@ class CoInferenceScheduler:
             self.next_log_round += 1
             queue = [(coinf.coinf_id, f"({coinf.priority[0]}, {coinf.priority[1]:.4f})",
                       f"{coinf.ddl_violation_risk:.2f}" if coinf.ddl_violation_risk else None,
-                      f"{coinf.tpt_violation_risk:.2f}" if coinf.tpt_violation_risk else None)
+                      # f"{coinf.tpt_violation_risk:.2f}" if coinf.tpt_violation_risk else None,
+                      )
                      for coinf in self.coinferences_queue if coinf.priority[1] != 0]
             logger.info(f"Priority Queue: {queue}")
 
@@ -666,12 +677,13 @@ class CoInferenceScheduler:
         self.free_finished_seq_groups()
 
         coinference_info_dict = coinference_info_dict if coinference_info_dict is not None else {}
-        hint: Union[Dict, None] = coinference_info_dict["hint"] if self.scheduling_policy == "Idealized-SRJF" else None
+        hint: Union[Dict, None] = coinference_info_dict["hint"] \
+            if isinstance(self.policy, CoInferenceIdeal) else None
         stage_name: Union[str, None] = coinference_info_dict["stage_name"]
         slo: Union[float, None] = coinference_info_dict["slo"]
         tpt: Union[float, None] = coinference_info_dict["tpt"]
 
-        if self.scheduling_policy == "Request-Level-FIFO":
+        if isinstance(self.policy, RequestFCFS):
             seq_group.app_name = None
             seq_group.coinf_id = seq_group.request_id
 
@@ -687,7 +699,7 @@ class CoInferenceScheduler:
             # logger.info(f"Add coinference {seq_group.coinf_id} to scheduler")
 
         self.coinferences_dict[seq_group.coinf_id].add_req(seq_group, stage_name,
-                                                           use_mean=self.scheduling_policy == "Mean-SRJF",
+                                                           use_mean=isinstance(self.policy, CoInferenceMeanSRCF),
                                                            use_bayes=self.bayes_prediction)
 
         for seq in seq_group.seqs_dict.values():
@@ -750,17 +762,19 @@ class CoInferenceScheduler:
 
                 statistic = {
                     coinf.stat.coinf_id: {
-                        # finish_time - arrival_time = running_time(queue_time + execute_time) + gap
+                        # finish_time - arrival_time = running_time(suspending_time + execute_time) + gap
+                        "suspending_time": coinf.stat.suspending_time,
                         "queue_time": coinf.stat.queuing_time,
-                        "running_time": coinf.stat.running_time,  # execute_time = running_time - queue_time
-                        "jct": coinf.finish_time - coinf.arrival_time,
+                        "running_time": coinf.stat.running_time,  # execute_time = running_time - suspending_time
+                        "jct": coinf.stat.finish_time - coinf.stat.arrival_time,
                         "slo": coinf.stat.slo,
-                        "slo_ratio": ((coinf.finish_time - coinf.arrival_time) / coinf.stat.slo,
-                                      coinf.finish_time - coinf.stat.ddl)
+                        "slo_ratio": ((coinf.stat.finish_time - coinf.stat.arrival_time) / coinf.stat.slo,
+                                      coinf.stat.finish_time - coinf.stat.ddl)
                         if coinf.stat.slo else None,
                         "tpt_ratio": ((coinf.stat.running_time / coinf.stat.output_tokens) / coinf.stat.tpt,
                                       coinf.stat.running_time / coinf.stat.output_tokens - coinf.stat.tpt)
                         if coinf.stat.tpt else None,
+                        # "prefetch_waiting": np.average(coinf.waiting_using_time),
                     }
                 }
                 coinf.stat.cnt -= 1
@@ -771,7 +785,8 @@ class CoInferenceScheduler:
     def update_queue_time(self,
                           scheduled_seq_groups: Iterable[ScheduledSequenceGroup],
                           cur_step_time: float,
-                          is_prefill: bool):
+                          is_prefill: bool,
+                          start_schedule_time: float) -> None:
         # each request is seen as a coinf when using request-level-fcfs,
         # and the coinf.stat maintain the real coinf-level info
         scheduled_coinfer = {
@@ -788,10 +803,12 @@ class CoInferenceScheduler:
         }
         for coinf_stat in running_coinfer_stats:
             if coinf_stat.coinf_id not in scheduled_coinfer:
-                coinf_stat.queuing_time[0] += cur_step_time
+                coinf_stat.suspending_time[0] += cur_step_time
                 if is_prefill:
-                    coinf_stat.queuing_time[1] += cur_step_time
+                    coinf_stat.suspending_time[1] += cur_step_time
                 # queue_coinfer.add(coinf.true_coinf_id)
+            else:
+                coinf_stat.queuing_time = min(coinf_stat.queuing_time, start_schedule_time - coinf_stat.arrival_time)
             coinf_stat.running_time += cur_step_time
         # logger.info(f"Scheduled coinfer: {scheduled_coinfer}, queue_coinfer: {queue_coinfer}")
 
@@ -898,7 +915,8 @@ class CoInferenceScheduler:
             seq.status = SequenceStatus.SWAPPED
 
     def record_step_time(self, num_tokens: int, time: float, is_prefill: bool):
-        if is_prefill:
-            self.prefill_recorder.update(num_tokens, time)
-        else:
-            self.decode_recorder.update(num_tokens, time)
+        # if is_prefill:
+        #     self.prefill_recorder.update(num_tokens, time)
+        # else:
+        #     self.decode_recorder.update(num_tokens, time)
+        pass

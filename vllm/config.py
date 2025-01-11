@@ -360,6 +360,7 @@ class CacheConfig:
         disk_dir_path: str = None,
         preemption_mode: str = "swap",
         cache_policy: str = "Hermes",
+        prefetch_confidence: float = 0.1,
     ) -> None:
         self.block_size = block_size
         self.gpu_memory_utilization = gpu_memory_utilization
@@ -382,6 +383,7 @@ class CacheConfig:
         self.num_disk_blocks = num_disk_blocks if enable_prefix_caching else None
         self.disk_dir_path = disk_dir_path if enable_prefix_caching else None
         self.cache_policy = cache_policy
+        self.prefetch_confidence = prefetch_confidence
 
     def metrics_info(self):
         # convert cache_config to dict(key: str, value: str) for prometheus
@@ -1236,20 +1238,28 @@ def _get_and_verify_max_len(
         derived_max_model_len = default_max_len
 
     rope_scaling = getattr(hf_config, "rope_scaling", None)
-    if rope_scaling is not None and rope_scaling["type"] != "su":
-        if disable_sliding_window:
-            # TODO(robertgshaw): Find a model that supports rope_scaling
-            # with sliding window to see if this case should be allowed.
-            raise NotImplementedError(
-                "Disabling sliding window is not supported for models "
-                "with rope_scaling. Please raise an issue so we can "
-                "investigate.")
-        assert "factor" in rope_scaling
-        scaling_factor = rope_scaling["factor"]
-        if rope_scaling["type"] == "yarn":
-            derived_max_model_len = rope_scaling[
-                "original_max_position_embeddings"]
-        derived_max_model_len *= scaling_factor
+    if rope_scaling is not None:
+        # No need to consider "type" key because of patch_rope_scaling when
+        # loading HF config
+        rope_type = rope_scaling["rope_type"]
+
+        if rope_type not in ("su", "longrope", "llama3"):
+            if disable_sliding_window:
+                # TODO(robertgshaw): Find a model that supports rope_scaling
+                # with sliding window to see if this case should be allowed.
+                raise NotImplementedError(
+                    "Disabling sliding window is not supported for models "
+                    "with rope_scaling. Please raise an issue so we can "
+                    "investigate.")
+
+            # NOTE: rope_type == "default" does not define factor
+            # https://github.com/huggingface/transformers/blob/v4.45.2/src/transformers/modeling_rope_utils.py
+            scaling_factor = rope_scaling.get("factor", 1.0)
+
+            if rope_type == "yarn":
+                derived_max_model_len = rope_scaling[
+                    "original_max_position_embeddings"]
+            derived_max_model_len *= scaling_factor
 
     # If the user specified a max length, make sure it is smaller than the
     # derived length from the HF model config.

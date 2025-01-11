@@ -448,6 +448,7 @@ class SequenceGroup:
         pooling_params: Optional[PoolingParams] = None,
         encoder_seq: Optional[Sequence] = None,
         coinference_format=False,
+        coinf_remaining_time=0,
     ) -> None:
         self.request_id = request_id
 
@@ -473,7 +474,7 @@ class SequenceGroup:
         self.pooling_params = pooling_params
         self.encoder_seq = encoder_seq
         
-        self.coinf_remaining_time: float = 0
+        self.coinf_remaining_time: float = coinf_remaining_time
 
     @property
     def prompt(self) -> Optional[str]:

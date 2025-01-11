@@ -176,6 +176,16 @@ class AppPredictor:
         # }
         # logger.info(f"AppPredictor {app_name} initialized. Prior distribution: {prior_distribution}")
 
+        total_time, total_input, total_output = 0, 0, 0
+        for stage in self.distribution.values():
+            _input = stage["prompt"].get_mean() * stage["parallelism"].get_mean() * stage["loops"].get_mean()
+            _output = stage["decode"].get_mean() * stage["parallelism"].get_mean() * stage["loops"].get_mean()
+            total_time += _input * 0.00009485249914667758 + _output * 0.05 + stage["stage_gap"].get_mean() / 1000
+            total_input += _input
+            total_output += _output
+        logger.info(f"AppPredictor {app_name} initialized. "
+                    f"Predicted total time: {total_time}, input: {total_input}, output: {total_output}")
+
     def save_profiling(self):
         logger.info(f"AppPredictor {self.app_name} saved.")
         profiling_distribution = {

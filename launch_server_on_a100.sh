@@ -3,7 +3,7 @@ echo 3 > /proc/sys/vm/drop_caches && \
 export CUDA_VISIBLE_DEVICES=0 && \
 python -m vllm.entrypoints.openai.api_server \
   --uvicorn-log-level warning \
-  --model /state/partition/llama/llama-7b-hf \
+  --model /state/partition/yfliu/llama-7b-hf \
   --served-model-name gpt-3.5-turbo \
   --gpu-memory-utilization 0.7 \
   --tensor-parallel-size 1 \

@@ -68,7 +68,7 @@ class CacheEngine:
         if self.disk_dir_path is not None:
             logger.info(f"Disk dir path: {self.disk_dir_path}")
             os.system(f"rm -rf {self.disk_dir_path}")
-            os.makedirs(self.disk_dir_path)
+            os.makedirs(self.disk_dir_path, exist_ok=True)
 
     def __del__(self):
         if self.disk_dir_path is not None:

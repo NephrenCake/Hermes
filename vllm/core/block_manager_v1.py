@@ -323,12 +323,15 @@ class CoInferCachedBlockAllocator(BlockAllocatorBase):
             if self.next_level_cache is not None:
                 self.next_level_cache.inc_read(block_hash)
 
-    def prefetch_coinf(self, coinf_id):
+    def may_prefetch(self, coinf_id):
         low_level_cache = {(b.block_hash, b.num_hashed_tokens)
                            for b in self.next_level_cache.evictor.free_table.get(coinf_id, {}).values()}
         cur_level_cache = {(b.block_hash, b.num_hashed_tokens)
                            for b in self.evictor.free_table.get(coinf_id, {}).values()}
-        blocks_to_prefetch = low_level_cache - cur_level_cache
+        return low_level_cache - cur_level_cache
+
+    def prefetch_coinf(self, coinf_id):
+        blocks_to_prefetch = self.may_prefetch(coinf_id)
         for (block_hash, num_hashed_tokens) in blocks_to_prefetch:
             b = self.allocate(block_hash, num_hashed_tokens)
             b.computed = True
