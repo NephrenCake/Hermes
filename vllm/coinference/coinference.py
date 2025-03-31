@@ -111,6 +111,7 @@ class CoInferenceStatistics:
     def __init__(self, coinf_id, arrival_time, slo, tpt):
         self.coinf_id = coinf_id  # real coinf id
         self.arrival_time = arrival_time
+        self.finish_time = 0
 
         self.slo: Union[float, None] = slo
         self.ddl: Union[float, None] = self.arrival_time + slo if slo else None
@@ -123,8 +124,11 @@ class CoInferenceStatistics:
         self.risk_monitor_reset = 100
         self.priority = None
 
-        self.queuing_time = [0, 0]  # total queue time, prefill queue time
+        self.suspending_time = [0, 0]  # total queue time, prefill queue time
+        self.queuing_time = 1 << 16  # first_schedule_time - arrival_time
         self.cnt = 0
+
+        self.service_output_token = 0
 
     @staticmethod
     def get_statistics(coinf_id, arrival_time=None, slo=None, tpt=None):
@@ -179,6 +183,10 @@ class CoInference:
         self.stat = CoInferenceStatistics.get_statistics(coinf_id, arrival_time, slo, tpt)
         self.stat.cnt += 1
         self.priority = None
+
+        self.prefetched = False
+        self.prefetch_time = 1 << 32
+        self.waiting_using_time = []
 
     def create(self, coinference_info_dict: Optional[Dict]):
         raise NotImplementedError
@@ -245,6 +253,7 @@ class CoInference:
                 self.stage_gap_timer = time.time()
                 self.current_stage_id += 1
                 self.finish_time = now
+                self.stat.finish_time = now
             return False
 
         if self.finish_status == FinishType.StageFinished:
@@ -292,7 +301,7 @@ class CoInference:
             worst_prompt_tokens, worst_decode_tokens = prompt_tokens, decode_tokens
 
         prefill_time_per_token = 0.00009485249914667758 * 1000
-        decode_time_per_iter = 0.05862 * 1000
+        decode_time_per_iter = 0.06 * 1000
         self.remaining_time = (prefill_time_per_token * prompt_tokens
                                + decode_time_per_iter * decode_tokens
                                + self.following_stages_info["stage_gap"])

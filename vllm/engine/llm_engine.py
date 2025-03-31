@@ -221,6 +221,7 @@ class LLMEngine:
         self.generation_config_fields = _load_generation_config_dict(
             model_config)
 
+        t = time.time()
         self.model_executor = executor_class(
             model_config=model_config,
             cache_config=cache_config,
@@ -232,9 +233,14 @@ class LLMEngine:
             speculative_config=speculative_config,
             load_config=load_config,
         )
+        logger.info(">>> Model executor initialization took %.3f seconds",
+                    time.time() - t)
 
+        t = time.time()
         if not self.model_config.embedding_mode:
             self._initialize_kv_caches()
+        logger.info(">>> KV cache initialization took %.3f seconds",
+                    time.time() - t)
 
         # If usage stat is enabled, collect relevant info.
         if is_usage_stats_enabled():

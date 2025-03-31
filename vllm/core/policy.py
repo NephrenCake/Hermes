@@ -72,10 +72,10 @@ class CoInferencePolicy:
         weights = 0
         for coinf in coinferences_dict.values():
             if coinf.finish_status == FinishType.UnFinished:
-                weights += len(coinf.stages[-1].parallel_requests)
+                weights += len(coinf.current_stage.parallel_requests)
         for coinf in coinferences_dict.values():
             if coinf.finish_status == FinishType.UnFinished:
-                coinf.stat.service_output_token -= output_tokens_num * (len(coinf.stages[-1].parallel_requests) / weights)
+                coinf.stat.service_output_token -= output_tokens_num * (len(coinf.current_stage.parallel_requests) / weights)
 
         for i, scheduled_seq_group in enumerate(schedule_outputs.scheduled_seq_groups):
             coinf_id = scheduled_seq_group.seq_group.coinf_id
@@ -259,7 +259,7 @@ class Hermes(CoInferencePolicy):
             else:
                 coinf.ddl_violation_risk = None
 
-            if coinf.ddl_violation_risk is not None and coinf.ddl_violation_risk > 0.8:
+            if coinf.ddl_violation_risk is not None and coinf.ddl_violation_risk > 0.5:
                 coinf.priority = (2, coinf.remaining_time / 1000 / coinf.ddl_violation_risk)
                 # coinf.priority = (2, -coinf.ddl_violation_risk)
             else:

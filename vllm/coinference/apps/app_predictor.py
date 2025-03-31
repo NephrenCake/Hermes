@@ -3,6 +3,7 @@ import json
 from bisect import bisect_right
 from typing import Tuple, Dict, List
 import random
+import time
 import numpy as np
 from scipy.stats import skewnorm
 from vllm.logger import init_logger
@@ -23,8 +24,10 @@ class Distribution:
     def __init__(
             self,
             window_size: int = 100,
+            bin_num: int = 10,
     ) -> None:
         self.window_size = window_size
+        self.bin_num = bin_num
 
         self.samples = []
 
@@ -43,7 +46,7 @@ class Distribution:
         if len(set(self.samples)) == 1:
             counts, bin_edges = [len(self.samples)], [self.samples[0], self.samples[0] + 1e-6]
         else:
-            counts, bin_edges = np.histogram(sorted(self.samples), bins=10)
+            counts, bin_edges = np.histogram(sorted(self.samples), bins=self.bin_num)
         bin_sum = [(bin_edges[i] + bin_edges[i + 1]) / 2 * counts[i] for i in range(len(bin_edges) - 1)]
         suffix_sum = np.cumsum(bin_sum[::-1])[::-1].tolist() + [0]
         suffix_cnt = np.cumsum(counts[::-1])[::-1].tolist() + [0]
@@ -126,7 +129,10 @@ class AppPredictor:
             self,
             app_name: str,
             window_size: int = 100,
+            bin_num: int = 50,
     ) -> None:
+        print(f"AppPredictor {app_name} initialized. bin_num: {bin_num}")
+
         self.app_name = app_name
         app_file = os.path.join(os.path.dirname(__file__), f"{app_name}.json")
         if os.path.exists(app_file):
@@ -137,25 +143,25 @@ class AppPredictor:
                 self.model_dict = json.load(f)[app_name]
         self.distribution: Dict[str, Dict[str, Distribution]] = {
             stage_name: {
-                "stage_gap": Distribution(window_size).add_samples(
+                "stage_gap": Distribution(window_size, bin_num).add_samples(
                     self.model_dict[stage_name]["stage_gap"]  # ms
                 ).update_cache(),
-                # "stage_gap": Distribution(window_size).add_samples(
+                # "stage_gap": Distribution(window_size, bin_num).add_samples(
                 #     [(
                 #         i if stage_name not in ["verifies", "thought"] else i + 10000
                 #     )
                 #      for i in self.model_dict[stage_name]["stage_gap"]]  # ms
                 # ).update_cache(),
-                "parallelism": Distribution(window_size).add_samples(
+                "parallelism": Distribution(window_size, bin_num).add_samples(
                     self.model_dict[stage_name]["parallelism"]
                 ).update_cache(),
-                "prompt": Distribution(window_size).add_samples(
+                "prompt": Distribution(window_size, bin_num).add_samples(
                     self.model_dict[stage_name]["prompt_tokens"]
                 ).update_cache(),
-                "decode": Distribution(window_size).add_samples(
+                "decode": Distribution(window_size, bin_num).add_samples(
                     self.model_dict[stage_name]["completion_tokens"]
                 ).update_cache(),
-                "loops": Distribution(window_size).add_samples(
+                "loops": Distribution(window_size, bin_num).add_samples(
                     self.model_dict[stage_name]["loops"]
                 ).update_cache(),
             } for stage_name in self.model_dict["stage_list"]
@@ -176,15 +182,15 @@ class AppPredictor:
         # }
         # logger.info(f"AppPredictor {app_name} initialized. Prior distribution: {prior_distribution}")
 
-        total_time, total_input, total_output = 0, 0, 0
-        for stage in self.distribution.values():
-            _input = stage["prompt"].get_mean() * stage["parallelism"].get_mean() * stage["loops"].get_mean()
-            _output = stage["decode"].get_mean() * stage["parallelism"].get_mean() * stage["loops"].get_mean()
-            total_time += _input * 0.00009485249914667758 + _output * 0.05 + stage["stage_gap"].get_mean() / 1000
-            total_input += _input
-            total_output += _output
-        logger.info(f"AppPredictor {app_name} initialized. "
-                    f"Predicted total time: {total_time}, input: {total_input}, output: {total_output}")
+        # total_time, total_input, total_output = 0, 0, 0
+        # for stage in self.distribution.values():
+        #     _input = stage["prompt"].get_mean() * stage["parallelism"].get_mean() * stage["loops"].get_mean()
+        #     _output = stage["decode"].get_mean() * stage["parallelism"].get_mean() * stage["loops"].get_mean()
+        #     total_time += _input * 0.00009485249914667758 + _output * 0.05 + stage["stage_gap"].get_mean() / 1000
+        #     total_input += _input
+        #     total_output += _output
+        # logger.info(f"AppPredictor {app_name} initialized. "
+        #             f"Predicted total time: {total_time}, input: {total_input}, output: {total_output}")
 
     def save_profiling(self):
         logger.info(f"AppPredictor {self.app_name} saved.")
@@ -294,3 +300,16 @@ APPLICATION = {
     "code_feedback": AppPredictor("code_feedback"),
     "hugginggpt": AppPredictor("hugginggpt"),
 }
+
+if __name__ == '__main__':
+    total_res = {}
+    for bin_num in [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]:
+        res = []
+        for _ in range(10):
+            timer = time.time()
+            for key in APPLICATION.keys():
+                AppPredictor(key, bin_num=bin_num)
+            res.append((time.time() - timer) / len(APPLICATION) * 1000)
+        print(f"bin_num: {bin_num}, avg: {np.mean(res)}")
+        total_res[bin_num] = res
+    print(json.dumps(total_res))

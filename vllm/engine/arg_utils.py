@@ -105,6 +105,7 @@ class EngineArgs:
 
     # disk kv cache dir path
     disk_dir_path: str = "/workspace/kv_cache/"
+    prefetch_confidence: float = 0.1
 
     def __post_init__(self):
         if self.tokenizer is None:
@@ -606,6 +607,11 @@ class EngineArgs:
             type=str,
             default=EngineArgs.disk_dir_path
         )
+        parser.add_argument(
+            "--prefetch_confidence",
+            type=float,
+            default=EngineArgs.prefetch_confidence
+        )
 
         return parser
 
@@ -637,7 +643,8 @@ class EngineArgs:
                                    self.num_disk_blocks,
                                    self.disk_dir_path,
                                    self.preemption_mode,
-                                   self.cache_policy)
+                                   self.cache_policy,
+                                   self.prefetch_confidence)
         parallel_config = ParallelConfig(
             self.pipeline_parallel_size,
             self.tensor_parallel_size,

@@ -189,8 +189,8 @@ class CoInferenceScheduler:
         if self.bayes_prediction:
             logger.info(f"[Bayesian Debug] > Enable Bayesian Prediction")
 
-        self.prefill_recorder = TimeRecorder(record_window_size=100, default_time_per_token=0.33, token_type="prefill")
-        self.decode_recorder = TimeRecorder(record_window_size=1000, default_time_per_token=3.16, token_type="decode")
+        # self.prefill_recorder = TimeRecorder(record_window_size=100, default_time_per_token=0.33, token_type="prefill")
+        # self.decode_recorder = TimeRecorder(record_window_size=1000, default_time_per_token=3.16, token_type="decode")
 
         self.used_prefix_block = 0
         self.all_prefill_block = 0
@@ -201,6 +201,8 @@ class CoInferenceScheduler:
             self.scheduler_config.non_preempt = True
 
         self.last_running = []
+        self.cur_running_coinf = set()
+        self.last_running_coinf = set()
 
     @property
     def lora_enabled(self) -> bool:
@@ -285,16 +287,17 @@ class CoInferenceScheduler:
 
         if self.cache_config.enable_prefix_caching and self.all_prefill_block > self.next_log_prefix * 1000:
             self.next_log_prefix = self.all_prefill_block // 1000 + 1
-            logger.info(f"[KVC Debug] > prefix utilization: "
-                        f"{self.used_prefix_block} / {self.all_prefill_block} = "
-                        f"{self.used_prefix_block / self.all_prefill_block:.2f}")
-            g_hit, g_miss, g_total = self.block_manager.gpu_allocator.export_statistics()
-            c_hit, c_miss, c_total = self.block_manager.cpu_allocator.export_statistics()
-            d_hit, d_miss, d_total = self.block_manager.disk_allocator.export_statistics()
-            logger.info(f"[KVC Debug] > "
-                        f"GPU: {g_hit} / {g_total} = {(g_hit / g_total) if g_total else 0.:.2f}, "
-                        f"CPU: {c_hit} / {g_total} = {(c_hit / g_total) if g_total else 0.:.2f}, "
-                        f"Disk: {d_hit} / {g_total} = {(d_hit / g_total) if g_total else 0.:.2f}")
+            if scheduler_outputs.num_prefill_groups != 0:
+                logger.info(f"[KVC Debug] > prefix utilization: "
+                            f"{self.used_prefix_block} / {self.all_prefill_block} = "
+                            f"{self.used_prefix_block / self.all_prefill_block:.2f}")
+                g_hit, g_miss, g_total = self.block_manager.gpu_allocator.export_statistics()
+                c_hit, c_miss, c_total = self.block_manager.cpu_allocator.export_statistics()
+                d_hit, d_miss, d_total = self.block_manager.disk_allocator.export_statistics()
+                logger.info(f"[KVC Debug] > "
+                            f"GPU: {g_hit} / {g_total} = {(g_hit / g_total) if g_total else 0.:.2f}, "
+                            f"CPU: {c_hit} / {g_total} = {(c_hit / g_total) if g_total else 0.:.2f}, "
+                            f"Disk: {d_hit} / {g_total} = {(d_hit / g_total) if g_total else 0.:.2f}")
 
         # Now that the batch has been created, we can assume all blocks in the
         # batch will have been computed before the next scheduling invocation.
@@ -357,13 +360,14 @@ class CoInferenceScheduler:
         now = time.time()
 
         self.policy.update_priority(self.coinferences_dict,
-                                    self.prefill_recorder.time_per_token,
-                                    self.decode_recorder.time_per_token,
+                                    0.00009485249914667758,
+                                    0.05,
                                     now)
 
         for coinf in self.coinferences_dict.values():
-            for i in coinf.stages[-1].parallel_requests:
-                i.coinf_remaining_time = coinf.remaining_time if isinstance(self.policy, Hermes) else 0
+            if coinf.finish_status == FinishType.UnFinished:
+                for i in coinf.current_stage.parallel_requests:
+                    i.coinf_remaining_time = coinf.remaining_time if isinstance(self.policy, Hermes) else 0
 
         self.coinferences_queue = self.policy.sort_by_priority(now, self.coinferences_queue)
         scheduling_time = time.time() - now
@@ -377,6 +381,22 @@ class CoInferenceScheduler:
                       )
                      for coinf in self.coinferences_queue if coinf.priority[1] != 0]
             logger.info(f"Priority Queue: {queue}")
+
+        # # TODO test prefetch
+        # self.cur_running_coinf = {coinf for coinf in self.coinferences_queue
+        #                           if coinf.finish_status == FinishType.UnFinished}
+        # finished_coinf = self.last_running_coinf - self.cur_running_coinf
+        # if finished_coinf:
+        #     for coinf in finished_coinf:
+        #         self.block_manager.gpu_allocator.drop_coinf(coinf.coinf_id)
+        #         self.block_manager.cpu_allocator.drop_coinf(coinf.coinf_id)
+        #     print(f"Drop Coinf: {finished_coinf}")
+        #     # print(f"GPU: {len(self.block_manager.gpu_allocator.cached_blocks) + self.block_manager.gpu_allocator.evictor.num_blocks}, "
+        #     #       f"CPU: {len(self.block_manager.cpu_allocator.cached_blocks) + self.block_manager.cpu_allocator.evictor.num_blocks}, ")
+        # self.last_running_coinf = self.cur_running_coinf
+        # # if self.cur_running_coinf:
+        # #     print(f"GPU: {len(self.block_manager.gpu_allocator.cached_blocks) + self.block_manager.gpu_allocator.evictor.num_blocks}, "
+        # #           f"CPU: {len(self.block_manager.cpu_allocator.cached_blocks) + self.block_manager.cpu_allocator.evictor.num_blocks}, ")
 
         # split coinference to running_queue and waiting_queue
         split_outputs = self.split_seq_groups(self.coinferences_queue)
@@ -415,21 +435,42 @@ class CoInferenceScheduler:
             #     f"WaitingQueue: {[i.lora_int_id for i in lora_preference_[:10]]}, "
             # )
 
+        # for coinf in self.cur_running_coinf:
+        #     if coinf.prefetched:
+        #         coinf.waiting_using_time.append(time.time() - coinf.prefetch_time)
+        #         print(f"wait using for {np.average(coinf.waiting_using_time):.2f}s")
+        #     coinf.prefetched = False
+        #     coinf.prefetch_time = 1 << 32
+
         # get cache preference to evict or prefetch
         if self.cache_config.enable_prefix_caching and self.cache_config.cache_policy in ["Hermes", "EPWQ"]:
             # set priority for eviction
             priority = [
                 coinf.coinf_id for coinf in self.coinferences_queue
-                if self.coinf_filter(coinf, self.cache_config.cache_policy, 0.1, 0.9, 1, 1)
+                if self.coinf_filter(coinf, self.cache_config.cache_policy,
+                                     self.cache_config.prefetch_confidence, 1, 1, 1)
             ]
             self.block_manager.gpu_allocator.evictor.set_priority(priority)
             self.block_manager.cpu_allocator.evictor.set_priority(priority)
             self.block_manager.disk_allocator.evictor.set_priority(priority)
             # do prefetch
+            gpu_block = self.block_manager.gpu_allocator.get_num_free_blocks()
+            used_gpu_blocks = 0
+            # print(priority)
+            for i in priority:
+                if used_gpu_blocks + len(self.block_manager.gpu_allocator.may_prefetch(i)) > gpu_block:
+                    break
+                self.block_manager.gpu_allocator.prefetch_coinf(i)
+                if not self.cur_running_coinf:
+                    self.coinferences_dict[i].prefetched = True
+                    self.coinferences_dict[i].prefetch_time = min(self.coinferences_dict[i].prefetch_time, time.time())
+                    # print(f"confidence: {self.cache_config.prefetch_confidence}")
+                    # print(f"prefetching {i}")
+                used_gpu_blocks += self.block_manager.gpu_allocator.evictor.num_blocks_of(i)
             cpu_blocks = self.block_manager.num_total_cpu_blocks * 0.30
             used_cpu_blocks = 0
             for i in priority:
-                if used_cpu_blocks >= cpu_blocks:
+                if used_cpu_blocks + len(self.block_manager.cpu_allocator.may_prefetch(i)) > cpu_blocks:
                     break
                 self.block_manager.cpu_allocator.prefetch_coinf(i)  # try prefetch from disk to cpu
                 used_cpu_blocks += self.block_manager.cpu_allocator.evictor.num_blocks_of(i)
@@ -467,6 +508,7 @@ class CoInferenceScheduler:
             preempted=len(split_outputs.swapout_queue),
             advised_lora=advised_lora,
         )
+        self.policy.update_service(schedule_outputs, self.coinferences_dict)
         return schedule_outputs, scheduling_time
 
     def admission_control(self, seq_group, curr_loras, logicalbudget,

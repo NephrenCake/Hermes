@@ -303,6 +303,10 @@ class CoInferCachedBlockAllocator(BlockAllocatorBase):
         self.nr_access = 0
         self.nr_miss = 0
 
+        self.nr_prefetch = 0
+        self.nr_prefetch_used = 0
+        self.nr_prefetch_wasted = 0
+
     def export_statistics(self) -> Tuple[int, int, int]:
         """
         Returns:
@@ -336,6 +340,8 @@ class CoInferCachedBlockAllocator(BlockAllocatorBase):
             b = self.allocate(block_hash, num_hashed_tokens)
             b.computed = True
             self.free(b)
+            b.prefetched = True
+            self.nr_prefetch += 1
         # if blocks_to_prefetch:
         #     logger.info(f"[KVC Debug] > [{self.device}<-{self.next_level_cache.device}] "
         #                 f"Prefetch {len(blocks_to_prefetch)} = "

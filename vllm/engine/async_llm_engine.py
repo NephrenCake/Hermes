@@ -18,7 +18,7 @@ from vllm.lora.request import LoRARequest
 from vllm.outputs import EmbeddingRequestOutput, RequestOutput
 from vllm.pooling_params import PoolingParams
 from vllm.sampling_params import SamplingParams
-from vllm.sequence import ExecuteModelRequest, SamplerOutput
+from vllm.sequence import ExecuteModelRequest, SamplerOutput, SequenceGroupMetadata
 from vllm.usage.usage_lib import UsageContext
 
 logger = init_logger(__name__)
@@ -225,6 +225,7 @@ class _AsyncLLMEngine(LLMEngine):
         """
         inter_step_time = 0 if self.timer is None else time.time() - self.timer
         self.timer = time.time()
+        start_schedule_time = self.timer
 
         seq_group_metadata_list, scheduler_outputs, scheduling_time = self.scheduler.schedule()
 
@@ -261,6 +262,15 @@ class _AsyncLLMEngine(LLMEngine):
         self.timer = time.time()
 
         # Log stats.
+        for seq_group_metadata in seq_group_metadata_list:
+            seq_group_metadata: SequenceGroupMetadata
+            owned_blocks = set()
+            for blocks in seq_group_metadata.block_tables.values():
+                owned_blocks.update(blocks)
+            blocks_num = len(owned_blocks)
+            seq_group_metadata.request_id
+            # print(f"request_id: {seq_group_metadata.request_id}, blocks_num: {blocks_num}")
+
         runtime_inspect = {
             "inter_step_time": inter_step_time * 1000,
             "schedule_time": scheduling_time * 1000,
@@ -268,6 +278,9 @@ class _AsyncLLMEngine(LLMEngine):
             "swap_time": swap_time * 1000,
             "execute_time": execute_time * 1000,
             "cur_step_time": cur_step_time * 1000,
+            # "kv_small": cur_step_time * 1000,
+            # "kv_medium": cur_step_time * 1000,
+            # "kv_large": cur_step_time * 1000,
         }
         self.do_log_stats(scheduler_outputs, output, runtime_inspect)
 
@@ -281,7 +294,7 @@ class _AsyncLLMEngine(LLMEngine):
 
         is_prefill = scheduler_outputs.num_prefill_groups > 0
         num_tokens = scheduler_outputs.num_batched_tokens
-        self.scheduler.update_queue_time(scheduler_outputs.scheduled_seq_groups, cur_step_time, is_prefill)
+        self.scheduler.update_queue_time(scheduler_outputs.scheduled_seq_groups, cur_step_time, is_prefill, start_schedule_time)
         if self.scheduler_config.coinference_scheduler:
             self.scheduler.record_step_time(num_tokens, cur_step_time * 1000, is_prefill)
         # logger.info(

@@ -71,6 +71,8 @@ class PhysicalTokenBlock:
 
         self.computed = False
 
+        self.prefetched = False
+
     def __repr__(self) -> str:
         return (f'PhysicalTokenBlock(device={self.device}, '
                 f'block_number={self.block_number}, '
