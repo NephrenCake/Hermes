@@ -503,6 +503,52 @@ class Phi3SuScaledRotaryEmbedding(nn.Module):
         return query.flatten(-2), key.flatten(-2)
 
 
+class Llama3RotaryEmbedding(RotaryEmbedding):
+
+    def __init__(
+        self,
+        head_size: int,
+        rotary_dim: int,
+        max_position_embeddings: int,
+        base: int,
+        is_neox_style: bool,
+        dtype: torch.dtype,
+        scaling_factor: float,
+        low_freq_factor: float,
+        high_freq_factor: float,
+        orig_max_position: int,
+    ) -> None:
+        self.scaling_factor = scaling_factor
+        self.low_freq_factor = low_freq_factor
+        self.high_freq_factor = high_freq_factor
+        self.orig_max_position = orig_max_position
+        super().__init__(head_size, rotary_dim, max_position_embeddings, base,
+                         is_neox_style, dtype)
+
+    def _compute_inv_freq(self, base: Union[int, float]) -> torch.Tensor:
+        inv_freqs = super()._compute_inv_freq(base)
+        low_freq_wavelen = self.orig_max_position / self.low_freq_factor
+        high_freq_wavelen = self.orig_max_position / self.high_freq_factor
+
+        wave_len = 2 * math.pi / inv_freqs
+        if self.low_freq_factor != self.high_freq_factor:
+            smooth = (self.orig_max_position / wave_len - self.low_freq_factor
+                      ) / (self.high_freq_factor - self.low_freq_factor)
+        else:
+            smooth = 0
+        new_freqs = torch.where(
+            wave_len < high_freq_wavelen,
+            inv_freqs,
+            torch.where(
+                wave_len > low_freq_wavelen,
+                inv_freqs / self.scaling_factor,
+                (1 - smooth) * inv_freqs / self.scaling_factor +
+                smooth * inv_freqs,
+            ),
+        )
+        return new_freqs
+
+
 _ROPE_DICT: Dict[Tuple, RotaryEmbedding] = {}
 
 
@@ -514,6 +560,7 @@ def get_rope(
     is_neox_style: bool = True,
     rope_scaling: Optional[Dict[str, Any]] = None,
     dtype: Optional[torch.dtype] = None,
+    partial_rotary_factor: float = 1.0,
 ) -> RotaryEmbedding:
     if dtype is None:
         dtype = torch.get_default_dtype()
@@ -526,27 +573,66 @@ def get_rope(
         rope_scaling_args = tuple(rope_scaling_tuple.items())
     else:
         rope_scaling_args = None
+    if partial_rotary_factor < 1.0:
+        rotary_dim = int(rotary_dim * partial_rotary_factor)
     key = (head_size, rotary_dim, max_position, base, is_neox_style,
            rope_scaling_args, dtype)
     if key in _ROPE_DICT:
         return _ROPE_DICT[key]
+
     if rope_scaling is None:
         rotary_emb = RotaryEmbedding(head_size, rotary_dim, max_position, base,
                                      is_neox_style, dtype)
     else:
-        scaling_type = rope_scaling["type"]
-        if scaling_type != "su":
+        scaling_type = rope_scaling["rope_type"]
+
+        if scaling_type == "llama3":
             scaling_factor = rope_scaling["factor"]
-        if scaling_type == "linear":
+            low_freq_factor = rope_scaling["low_freq_factor"]
+            high_freq_factor = rope_scaling["high_freq_factor"]
+            original_max_position = rope_scaling[
+                "original_max_position_embeddings"]
+            rotary_emb = Llama3RotaryEmbedding(head_size, rotary_dim,
+                                               max_position, base,
+                                               is_neox_style, dtype,
+                                               scaling_factor, low_freq_factor,
+                                               high_freq_factor,
+                                               original_max_position)
+        elif scaling_type == "default":
+            if "mrope_section" in rope_scaling:
+                # rotary_emb = MRotaryEmbedding(
+                #     head_size,
+                #     rotary_dim,
+                #     max_position,
+                #     base,
+                #     is_neox_style,
+                #     dtype,
+                #     mrope_section=rope_scaling["mrope_section"],
+                # )
+                raise NotImplementedError(
+                    "MRotaryEmbedding is not supported in this version.")
+            else:
+                rotary_emb = RotaryEmbedding(
+                    head_size,
+                    rotary_dim,
+                    max_position,
+                    base,
+                    is_neox_style,
+                    dtype,
+                )
+        elif scaling_type == "linear":
+            scaling_factor = rope_scaling["factor"]
             rotary_emb = LinearScalingRotaryEmbedding(head_size, rotary_dim,
                                                       max_position, base,
                                                       is_neox_style,
                                                       scaling_factor, dtype)
         elif scaling_type == "dynamic":
+            scaling_factor = rope_scaling["factor"]
             rotary_emb = DynamicNTKScalingRotaryEmbedding(
                 head_size, rotary_dim, max_position, base, is_neox_style,
                 scaling_factor, dtype)
         elif scaling_type == "yarn":
+            scaling_factor = rope_scaling["factor"]
             original_max_position = rope_scaling[
                 "original_max_position_embeddings"]
             extra_kwargs = {
@@ -560,20 +646,34 @@ def get_rope(
                                                     base, is_neox_style,
                                                     scaling_factor, dtype,
                                                     **extra_kwargs)
-        elif scaling_type == "su":
-            short_factor = rope_scaling["short_factor"]
-            long_factor = rope_scaling["long_factor"]
-            original_max_position = rope_scaling[
-                "original_max_position_embeddings"]
-            extra_kwargs = {
-                k: v
-                for k, v in rope_scaling.items()
-                if k in ("short_mscale", "long_mscale")
-            }
-            rotary_emb = Phi3SuScaledRotaryEmbedding(
-                head_size, rotary_dim, max_position, original_max_position,
-                base, is_neox_style, dtype, short_factor, long_factor,
-                **extra_kwargs)
+        # elif scaling_type == "deepseek_yarn":
+        #     scaling_factor = rope_scaling["factor"]
+        #     original_max_position = rope_scaling[
+        #         "original_max_position_embeddings"]
+        #     # assert max_position == original_max_position * scaling_factor
+        #     extra_kwargs = {
+        #         k: v
+        #         for k, v in rope_scaling.items()
+        #         if k in ("extrapolation_factor", "attn_factor", "beta_fast",
+        #                  "beta_slow", "mscale", "mscale_all_dim")
+        #     }
+        #     rotary_emb = DeepseekScalingRotaryEmbedding(
+        #         head_size, rotary_dim, original_max_position, base,
+        #         is_neox_style, scaling_factor, dtype, **extra_kwargs)
+        # elif scaling_type == "longrope":
+        #     short_factor = rope_scaling["short_factor"]
+        #     long_factor = rope_scaling["long_factor"]
+        #     original_max_position = rope_scaling[
+        #         "original_max_position_embeddings"]
+        #     extra_kwargs = {
+        #         k: v
+        #         for k, v in rope_scaling.items()
+        #         if k in ("short_mscale", "long_mscale")
+        #     }
+        #     rotary_emb = Phi3LongRoPEScaledRotaryEmbedding(
+        #         head_size, rotary_dim, max_position, original_max_position,
+        #         base, is_neox_style, dtype, short_factor, long_factor,
+        #         **extra_kwargs)
         else:
             raise ValueError(f"Unknown RoPE scaling type {scaling_type}")
     _ROPE_DICT[key] = rotary_emb

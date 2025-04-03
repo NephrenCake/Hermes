@@ -4,6 +4,9 @@ from functools import partial
 from typing import (AsyncIterator, Callable, Dict, Iterable, List, Optional,
                     Set, Tuple, Type, Union)
 
+from aiozmq.rpc.rpc import RPCClient
+import aiozmq.rpc
+
 from transformers import PreTrainedTokenizer
 
 import vllm.envs as envs
@@ -200,6 +203,8 @@ class RequestTracker:
 class _AsyncLLMEngine(LLMEngine):
     """Extension of LLMEngine to add async methods."""
 
+    rpc_client: RPCClient = None
+
     async def step_async(
             self) -> List[Union[RequestOutput, EmbeddingRequestOutput]]:
         """Performs one decoding iteration and returns newly generated results.
@@ -211,6 +216,29 @@ class _AsyncLLMEngine(LLMEngine):
         and updates the scheduler with the model outputs. Finally, it decodes
         the sequences and returns the newly generated results.
         """
+        now = time.time()
+        if self.rpc_client is None:
+            self.rpc_client = await aiozmq.rpc.connect_rpc(
+                connect=f"tcp://a40-01:4242"
+            )
+        request_info = {
+            "request_id": {
+                "input_len": 10,
+                "output_len": 20,
+                "is_running": True,
+                "is_completed": False,
+            },
+        }
+        engine_info = {
+            "used_kv": 100,
+            "total_kv": 200,
+        }
+        response = await self.rpc_client.call.sync_info(
+            request_info=request_info,
+            engine_info=engine_info
+        )
+        print(f"test_rpc_call_async: RPC response: {response}, complete time: {(time.time() - now) * 1000:.2f} ms")
+
         seq_group_metadata_list, scheduler_outputs = self.scheduler.schedule()
 
         if not scheduler_outputs.is_empty():
@@ -550,11 +578,11 @@ class AsyncLLMEngine:
                 if shortened_token_ids is not None:
                     shortened_token_ids = shortened_token_ids[:max_log_len]
 
-            logger.info(
-                "Received request %s: prompt: %r, "
-                "params: %s, prompt_token_ids: %s, "
-                "lora_request: %s.", request_id, shortened_prompt, params,
-                shortened_token_ids, lora_request)
+            # logger.info(
+            #     "Received request %s: prompt: %r, "
+            #     "params: %s, prompt_token_ids: %s, "
+            #     "lora_request: %s.", request_id, shortened_prompt, params,
+            #     shortened_token_ids, lora_request)
 
         if not self.is_running:
             if self.start_engine_loop:
