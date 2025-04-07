@@ -419,61 +419,62 @@ class CoInferenceScheduler:
 
         # get lora preference
         advised_lora = set()
-        if self.lora_enabled and self.scheduler_config.lora_policy in ["Hermes", "EPWQ"]:
-            lora_preference, advised_lora = self.get_lora_preference(schedule_prefill_outputs,
-                                                                     schedule_decode_outputs,
-                                                                     split_outputs,
-                                                                     mode=self.scheduler_config.lora_policy)
-            # lora_preference_, advised_lora_ = self.get_lora_preference(schedule_prefill_outputs,
-            #                                                            schedule_decode_outputs,
-            #                                                            split_outputs,
-            #                                                            mode="EPWQ")
-            # logger.info(
-            #     f"[LoRA Debug] > "
-            #     f"Hermes: {[i.lora_int_id for i in lora_preference[:10]]}, "
-            #     # f"advised_lora: {[i.lora_int_id for i in advised_lora]}, "
-            #     f"WaitingQueue: {[i.lora_int_id for i in lora_preference_[:10]]}, "
-            # )
+        if self.scheduling_policy != "Request-Level-FIFO":
+            if self.lora_enabled and self.scheduler_config.lora_policy in ["Hermes", "EPWQ"]:
+                lora_preference, advised_lora = self.get_lora_preference(schedule_prefill_outputs,
+                                                                         schedule_decode_outputs,
+                                                                         split_outputs,
+                                                                         mode=self.scheduler_config.lora_policy)
+                # lora_preference_, advised_lora_ = self.get_lora_preference(schedule_prefill_outputs,
+                #                                                            schedule_decode_outputs,
+                #                                                            split_outputs,
+                #                                                            mode="EPWQ")
+                # logger.info(
+                #     f"[LoRA Debug] > "
+                #     f"Hermes: {[i.lora_int_id for i in lora_preference[:10]]}, "
+                #     # f"advised_lora: {[i.lora_int_id for i in advised_lora]}, "
+                #     f"WaitingQueue: {[i.lora_int_id for i in lora_preference_[:10]]}, "
+                # )
 
-        # for coinf in self.cur_running_coinf:
-        #     if coinf.prefetched:
-        #         coinf.waiting_using_time.append(time.time() - coinf.prefetch_time)
-        #         print(f"wait using for {np.average(coinf.waiting_using_time):.2f}s")
-        #     coinf.prefetched = False
-        #     coinf.prefetch_time = 1 << 32
+            # for coinf in self.cur_running_coinf:
+            #     if coinf.prefetched:
+            #         coinf.waiting_using_time.append(time.time() - coinf.prefetch_time)
+            #         print(f"wait using for {np.average(coinf.waiting_using_time):.2f}s")
+            #     coinf.prefetched = False
+            #     coinf.prefetch_time = 1 << 32
 
-        # get cache preference to evict or prefetch
-        if self.cache_config.enable_prefix_caching and self.cache_config.cache_policy in ["Hermes", "EPWQ"]:
-            # set priority for eviction
-            priority = [
-                coinf.coinf_id for coinf in self.coinferences_queue
-                if self.coinf_filter(coinf, self.cache_config.cache_policy,
-                                     self.cache_config.prefetch_confidence, 1, 1, 1)
-            ]
-            self.block_manager.gpu_allocator.evictor.set_priority(priority)
-            self.block_manager.cpu_allocator.evictor.set_priority(priority)
-            self.block_manager.disk_allocator.evictor.set_priority(priority)
-            # do prefetch
-            gpu_block = self.block_manager.gpu_allocator.get_num_free_blocks()
-            used_gpu_blocks = 0
-            # print(priority)
-            for i in priority:
-                if used_gpu_blocks + len(self.block_manager.gpu_allocator.may_prefetch(i)) > gpu_block:
-                    break
-                self.block_manager.gpu_allocator.prefetch_coinf(i)
-                if not self.cur_running_coinf:
-                    self.coinferences_dict[i].prefetched = True
-                    self.coinferences_dict[i].prefetch_time = min(self.coinferences_dict[i].prefetch_time, time.time())
-                    # print(f"confidence: {self.cache_config.prefetch_confidence}")
-                    # print(f"prefetching {i}")
-                used_gpu_blocks += self.block_manager.gpu_allocator.evictor.num_blocks_of(i)
-            cpu_blocks = self.block_manager.num_total_cpu_blocks * 0.30
-            used_cpu_blocks = 0
-            for i in priority:
-                if used_cpu_blocks + len(self.block_manager.cpu_allocator.may_prefetch(i)) > cpu_blocks:
-                    break
-                self.block_manager.cpu_allocator.prefetch_coinf(i)  # try prefetch from disk to cpu
-                used_cpu_blocks += self.block_manager.cpu_allocator.evictor.num_blocks_of(i)
+            # get cache preference to evict or prefetch
+            if self.cache_config.enable_prefix_caching and self.cache_config.cache_policy in ["Hermes", "EPWQ"]:
+                # set priority for eviction
+                priority = [
+                    coinf.coinf_id for coinf in self.coinferences_queue
+                    if self.coinf_filter(coinf, self.cache_config.cache_policy,
+                                         self.cache_config.prefetch_confidence, 1, 1, 1)
+                ]
+                self.block_manager.gpu_allocator.evictor.set_priority(priority)
+                self.block_manager.cpu_allocator.evictor.set_priority(priority)
+                self.block_manager.disk_allocator.evictor.set_priority(priority)
+                # do prefetch
+                gpu_block = self.block_manager.gpu_allocator.get_num_free_blocks()
+                used_gpu_blocks = 0
+                # print(priority)
+                for i in priority:
+                    if used_gpu_blocks + len(self.block_manager.gpu_allocator.may_prefetch(i)) > gpu_block:
+                        break
+                    self.block_manager.gpu_allocator.prefetch_coinf(i)
+                    if not self.cur_running_coinf:
+                        self.coinferences_dict[i].prefetched = True
+                        self.coinferences_dict[i].prefetch_time = min(self.coinferences_dict[i].prefetch_time, time.time())
+                        # print(f"confidence: {self.cache_config.prefetch_confidence}")
+                        # print(f"prefetching {i}")
+                    used_gpu_blocks += self.block_manager.gpu_allocator.evictor.num_blocks_of(i)
+                cpu_blocks = self.block_manager.num_total_cpu_blocks * 0.30
+                used_cpu_blocks = 0
+                for i in priority:
+                    if used_cpu_blocks + len(self.block_manager.cpu_allocator.may_prefetch(i)) > cpu_blocks:
+                        break
+                    self.block_manager.cpu_allocator.prefetch_coinf(i)  # try prefetch from disk to cpu
+                    used_cpu_blocks += self.block_manager.cpu_allocator.evictor.num_blocks_of(i)
         self.block_manager.clean_to_watermark(0.5)
 
         # update num of seq_groups in different status
