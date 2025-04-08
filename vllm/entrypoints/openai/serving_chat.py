@@ -158,7 +158,12 @@ class OpenAIServingChat(OpenAIServing):
             logger.error("Error in applying chat template from request: %s", e)
             return self.create_error_response(str(e))
 
-        request_id = f"cmpl-{random_uuid()}"
+        if request.request_id:
+            request_id = request.request_id
+        else:
+            logger.warning(f"should not happened in hermes")
+            request_id = f"cmpl-{random_uuid()}"
+        priority = request.priority
         try:
             # Tokenize/detokenize depending on prompt format (string/token list)
             prompt_ids, prompt_text = self._validate_prompt_and_tokenize(
@@ -188,6 +193,7 @@ class OpenAIServingChat(OpenAIServing):
             sampling_params,
             request_id,
             lora_request,
+            priority,
         )
         # Streaming response
         if request.stream:

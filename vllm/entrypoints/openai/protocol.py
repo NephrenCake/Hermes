@@ -191,6 +191,12 @@ class ChatCompletionRequest(OpenAIBaseModel):
 
     # doc: end-chat-completion-extra-params
 
+    # doc: begin-hermes-extra-params
+    request_id: Optional[str] = None
+    priority: Optional[float] = None
+    # doc: end-hermes-extra-params
+
+
     def to_sampling_params(self) -> SamplingParams:
         # We now allow logprobs being true without top_logrobs.
 

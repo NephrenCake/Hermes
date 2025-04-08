@@ -18,12 +18,12 @@ class Policy:
         now: float,
         seq_groups: Deque[SequenceGroup],
     ) -> Deque[SequenceGroup]:
-        return deque(
-            sorted(
-                seq_groups,
-                key=lambda seq_group: self.get_priority(now, seq_group),
-                reverse=True,
-            ))
+        res = deque(sorted(
+            seq_groups,
+            key=lambda seq_group: self.get_priority(now, seq_group)
+        ))
+        # print([(i.request_id, i.priority) for i in res])
+        return res
 
 
 class FCFS(Policy):
@@ -33,12 +33,25 @@ class FCFS(Policy):
         now: float,
         seq_group: SequenceGroup,
     ) -> float:
-        return now - seq_group.metrics.arrival_time
+        return seq_group.metrics.arrival_time
+
+
+class GlobalPolicy(Policy):
+
+    def get_priority(
+        self,
+        now: float,
+        seq_group: SequenceGroup,
+    ) -> float:
+        return seq_group.priority
 
 
 class PolicyFactory:
 
-    _POLICY_REGISTRY = {'fcfs': FCFS}
+    _POLICY_REGISTRY = {
+        'fcfs': FCFS,
+        'global': GlobalPolicy,
+    }
 
     @classmethod
     def get_policy(cls, policy_name: str, **kwargs) -> Policy:

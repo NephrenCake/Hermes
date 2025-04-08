@@ -4,7 +4,6 @@ from functools import partial
 from typing import (AsyncIterator, Callable, Dict, Iterable, List, Optional,
                     Set, Tuple, Type, Union)
 
-from aiozmq.rpc.rpc import RPCClient
 import aiozmq.rpc
 
 from transformers import PreTrainedTokenizer
@@ -203,8 +202,6 @@ class RequestTracker:
 class _AsyncLLMEngine(LLMEngine):
     """Extension of LLMEngine to add async methods."""
 
-    rpc_client: RPCClient = None
-
     async def step_async(
             self) -> List[Union[RequestOutput, EmbeddingRequestOutput]]:
         """Performs one decoding iteration and returns newly generated results.
@@ -217,27 +214,16 @@ class _AsyncLLMEngine(LLMEngine):
         the sequences and returns the newly generated results.
         """
         now = time.time()
-        if self.rpc_client is None:
-            self.rpc_client = await aiozmq.rpc.connect_rpc(
-                connect=f"tcp://a40-01:4242"
-            )
-        request_info = {
-            "request_id": {
-                "input_len": 10,
-                "output_len": 20,
-                "is_running": True,
-                "is_completed": False,
-            },
-        }
-        engine_info = {
-            "used_kv": 100,
-            "total_kv": 200,
-        }
-        response = await self.rpc_client.call.sync_info(
-            request_info=request_info,
-            engine_info=engine_info
+
+        from CTaskBench.platform.llm.rpc import RPCClient
+        client = await RPCClient.run()
+        response = await client.sync_info(
+            request_info=self.scheduler.get_request_info(),
+            engine_info={"block_size": self.cache_config.block_size,
+                         "num_gpu_blocks": self.cache_config.num_gpu_blocks,}
         )
-        print(f"test_rpc_call_async: RPC response: {response}, complete time: {(time.time() - now) * 1000:.2f} ms")
+        self.scheduler.update_request_priority(response)
+        logger.info(f"sync_info took {(time.time() - now) * 1000:.2f} ms")
 
         seq_group_metadata_list, scheduler_outputs = self.scheduler.schedule()
 
@@ -304,6 +290,7 @@ class _AsyncLLMEngine(LLMEngine):
         params: Union[SamplingParams, PoolingParams],
         arrival_time: Optional[float] = None,
         lora_request: Optional[LoRARequest] = None,
+        priority: float = 0,
     ) -> None:
         if lora_request is not None and not self.lora_config:
             raise ValueError(f"Got lora_request {lora_request} but LoRA is "
@@ -320,6 +307,7 @@ class _AsyncLLMEngine(LLMEngine):
             params=params,
             arrival_time=arrival_time,
             lora_request=lora_request,
+            priority=priority,
         )
 
     async def check_health_async(self) -> None:
@@ -553,7 +541,7 @@ class AsyncLLMEngine:
                     "Engine iteration timed out. This should never happen!")
                 self.set_errored(exc)
                 raise
-            await asyncio.sleep(0)
+            await asyncio.sleep(0.001)
 
     async def add_request(
         self,
@@ -562,6 +550,7 @@ class AsyncLLMEngine:
         params: Union[SamplingParams, PoolingParams],
         arrival_time: Optional[float] = None,
         lora_request: Optional[LoRARequest] = None,
+        priority: float = 0,
     ) -> AsyncStream:
         if self.log_requests:
             if isinstance(inputs, str):
@@ -615,6 +604,7 @@ class AsyncLLMEngine:
             params=params,
             arrival_time=arrival_time,
             lora_request=lora_request,
+            priority=priority,
         )
 
         return stream
@@ -625,6 +615,7 @@ class AsyncLLMEngine:
         sampling_params: SamplingParams,
         request_id: str,
         lora_request: Optional[LoRARequest] = None,
+        priority: float = 0
     ) -> AsyncIterator[RequestOutput]:
         """Generate outputs for a request.
 
@@ -692,6 +683,7 @@ class AsyncLLMEngine:
                 inputs,
                 sampling_params,
                 lora_request=lora_request,
+                priority=priority,
         ):
             yield LLMEngine.validate_output(output, RequestOutput)
 
@@ -776,6 +768,7 @@ class AsyncLLMEngine:
         params: Union[SamplingParams, PoolingParams],
         *,
         lora_request: Optional[LoRARequest] = None,
+        priority: float = 0,
     ) -> AsyncIterator[Union[RequestOutput, EmbeddingRequestOutput]]:
         """Common logic to process requests with SamplingParams or
         PoolingParams."""
@@ -787,6 +780,7 @@ class AsyncLLMEngine:
             params,
             arrival_time=arrival_time,
             lora_request=lora_request,
+            priority=priority,
         )
 
         try:

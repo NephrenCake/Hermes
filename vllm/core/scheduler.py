@@ -291,6 +291,8 @@ class Scheduler:
         # Contain decode requests that are swapped out.
         self.swapped: Deque[SequenceGroup] = deque()
 
+        self.finished: Deque[SequenceGroup] = deque()
+
         # Time at previous scheduling step
         self.prev_time = 0.0
         # Did we schedule a prompt at previous step?
@@ -305,6 +307,44 @@ class Scheduler:
                                        if self.enable_artificial_preemption
                                        else 0)
         self.num_cumulative_preemption: int = 0
+
+    def get_request_info(self):
+        request_info = {}
+        for sg in self.waiting:
+            request_info[sg.request_id] = {
+                "input_len": len(sg.prompt_token_ids),
+                "output_len": sum(seq.get_output_len() for seq in sg.seqs_dict.values()),
+                "state": "waiting"
+            }
+        for sg in self.running:
+            request_info[sg.request_id] = {
+                "input_len": len(sg.prompt_token_ids),
+                "output_len": sum(seq.get_output_len() for seq in sg.seqs_dict.values()),
+                "state": "running"
+            }
+        for sg in self.swapped:
+            request_info[sg.request_id] = {
+                "input_len": len(sg.prompt_token_ids),
+                "output_len": sum(seq.get_output_len() for seq in sg.seqs_dict.values()),
+                "state": "swapped"
+            }
+        for sg in self.finished:
+            request_info[sg.request_id] = {
+                "input_len": len(sg.prompt_token_ids),
+                "output_len": sum(seq.get_output_len() for seq in sg.seqs_dict.values()),
+                "state": "finished"
+            }
+        self.finished.clear()
+        return request_info
+
+    def update_request_priority(self, priorities: Dict[str, float]):
+        for state_queue in [self.waiting, self.running, self.swapped]:
+            for seq_group in state_queue:
+                if seq_group.request_id not in priorities:
+                    logger.warning(f"{seq_group.request_id} not in {priorities.keys()}")
+                    continue
+                seq_group.priority = priorities[seq_group.request_id]
+                logger.info(f"Update request {seq_group.request_id} priority to {seq_group.priority}")
 
     @property
     def lora_enabled(self) -> bool:
@@ -346,6 +386,7 @@ class Scheduler:
                     # Appending aborted group into pending list.
                     aborted_groups.append(seq_group)
                     request_ids.remove(seq_group.request_id)
+            self.finished.extend(aborted_groups)
             for aborted_group in aborted_groups:
                 # Remove the sequence group from the state queue.
                 state_queue.remove(aborted_group)
@@ -759,7 +800,7 @@ class Scheduler:
             remaining_waiting, prefills = self._schedule_prefills(
                 self.waiting, budget, curr_loras, enable_chunking=False)
 
-        fcfs_policy = PolicyFactory.get_policy(policy_name="fcfs")
+        fcfs_policy = PolicyFactory.get_policy(policy_name="global")
         # Don't schedule decodes if prefills are scheduled.
         # NOTE: If `_schedule_prefills` doesn't enable chunking, self.running
         # only contains decode requests, not chunked prefills.
@@ -1020,6 +1061,8 @@ class Scheduler:
         self.block_manager.free(seq)
 
     def free_finished_seq_groups(self) -> None:
+        self.finished.extend([seq_group for seq_group in self.running
+                              if seq_group.is_finished()])
         self.running = deque(seq_group for seq_group in self.running
                              if not seq_group.is_finished())
 
