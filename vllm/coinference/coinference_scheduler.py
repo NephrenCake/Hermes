@@ -822,7 +822,7 @@ class CoInferenceScheduler:
                 }
                 coinf.stat.cnt -= 1
                 if not coinf.stat.cnt:
-                    logger.info(f"{json.dumps(statistic)}")
+                    logger.info(f"app finished:{json.dumps(statistic)}")
                 self.block_manager.destroy_cache(coinf_id)
 
     def update_queue_time(self,
