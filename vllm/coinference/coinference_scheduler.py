@@ -116,39 +116,39 @@ class TokenBudget:
         return self._num_batched_tokens
 
 
-# class TimeRecorder:
-#     def __init__(
-#             self,
-#             record_window_size: int,
-#             default_time_per_token: float = 0.1,
-#             ema_alpha: float = 0.7,
-#             token_type: str = "prefill"
-#     ) -> None:
-#         ''' ms '''
-#         self.time_per_token = default_time_per_token
-#         self.time_recorder = []
-#         self.num_tokens_recorder = []
-#         self.record_window_size = record_window_size
-#         self.ema_alpha = ema_alpha
-#         self.token_type = token_type
-#
-#     def update(
-#             self,
-#             num_tokens: int,
-#             time: float
-#     ):
-#         self.time_recorder.append(time)
-#         self.num_tokens_recorder.append(num_tokens)
-#         if len(self.num_tokens_recorder) >= self.record_window_size:
-#             time_per_token = sum(self.time_recorder) / sum(self.num_tokens_recorder)
-#             self.time_recorder = []
-#             self.num_tokens_recorder = []
-#             self.time_per_token = self.time_per_token * self.ema_alpha + time_per_token * (1 - self.ema_alpha)
-#
-#         # with open(os.path.join(os.path.dirname(__file__), f"{self.token_type}.json"), "w") as f:
-#         #     json.dump({
-#         #         "time_per_token": self.time_per_token,
-#         #     }, f)
+class TimeRecorder:
+    def __init__(
+            self,
+            record_window_size: int,
+            default_time_per_token: float = 0.1,
+            ema_alpha: float = 0.9,
+            token_type: str = "prefill"
+    ) -> None:
+        ''' ms '''
+        self.time_per_token = default_time_per_token
+        self.time_recorder = []
+        self.num_tokens_recorder = []
+        self.record_window_size = record_window_size
+        self.ema_alpha = ema_alpha
+        self.token_type = token_type
+
+    def update(
+            self,
+            num_tokens: int,
+            time: float
+    ):
+        self.time_recorder.append(time)
+        self.num_tokens_recorder.append(num_tokens)
+        if len(self.num_tokens_recorder) >= self.record_window_size:
+            time_per_token = sum(self.time_recorder) / sum(self.num_tokens_recorder)
+            self.time_recorder = []
+            self.num_tokens_recorder = []
+            self.time_per_token = self.time_per_token * self.ema_alpha + time_per_token * (1 - self.ema_alpha)
+
+        # with open(os.path.join(os.path.dirname(__file__), f"{self.token_type}.json"), "w") as f:
+        #     json.dump({
+        #         "time_per_token": self.time_per_token,
+        #     }, f)
 
 
 class CoInferenceScheduler:
@@ -189,8 +189,8 @@ class CoInferenceScheduler:
         if self.bayes_prediction:
             logger.info(f"[Bayesian Debug] > Enable Bayesian Prediction")
 
-        # self.prefill_recorder = TimeRecorder(record_window_size=100, default_time_per_token=0.33, token_type="prefill")
-        # self.decode_recorder = TimeRecorder(record_window_size=1000, default_time_per_token=3.16, token_type="decode")
+        self.prefill_recorder = TimeRecorder(record_window_size=100, default_time_per_token=0.33, token_type="prefill")
+        self.decode_recorder = TimeRecorder(record_window_size=1000, default_time_per_token=3.16, token_type="decode")
 
         self.used_prefix_block = 0
         self.all_prefill_block = 0
@@ -958,8 +958,8 @@ class CoInferenceScheduler:
             seq.status = SequenceStatus.SWAPPED
 
     def record_step_time(self, num_tokens: int, time: float, is_prefill: bool):
-        # if is_prefill:
-        #     self.prefill_recorder.update(num_tokens, time)
-        # else:
-        #     self.decode_recorder.update(num_tokens, time)
+        if is_prefill:
+            self.prefill_recorder.update(num_tokens, time)
+        else:
+            self.decode_recorder.update(1, time)
         pass
