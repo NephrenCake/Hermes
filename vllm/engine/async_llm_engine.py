@@ -217,13 +217,24 @@ class _AsyncLLMEngine(LLMEngine):
 
         from CTaskBench.platform.llm.rpc import RPCClient
         client = await RPCClient.run()
+        pending_blocks = sum([
+            sum([s.get_prompt_len() for s in sg.seqs_dict.values()])
+            for sg in self.scheduler.waiting + self.scheduler.swapped
+        ]) / self.scheduler.block_manager.block_size
         response = await client.sync_info(
             request_info=self.scheduler.get_request_info(),
-            engine_info={"block_size": self.cache_config.block_size,
-                         "num_gpu_blocks": self.cache_config.num_gpu_blocks,}
+            engine_info={
+                self.scheduler_config.engine_name: {
+                    "free_cpu_blocks": self.scheduler.block_manager.get_num_free_cpu_blocks(),
+                    "free_gpu_blocks": self.scheduler.block_manager.get_num_free_gpu_blocks() - pending_blocks,
+                    "block_size": self.scheduler.block_manager.block_size,
+                    "total_cpu_blocks": self.scheduler.block_manager.num_total_cpu_blocks,
+                    "total_gpu_blocks": self.scheduler.block_manager.num_total_gpu_blocks,
+                }
+            }
         )
         self.scheduler.update_request_priority(response)
-        logger.info(f"sync_info took {(time.time() - now) * 1000:.2f} ms")
+        # logger.info(f"sync_info took {(time.time() - now) * 1000:.2f} ms")
 
         seq_group_metadata_list, scheduler_outputs = self.scheduler.schedule()
 

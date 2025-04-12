@@ -341,10 +341,10 @@ class Scheduler:
         for state_queue in [self.waiting, self.running, self.swapped]:
             for seq_group in state_queue:
                 if seq_group.request_id not in priorities:
-                    logger.warning(f"{seq_group.request_id} not in {priorities.keys()}")
+                    # logger.info(f"{seq_group.request_id} not in {priorities.keys()}")
                     continue
                 seq_group.priority = priorities[seq_group.request_id]
-                logger.info(f"Update request {seq_group.request_id} priority to {seq_group.priority}")
+                # logger.info(f"Update request {seq_group.request_id} priority to {seq_group.priority}")
 
     @property
     def lora_enabled(self) -> bool:

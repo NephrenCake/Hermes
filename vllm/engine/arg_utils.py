@@ -92,6 +92,8 @@ class EngineArgs:
     ngram_prompt_lookup_max: Optional[int] = None
     ngram_prompt_lookup_min: Optional[int] = None
 
+    engine_name: Optional[str] = None
+
     def __post_init__(self):
         if self.tokenizer is None:
             self.tokenizer = self.model
@@ -544,6 +546,12 @@ class EngineArgs:
             "prometheus metrics, if multiple names provided, metrics"
             "tag will take the first one.")
 
+        parser.add_argument(
+            "--engine-name",
+            type=str,
+            default=EngineArgs.engine_name,
+            help="specify the engine name")
+
         return parser
 
     @classmethod
@@ -611,6 +619,7 @@ class EngineArgs:
             delay_factor=self.scheduler_delay_factor,
             enable_chunked_prefill=self.enable_chunked_prefill,
             embedding_mode=model_config.embedding_mode,
+            engine_name=self.engine_name,
         )
         lora_config = LoRAConfig(
             max_lora_rank=self.max_lora_rank,
