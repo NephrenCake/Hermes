@@ -4,7 +4,7 @@ for offline inference.
 
 Requires HuggingFace credentials for access to Llama2.
 """
-import time
+
 from typing import List, Optional, Tuple
 
 from huggingface_hub import snapshot_download
@@ -29,42 +29,20 @@ def create_test_prompts(
          SamplingParams(temperature=0.0,
                         logprobs=1,
                         prompt_logprobs=1,
-                        max_tokens=128),
-            LoRARequest("sql-lora5", 5, lora_path)),
-        (
-            "[user] Write a SQL query to answer the question based on the table schema.\n\n context: CREATE TABLE table_name_74 (icao VARCHAR, airport VARCHAR)\n\n question: Name the ICAO for lilongwe international airport [/user] [assistant]",
-            # noqa: E501
-            SamplingParams(temperature=0.0,
-                           logprobs=1,
-                           prompt_logprobs=1,
-                           max_tokens=128,
-                           stop_token_ids=[32003]),
-            LoRARequest("sql-lora1", 1, lora_path)),
-        (
-            "[user] Write a SQL query to answer the question based on the table schema.\n\n context: CREATE TABLE table_name_11 (nationality VARCHAR, elector VARCHAR)\n\n question: When Anchero Pantaleone was the elector what is under nationality? [/user] [assistant]",
-            # noqa: E501
-            SamplingParams(n=3,
-                           best_of=3,
-                           use_beam_search=True,
-                           temperature=0,
-                           max_tokens=128,
-                           stop_token_ids=[32003]),
-            LoRARequest("sql-lora2", 2, lora_path)),
+                        max_tokens=128), None),
         ("To be or not to be,",
          SamplingParams(temperature=0.8,
                         top_k=5,
                         presence_penalty=0.2,
-                        max_tokens=128),
-            LoRARequest("sql-lora6", 6, lora_path)),
+                        max_tokens=128), None),
         (
-            "[user] Write a SQL query to answer the question based on the table schema.\n\n context: CREATE TABLE table_name_74 (icao VARCHAR, airport VARCHAR)\n\n question: Name the ICAO for lilongwe international airport [/user] [assistant]",
-            # noqa: E501
+            "[user] Write a SQL query to answer the question based on the table schema.\n\n context: CREATE TABLE table_name_74 (icao VARCHAR, airport VARCHAR)\n\n question: Name the ICAO for lilongwe international airport [/user] [assistant]",  # noqa: E501
             SamplingParams(temperature=0.0,
                            logprobs=1,
                            prompt_logprobs=1,
                            max_tokens=128,
                            stop_token_ids=[32003]),
-            LoRARequest("sql-lora3", 3, lora_path)),
+            LoRARequest("sql-lora", 1, lora_path)),
         (
             "[user] Write a SQL query to answer the question based on the table schema.\n\n context: CREATE TABLE table_name_11 (nationality VARCHAR, elector VARCHAR)\n\n question: When Anchero Pantaleone was the elector what is under nationality? [/user] [assistant]",  # noqa: E501
             SamplingParams(n=3,
@@ -73,13 +51,30 @@ def create_test_prompts(
                            temperature=0,
                            max_tokens=128,
                            stop_token_ids=[32003]),
-            LoRARequest("sql-lora4", 4, lora_path)),
+            LoRARequest("sql-lora", 1, lora_path)),
+        (
+            "[user] Write a SQL query to answer the question based on the table schema.\n\n context: CREATE TABLE table_name_74 (icao VARCHAR, airport VARCHAR)\n\n question: Name the ICAO for lilongwe international airport [/user] [assistant]",  # noqa: E501
+            SamplingParams(temperature=0.0,
+                           logprobs=1,
+                           prompt_logprobs=1,
+                           max_tokens=128,
+                           stop_token_ids=[32003]),
+            LoRARequest("sql-lora2", 2, lora_path)),
+        (
+            "[user] Write a SQL query to answer the question based on the table schema.\n\n context: CREATE TABLE table_name_11 (nationality VARCHAR, elector VARCHAR)\n\n question: When Anchero Pantaleone was the elector what is under nationality? [/user] [assistant]",  # noqa: E501
+            SamplingParams(n=3,
+                           best_of=3,
+                           use_beam_search=True,
+                           temperature=0,
+                           max_tokens=128,
+                           stop_token_ids=[32003]),
+            LoRARequest("sql-lora", 1, lora_path)),
     ]
 
 
 def process_requests(engine: LLMEngine,
                      test_prompts: List[Tuple[str, SamplingParams,
-                     Optional[LoRARequest]]]):
+                                              Optional[LoRARequest]]]):
     """Continuously process a list of prompts and handle the outputs."""
     request_id = 0
 
@@ -94,9 +89,9 @@ def process_requests(engine: LLMEngine,
 
         request_outputs: List[RequestOutput] = engine.step()
 
-        # for request_output in request_outputs:
-        #     if request_output.finished:
-        #         print(request_output)
+        for request_output in request_outputs:
+            if request_output.finished:
+                print(request_output)
 
 
 def initialize_engine() -> LLMEngine:
@@ -108,28 +103,21 @@ def initialize_engine() -> LLMEngine:
     #   numbers will cause higher memory usage. If you know that all LoRAs will
     #   use the same rank, it is recommended to set this as low as possible.
     # max_cpu_loras: controls the size of the CPU LoRA cache.
-    engine_args = EngineArgs(
-        model="/state/partition/llama/llama-7b-hf",
-        enable_lora=True,
-        max_loras=2,
-        max_lora_rank=8,
-        max_cpu_loras=6,
-        max_num_seqs=256,
-        coinference_scheduler=True,
-        scheduling_policy="Request-Level-FIFO",
-        gpu_memory_utilization=0.5,
-    )
+    engine_args = EngineArgs(model="meta-llama/Llama-2-7b-hf",
+                             enable_lora=True,
+                             max_loras=1,
+                             max_lora_rank=8,
+                             max_cpu_loras=2,
+                             max_num_seqs=256)
     return LLMEngine.from_engine_args(engine_args)
 
 
 def main():
     """Main function that sets up and runs the prompt processing."""
     engine = initialize_engine()
-    # lora_path = snapshot_download(repo_id="yard1/llama-2-7b-sql-lora-test")
-    test_prompts = create_test_prompts("/state/partition/yfliu/llama-2-7b-sql-lora-test")
-    timer = time.time()
+    lora_path = snapshot_download(repo_id="yard1/llama-2-7b-sql-lora-test")
+    test_prompts = create_test_prompts(lora_path)
     process_requests(engine, test_prompts)
-    print(f"Total time: {time.time() - timer:.2f} seconds")
 
 
 if __name__ == '__main__':
