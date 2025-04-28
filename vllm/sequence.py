@@ -3,7 +3,7 @@ import copy
 import enum
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union, Set
 
 from vllm.block import LogicalTokenBlock
 from vllm.inputs import LLMInputs
@@ -225,6 +225,7 @@ class Sequence:
         eos_token_id: Optional[int] = None,
         lora_request: Optional[LoRARequest] = None,
     ) -> None:
+        self.app_id = "default"
         self.seq_id = seq_id
         self.inputs = inputs
         self.block_size = block_size
@@ -269,7 +270,7 @@ class Sequence:
         return self.output_text[:-buffer_length] if truncate else (
             self.output_text)
 
-    def hash_of_block(self, logical_idx: int) -> int:
+    def hash_of_block(self, logical_idx: int) -> Union[int, Tuple[str, int]]:
         # TODO This can produce incorrect hash when block size > prompt size
 
         # Compute the number of tokens in the sequence
@@ -277,7 +278,7 @@ class Sequence:
         # this in the future.
         num_tokens = self.num_hashed_tokens_of_block(logical_idx)
         hashed_tokens = self.data.get_prefix_token_ids(num_tokens)
-        return hash((hashed_tokens, self.lora_int_id))
+        return self.app_id, hash((hashed_tokens, self.lora_int_id))
 
     def num_hashed_tokens_of_block(self, logical_idx: int):
         return logical_idx * self.block_size + self.block_size
@@ -462,6 +463,9 @@ class SequenceGroup:
         self.encoder_seq = encoder_seq
 
         self.priority = priority
+        self.app_id = "--".join(request_id.split("--")[:2]) if "--" in request_id else "default"
+        for seq in self.seqs_dict.values():
+            seq.app_id = self.app_id
 
     @property
     def prompt(self) -> Optional[str]:
@@ -607,6 +611,12 @@ class SequenceGroup:
     def is_prefill(self) -> bool:
         # Every sequence should be in the same stage.
         return self.get_seqs()[0].is_prefill()
+
+    def is_swapped(self) -> bool:
+        return self.get_unfinished_seqs()[0].status == SequenceStatus.SWAPPED
+
+    def is_running(self) -> bool:
+        return self.get_unfinished_seqs()[0].status == SequenceStatus.RUNNING
 
     def __repr__(self) -> str:
         return (f"SequenceGroup(request_id={self.request_id}, "
@@ -875,6 +885,11 @@ class ExecuteModelRequest:
     num_lookahead_slots: int = 0
     # The number of requests in the running queue.
     running_queue_size: int = 0
+    advised_lora: Set[LoRARequest] = None
+    # Blocks to save to disk.
+    blocks_to_save: List[Tuple[int, int]] = field(default_factory=list)
+    # Blocks to load from
+    blocks_to_load: List[Tuple[int, int]] = field(default_factory=list)
 
     def clone(
         self, seq_group_metadata_list: List[SequenceGroupMetadata]
@@ -887,4 +902,6 @@ class ExecuteModelRequest:
             blocks_to_copy=self.blocks_to_copy.copy(),
             num_lookahead_slots=self.num_lookahead_slots,
             running_queue_size=self.running_queue_size,
+            blocks_to_save=self.blocks_to_save.copy(),
+            blocks_to_load=self.blocks_to_load.copy(),
         )

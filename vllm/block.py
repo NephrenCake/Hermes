@@ -1,5 +1,5 @@
 """Token blocks."""
-from typing import List
+from typing import List, Union, Tuple
 
 from vllm.utils import Device
 
@@ -57,7 +57,7 @@ class PhysicalTokenBlock:
         device: Device,
         block_number: int,
         block_size: int,
-        block_hash: int,
+        block_hash: Union[int, Tuple[str, int]],
         num_hashed_tokens: int,
     ) -> None:
         self.device = device
@@ -70,6 +70,8 @@ class PhysicalTokenBlock:
         self.last_accessed = DEFAULT_LAST_ACCESSED_TIME
 
         self.computed = False
+
+        self.prefetched = False
 
     def __repr__(self) -> str:
         return (f'PhysicalTokenBlock(device={self.device}, '

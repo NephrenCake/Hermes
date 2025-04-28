@@ -1,5 +1,7 @@
 """CacheEngine class for managing the KV cache."""
 from typing import List
+import os
+import atexit
 
 import torch
 
@@ -53,9 +55,25 @@ class CacheEngine:
             self.block_size,
         )
 
+        # Initialize the stream for caching operations.
+        self.cache_stream = torch.cuda.Stream()
+        assert self.cache_stream != torch.cuda.current_stream()
+        # Initialize the events for stream synchronization.
+        self.cache_events = [torch.cuda.Event() for _ in range(self.num_layers)]
+
         # Initialize the cache.
         self.gpu_cache = self._allocate_kv_cache(self.num_gpu_blocks, "cuda")
         self.cpu_cache = self._allocate_kv_cache(self.num_cpu_blocks, "cpu")
+
+        self.disk_dir_path = self.cache_config.disk_dir_path
+        logger.info(f"Disk dir path: {self.disk_dir_path}")
+        self.clean_disk()
+        os.makedirs(self.disk_dir_path, exist_ok=True)
+        atexit.register(self.clean_disk)
+
+    def clean_disk(self):
+        if self.disk_dir_path is not None:
+            os.system(f"rm -rf {self.disk_dir_path}")
 
     def _allocate_kv_cache(
         self,
@@ -90,6 +108,39 @@ class CacheEngine:
 
     def copy(self, src_to_dsts: torch.Tensor) -> None:
         self.attn_backend.copy_blocks(self.gpu_cache, src_to_dsts)
+
+    def save_to_disk(self, src_to_dst: torch.Tensor) -> None:
+        # kv_cache_shape: (2, num_blocks, block_size * num_kv_heads * head_size)
+        assert self.disk_dir_path is not None
+        src_to_dst = src_to_dst.tolist()
+        # for i in range(self.num_layers):
+        #     for src, dst in src_to_dst:
+        #         key_file_name = os.path.join(self.disk_dir_path, f"{dst}-key-{i}.pt")
+        #         torch.save(self.cpu_cache[i][0][src], key_file_name)
+        #         value_file_name = os.path.join(self.disk_dir_path, f"{dst}-value-{i}.pt")
+        #         torch.save(self.cpu_cache[i][1][src], value_file_name)
+
+        for src, dst in src_to_dst:
+            tensor_list = [torch.unsqueeze(self.cpu_cache[i][:, src, ], 0) for i in range(self.num_layers)]
+            tensor_to_save = torch.cat(tensor_list, 0)
+            file_name = os.path.join(self.disk_dir_path, f"{dst}.pt")
+            torch.save(tensor_to_save, file_name)
+
+    def load_from_disk(self, src_to_dst: torch.Tensor) -> None:
+        assert self.disk_dir_path is not None
+        src_to_dst = src_to_dst.tolist()
+        # for i in range(self.num_layers):
+        #     for src, dst in src_to_dst:
+        #         key_file_name = os.path.join(self.disk_dir_path, f"{src}-key-{i}.pt")
+        #         self.cpu_cache[i][0][dst] = torch.load(key_file_name)
+        #         value_file_name = os.path.join(self.disk_dir_path, f"{src}-value-{i}.pt")
+        #         self.cpu_cache[i][1][dst] = torch.load(value_file_name)
+
+        for src, dst in src_to_dst:
+            file_name = os.path.join(self.disk_dir_path, f"{src}.pt")
+            tensor_loaded = torch.load(file_name)
+            for i in range(self.num_layers):
+                self.cpu_cache[i][:, dst] = tensor_loaded[i]
 
     @staticmethod
     def get_cache_block_size(

@@ -1,4 +1,5 @@
 import enum
+import json
 import os
 import random
 import time
@@ -197,6 +198,10 @@ class SchedulerOutputs:
     blocks_to_swap_out: List[Tuple[int, int]]
     # Blocks to copy. Source to dest block.
     blocks_to_copy: List[Tuple[int, int]]
+    # blocks to save.
+    blocks_to_save: List[Tuple[int, int]]
+    # blocks to load.
+    blocks_to_load: List[Tuple[int, int]]
     # Sequence groups that are going to be ignored.
     ignored_seq_groups: List[SequenceGroup]
     # The number of slots for lookahead decoding.
@@ -204,10 +209,11 @@ class SchedulerOutputs:
     # The number of requests in the running queue
     running_queue_size: int
     preempted: int
+    advised_lora: Set[LoRARequest]
 
     def __post_init__(self):
         # Swap in and swap out should never happen at the same time.
-        assert not (self.blocks_to_swap_in and self.blocks_to_swap_out)
+        # assert not (self.blocks_to_swap_in and self.blocks_to_swap_out)
 
         self.num_loras: int = len(self.lora_requests)
         if self.num_loras > 0:
@@ -216,12 +222,18 @@ class SchedulerOutputs:
     def is_empty(self) -> bool:
         # NOTE: We do not consider the ignored sequence groups.
         return (not self.scheduled_seq_groups and not self.blocks_to_swap_in
-                and not self.blocks_to_swap_out and not self.blocks_to_copy)
+                and not self.blocks_to_swap_out and not self.blocks_to_copy
+                and not self.blocks_to_save and not self.blocks_to_load)
 
     def _sort_by_lora_ids(self):
         self.scheduled_seq_groups = sorted(
             self.scheduled_seq_groups,
             key=lambda g: (g.seq_group.lora_int_id, g.seq_group.request_id))
+
+    def swap_info_empty(self) -> bool:
+        return (not self.blocks_to_swap_in and not self.blocks_to_swap_out
+                and not self.blocks_to_copy
+                and not self.blocks_to_save and not self.blocks_to_load)
 
     @property
     def lora_requests(self) -> Set[LoRARequest]:
@@ -332,6 +344,42 @@ class SchedulerPrefillOutputs:
         return len(self.seq_groups) == 0
 
 
+class TimeRecorder:
+    def __init__(
+            self,
+            record_window_size: int,
+            default_time_per_token: float = 0.1,
+            ema_alpha: float = 0.9,
+            token_type: str = "prefill"
+    ) -> None:
+        ''' ms '''
+        self.time_per_token = default_time_per_token
+        self.time_recorder = []
+        self.num_tokens_recorder = []
+        self.record_window_size = record_window_size
+        self.ema_alpha = ema_alpha
+        self.token_type = token_type
+
+    def update(
+            self,
+            num_tokens: int,
+            dur: float
+    ):
+        self.time_recorder.append(dur)
+        self.num_tokens_recorder.append(num_tokens)
+        if len(self.num_tokens_recorder) >= self.record_window_size:
+            time_per_token = sum(self.time_recorder) / sum(self.num_tokens_recorder)
+            self.time_recorder = []
+            self.num_tokens_recorder = []
+            self.time_per_token = self.time_per_token * self.ema_alpha + time_per_token * (1 - self.ema_alpha)
+
+            print(f"[TimeRecorder] {self.token_type} time_per_token: {self.time_per_token:.4f} ms")
+        # with open(os.path.join(os.path.dirname(__file__), f"{self.token_type}.json"), "w") as f:
+        #     json.dump({
+        #         "time_per_token": self.time_per_token,
+        #     }, f)
+
+
 class Scheduler:
 
     def __init__(
@@ -353,14 +401,13 @@ class Scheduler:
         if self.scheduler_config.embedding_mode:
             version = "embedding"
 
-        BlockSpaceManagerImpl = BlockSpaceManager.get_block_space_manager_class(
-            version)
-
         # Create the block space manager.
-        self.block_manager = BlockSpaceManagerImpl(
+        from vllm.core.block_manager_v1 import BlockSpaceManagerV1
+        self.block_manager = BlockSpaceManagerV1(
             block_size=self.cache_config.block_size,
             num_gpu_blocks=self.cache_config.num_gpu_blocks,
             num_cpu_blocks=self.cache_config.num_cpu_blocks,
+            num_disk_blocks=self.cache_config.num_disk_blocks,
             sliding_window=self.cache_config.sliding_window,
             enable_caching=self.cache_config.enable_prefix_caching)
 
@@ -391,7 +438,16 @@ class Scheduler:
                                        else 0)
         self.num_cumulative_preemption: int = 0
 
-        self.enable_request_preempt = True
+        self.non_preempt = scheduler_config.non_preempt
+        self.lora_requests: Dict[str, LoRARequest] = {}
+
+        self.prefill_recorder = TimeRecorder(record_window_size=100, default_time_per_token=0.33, token_type="prefill")
+        self.decode_recorder = TimeRecorder(record_window_size=1000, default_time_per_token=3.16, token_type="decode")
+
+        self.used_prefix_block = 0
+        self.all_prefill_block = 0
+        self.next_log_prefix = 0
+
 
     def get_request_info(self):
         request_info = {}
@@ -938,6 +994,8 @@ class Scheduler:
             blocks_to_swap_out=running_scheduled.blocks_to_swap_out,
             blocks_to_copy=running_scheduled.blocks_to_copy +
             swapped_in.blocks_to_copy,
+            blocks_to_save=None,
+            blocks_to_load=None,
             ignored_seq_groups=prefills.ignored_seq_groups +
             swapped_in.infeasible_seq_groups,
             num_lookahead_slots=running_scheduled.num_lookahead_slots,
@@ -1025,6 +1083,8 @@ class Scheduler:
             num_batched_tokens=budget.num_batched_tokens,
             blocks_to_swap_in=swapped_in.blocks_to_swap_in,
             blocks_to_swap_out=running_scheduled.blocks_to_swap_out,
+            blocks_to_save=[],
+            blocks_to_load=[],
             blocks_to_copy=running_scheduled.blocks_to_copy +
             swapped_in.blocks_to_copy,
             ignored_seq_groups=prefills.ignored_seq_groups,
@@ -1046,6 +1106,9 @@ class Scheduler:
         # split coinference to running_queue and waiting_queue
         schedule = self.schedule_seq_groups()
 
+        # prepare for eviction and prefetch
+        swap_mapping = self.block_manager.cache_swap_mapping.clear()
+
         # swap out all seq_group in waiting_queue
         blocks_to_swap_out = self.schedule_swapout(schedule.swapout_queue)
 
@@ -1058,21 +1121,61 @@ class Scheduler:
             schedule_decode_outputs = self.schedule_decode(schedule.decode_queue,
                                                            schedule.swapin_queue)
 
+        # lora
+        advised_lora = schedule.curr_loras  # default vllm lora policy
+        if self.lora_enabled:  # took over by top scheduler
+            lora_preference = []  # todo 由 top scheduler 给出 [lora id]
+            for name in lora_preference:
+                lora = self.lora_requests[name]
+                if len(advised_lora) == self.lora_config.max_cpu_loras:
+                    break
+                if lora in advised_lora:
+                    continue
+                advised_lora.add(lora)
+                logger.info(
+                    f"[LoRA Debug] > "
+                    f"advised_lora: {[i.lora_int_id for i in advised_lora]}, "
+                )
+        # kv
+        if self.cache_config.enable_prefix_caching:  # took over by top scheduler
+            kv_preference = []  # todo 由 top scheduler 给出 [app id]
+            self.block_manager.gpu_allocator.evictor.set_priority(kv_preference)
+            self.block_manager.cpu_allocator.evictor.set_priority(kv_preference)
+            self.block_manager.disk_allocator.evictor.set_priority(kv_preference)
+            # gpu
+            gpu_block = self.block_manager.gpu_allocator.get_num_free_blocks()
+            used_gpu_blocks = 0
+            for i in kv_preference:
+                if used_gpu_blocks + len(self.block_manager.gpu_allocator.may_prefetch(i)) > gpu_block:
+                    break
+                self.block_manager.gpu_allocator.prefetch_coinf(i)
+                used_gpu_blocks += self.block_manager.gpu_allocator.evictor.num_blocks_of(i)
+            # cpu
+            cpu_blocks = self.block_manager.num_total_cpu_blocks * 0.30
+            used_cpu_blocks = 0
+            for i in kv_preference:
+                if used_cpu_blocks + len(self.block_manager.cpu_allocator.may_prefetch(i)) > cpu_blocks:
+                    break
+                self.block_manager.cpu_allocator.prefetch_coinf(i)  # try prefetch from disk to cpu
+                used_cpu_blocks += self.block_manager.cpu_allocator.evictor.num_blocks_of(i)
+        self.block_manager.clean_to_watermark(0.5)
+
         return SchedulerOutputs(
             scheduled_seq_groups=(schedule_prefill_outputs.seq_groups +
                                   schedule_decode_outputs.seq_groups),
             num_prefill_groups=len(schedule_prefill_outputs.seq_groups),
             num_batched_tokens=(schedule_prefill_outputs.num_batched_tokens +
                                 schedule_decode_outputs.num_batched_tokens),
-            blocks_to_swap_in=schedule_decode_outputs.blocks_to_swap_in,
-            blocks_to_swap_out=blocks_to_swap_out,
+            blocks_to_swap_in=(schedule_decode_outputs.blocks_to_swap_in + swap_mapping.cpu2gpu),
+            blocks_to_swap_out=(blocks_to_swap_out + swap_mapping.gpu2cpu),
             blocks_to_copy=schedule_decode_outputs.blocks_to_copy,
-            blocks_to_save=None,
-            blocks_to_load=None,
+            blocks_to_save=swap_mapping.cpu2disk,
+            blocks_to_load=swap_mapping.disk2cpu,
             ignored_seq_groups=list(schedule.ignored_seq_groups),
             num_lookahead_slots=0,
             running_queue_size=0,
             preempted=len(schedule.swapout_queue),
+            advised_lora=advised_lora,
         )
 
     def try_schedule(self, seq_group, logicalbudget, schedule: ScheduledSeqGroupOutputs):
@@ -1174,7 +1277,7 @@ class Scheduler:
                                             waiting_queue=set(),
                                             curr_loras=set())
 
-        if not self.enable_request_preempt:  # follow default preempt logic of vllm
+        if self.non_preempt:  # follow default preempt logic of vllm
             for seq_group in self.running + self.swapped:
                 if seq_group.is_finished():
                     continue
@@ -1190,7 +1293,7 @@ class Scheduler:
         self.waiting = deque(schedule.ignored_seq_groups | schedule.waiting_queue)
         self.running = deque(schedule.prefill_queue | schedule.decode_queue | schedule.swapin_queue)
         self.swapped = deque(schedule.swapout_queue | schedule.swapped_queue)
-        print([sg.request_id for sg in self.running])
+        # print(f"[Schedule Debug] running requests: {[sg.request_id for sg in self.running]}")
 
         return schedule
 
@@ -1324,6 +1427,14 @@ class Scheduler:
                         seqs[0].data.get_len()):
                     do_sample = False
 
+                self.used_prefix_block += len(common_computed_block_nums)
+                self.all_prefill_block += len(block_tables[seqs[0].seq_id])
+                # if len(common_computed_block_nums) > 0:
+                #     logger.info(
+                #         f"[KVC Debug] > {seq_group.request_id} prefill with prefix: "
+                #         f"{len(common_computed_block_nums)}/{len(block_tables[seqs[0].seq_id])}"
+                #     )
+
             # It assumes the scheduled_seq_groups is ordered by
             # prefill < decoding.
             is_prompt = seq_group.is_prefill()
@@ -1347,6 +1458,20 @@ class Scheduler:
                 if scheduler_outputs.num_prefill_groups > 0 else None,
             )
             seq_group_metadata_list.append(seq_group_metadata)
+
+        if self.cache_config.enable_prefix_caching and self.all_prefill_block > self.next_log_prefix * 1000:
+            self.next_log_prefix = self.all_prefill_block // 1000 + 1
+            if scheduler_outputs.num_prefill_groups != 0:
+                logger.info(f"[KVC Debug] > prefix utilization: "
+                            f"{self.used_prefix_block} / {self.all_prefill_block} = "
+                            f"{self.used_prefix_block / self.all_prefill_block:.2f}")
+                g_hit, g_miss, g_total = self.block_manager.gpu_allocator.export_statistics()
+                c_hit, c_miss, c_total = self.block_manager.cpu_allocator.export_statistics()
+                d_hit, d_miss, d_total = self.block_manager.disk_allocator.export_statistics()
+                logger.info(f"[KVC Debug] > "
+                            f"GPU: {g_hit} / {g_total} = {(g_hit / g_total) if g_total else 0.:.2f}, "
+                            f"CPU: {c_hit} / {g_total} = {(c_hit / g_total) if g_total else 0.:.2f}, "
+                            f"Disk: {d_hit} / {g_total} = {(d_hit / g_total) if g_total else 0.:.2f}")
 
         # Now that the batch has been created, we can assume all blocks in the
         # batch will have been computed before the next scheduling invocation.
@@ -1537,3 +1662,9 @@ class Scheduler:
             num_new_tokens = min(num_new_tokens,
                                  budget.remaining_token_budget())
         return num_new_tokens
+
+    def record_step_time(self, num_tokens: int, dur: float, is_prefill: bool):
+        if is_prefill:
+            self.prefill_recorder.update(num_tokens, dur)
+        else:
+            self.decode_recorder.update(1, dur)

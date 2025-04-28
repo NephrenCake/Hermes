@@ -213,7 +213,8 @@ class _AsyncLLMEngine(LLMEngine):
         and updates the scheduler with the model outputs. Finally, it decodes
         the sequences and returns the newly generated results.
         """
-        now = time.time()
+        inter_step_time = time.time() - self.timer
+        self.timer = time.time()
 
         from CTaskBench.platform.llm.rpc import RPCClient
         client = await RPCClient.run()
@@ -237,6 +238,9 @@ class _AsyncLLMEngine(LLMEngine):
         # logger.info(f"sync_info took {(time.time() - now) * 1000:.2f} ms")
 
         seq_group_metadata_list, scheduler_outputs = self.scheduler.schedule()
+        # logger.info(f"seq_group_metadata_list: {seq_group_metadata_list}, scheduler_outputs: {scheduler_outputs}")
+        schedule_time = time.time() - self.timer
+        self.timer = time.time()
 
         if not scheduler_outputs.is_empty():
             # Execute the model.
@@ -245,20 +249,37 @@ class _AsyncLLMEngine(LLMEngine):
                 blocks_to_swap_in=scheduler_outputs.blocks_to_swap_in,
                 blocks_to_swap_out=scheduler_outputs.blocks_to_swap_out,
                 blocks_to_copy=scheduler_outputs.blocks_to_copy,
+                blocks_to_save=scheduler_outputs.blocks_to_save,
+                blocks_to_load=scheduler_outputs.blocks_to_load,
                 num_lookahead_slots=scheduler_outputs.num_lookahead_slots,
                 running_queue_size=scheduler_outputs.running_queue_size,
+                advised_lora=scheduler_outputs.advised_lora,
             )
-            output = await self.model_executor.execute_model_async(
+            output, load_time, swap_time, lora_time, execute_time = await self.model_executor.execute_model_async(
                 execute_model_req)
+            # logger.info(f"{swap_time}, {execute_time}, {load_time}")
         else:
-            output = []
+            output, load_time, swap_time, lora_time, execute_time = [], 0, 0, 0, 0
 
         request_outputs = self._process_model_outputs(
             output, scheduler_outputs.scheduled_seq_groups,
             scheduler_outputs.ignored_seq_groups, seq_group_metadata_list)
 
+        infer_time = time.time() - self.timer
+        comm_time = infer_time - swap_time - execute_time
+        cur_step_time = schedule_time + infer_time
+        self.timer = time.time()
+
         # Log stats.
-        self.do_log_stats(scheduler_outputs, output)
+        runtime_inspect = {
+            "inter_step_time": inter_step_time * 1000,
+            "schedule_time": schedule_time * 1000,
+            "comm_time": comm_time * 1000,
+            "swap_time": swap_time * 1000,
+            "execute_time": execute_time * 1000,
+            "cur_step_time": cur_step_time * 1000,
+        }
+        self.do_log_stats(scheduler_outputs, output, runtime_inspect)
 
         if not request_outputs:
             # Stop the execute model loop in parallel workers until there are
@@ -268,6 +289,26 @@ class _AsyncLLMEngine(LLMEngine):
             # queued control plane messages, such as add/remove lora adapters.
             await self.model_executor.stop_remote_worker_execution_loop_async()
 
+        is_prefill = scheduler_outputs.num_prefill_groups > 0
+        num_tokens = scheduler_outputs.num_batched_tokens
+        # self.scheduler.update_queue_time(scheduler_outputs.scheduled_seq_groups, cur_step_time, is_prefill, start_schedule_time)
+        self.scheduler.record_step_time(num_tokens, cur_step_time * 1000, is_prefill)
+        if not scheduler_outputs.swap_info_empty():
+            pass
+            # logger.info(f"[KVC Debug] > num_blocks: (GPU->CPU: {scheduler_outputs.blocks_to_swap_out}, "
+            #             f"CPU->DISK: {scheduler_outputs.blocks_to_save}, "
+            #             f"DISK->CPU: {scheduler_outputs.blocks_to_load}, "
+            #             f"CPU->GPU: {scheduler_outputs.blocks_to_swap_in}), "
+            #             f"execute_time: {execute_time * 1000:.2f} ms, "
+            #             f"swap_time: {swap_time * 1000:.2f} ms, "
+            #             f"load_time: {load_time * 1000:.2f} ms, ")
+            # logger.info(f"[KVC Debug] > num_blocks: (GPU->CPU: {len(scheduler_outputs.blocks_to_swap_out)}, "
+            #             f"CPU->DISK: {len(scheduler_outputs.blocks_to_save)}, "
+            #             f"DISK->CPU: {len(scheduler_outputs.blocks_to_load)}, "
+            #             f"CPU->GPU: {len(scheduler_outputs.blocks_to_swap_in)}), "
+            #             f"execute_time: {execute_time * 1000:.2f} ms, "
+            #             f"swap_time: {swap_time * 1000:.2f} ms, "
+            #             f"load_time: {load_time * 1000:.2f} ms, ")
         return request_outputs
 
     async def process_model_inputs_async(
@@ -552,7 +593,7 @@ class AsyncLLMEngine:
                     "Engine iteration timed out. This should never happen!")
                 self.set_errored(exc)
                 raise
-            await asyncio.sleep(0.001)
+            await asyncio.sleep(0)
 
     async def add_request(
         self,
@@ -799,7 +840,8 @@ class AsyncLLMEngine:
                 yield request_output
         except (Exception, asyncio.CancelledError) as e:
             self._abort(request_id)
-            raise e
+            exit(1)
+            # raise e
 
     async def abort(self, request_id: str) -> None:
         """Abort a request.

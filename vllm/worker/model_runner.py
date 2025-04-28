@@ -15,7 +15,7 @@ from vllm.distributed.communication_op import graph_capture
 from vllm.logger import init_logger
 from vllm.lora.layers import LoRAMapping
 from vllm.lora.request import LoRARequest
-from vllm.lora.worker_manager import LRUCacheWorkerLoRAManager
+from vllm.lora.worker_manager import LRUCacheWorkerLoRAManagerWithPrefetch, LRUCacheWorkerLoRAManager
 from vllm.model_executor import SamplingMetadata
 from vllm.model_executor.model_loader import get_model
 from vllm.sampling_params import SamplingParams
@@ -127,7 +127,7 @@ class ModelRunner:
         # Set if the backend is flashinfer.
         self.flashinfer_workspace_buffer: torch.Tensor
         # Set after load_model.
-        self.lora_manager: Optional[LRUCacheWorkerLoRAManager] = None
+        self.lora_manager: Optional[LRUCacheWorkerLoRAManagerWithPrefetch, LRUCacheWorkerLoRAManager] = None
 
     def load_model(self) -> None:
         with CudaMemoryProfiler() as m:
@@ -155,7 +155,8 @@ class ModelRunner:
                 "embedding_modules"), "Model does not have embedding_modules"
             assert hasattr(self.model, "embedding_padding_modules"
                            ), "Model does not have embedding_padding_modules"
-            self.lora_manager = LRUCacheWorkerLoRAManager(
+            logger.info("Using LoRA with %s policy", self.scheduler_config.lora_policy)
+            self.lora_manager = LRUCacheWorkerLoRAManagerWithPrefetch(
                 self.scheduler_config.max_num_seqs,
                 self.scheduler_config.max_num_batched_tokens,
                 self.vocab_size,
@@ -701,12 +702,14 @@ class ModelRunner:
         self,
         seq_group_metadata_list: Optional[List[SequenceGroupMetadata]],
         kv_caches: List[torch.Tensor],
+        set_lora=True,
+        cache_events=None,
     ) -> Optional[SamplerOutput]:
         (input_tokens, input_positions, attn_metadata, sampling_metadata,
          lora_requests, lora_mapping, multi_modal_input
          ) = self.prepare_input_tensors(seq_group_metadata_list)
 
-        if self.lora_config:
+        if self.lora_config and set_lora:
             self.set_active_loras(lora_requests, lora_mapping)
 
         # Currently cuda graph is only supported by the decode phase.
@@ -722,6 +725,7 @@ class ModelRunner:
             "positions": input_positions,
             "kv_caches": kv_caches,
             "attn_metadata": attn_metadata,
+            "cache_events": cache_events,
         }
         if self.vision_language_config:
             execute_model_kwargs.update({"image_input": multi_modal_input})

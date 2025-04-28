@@ -356,6 +356,9 @@ class CacheConfig:
         num_gpu_blocks_override: Optional[int] = None,
         sliding_window: Optional[int] = None,
         enable_prefix_caching: bool = False,
+        num_disk_blocks: int = None,
+        disk_dir_path: str = "/tmp/vllm_kv_cache",
+        cache_policy: str = "Hermes"
     ) -> None:
         self.block_size = block_size
         self.gpu_memory_utilization = gpu_memory_utilization
@@ -371,6 +374,11 @@ class CacheConfig:
         # Will be set after profiling.
         self.num_gpu_blocks = None
         self.num_cpu_blocks = None
+
+        # support for disk offloading
+        self.num_disk_blocks = num_disk_blocks
+        self.disk_dir_path = disk_dir_path
+        self.cache_policy = cache_policy
 
     def metrics_info(self):
         # convert cache_config to dict(key: str, value: str) for prometheus
@@ -657,6 +665,8 @@ class SchedulerConfig:
         enable_chunked_prefill: bool = False,
         embedding_mode: Optional[bool] = False,
         engine_name: Optional[str] = None,
+        non_preempt: bool = False,
+        lora_policy: str = "Hermes",
     ) -> None:
         if max_num_batched_tokens is not None:
             self.max_num_batched_tokens = max_num_batched_tokens
@@ -685,6 +695,8 @@ class SchedulerConfig:
         self.embedding_mode = embedding_mode
 
         self.engine_name = engine_name
+        self.non_preempt = non_preempt
+        self.lora_policy = lora_policy
 
         self._verify_args()
 

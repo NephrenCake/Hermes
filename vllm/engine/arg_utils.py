@@ -82,6 +82,7 @@ class EngineArgs:
     image_feature_size: Optional[int] = None
     scheduler_delay_factor: float = 0.0
     enable_chunked_prefill: bool = False
+    num_disk_blocks: int = 10000
 
     guided_decoding_backend: str = 'outlines'
     # Speculative decoding configuration.
@@ -93,6 +94,11 @@ class EngineArgs:
     ngram_prompt_lookup_min: Optional[int] = None
 
     engine_name: Optional[str] = None
+    non_preempt: bool = False
+    lora_policy: str = "Hermes"
+    cache_policy: str = "Hermes"
+    # disk kv cache dir path
+    disk_dir_path: str = "/workspace/kv_cache/"
 
     def __post_init__(self):
         if self.tokenizer is None:
@@ -270,6 +276,11 @@ class EngineArgs:
         parser.add_argument('--enable-prefix-caching',
                             action='store_true',
                             help='Enables automatic prefix caching.')
+        parser.add_argument('--num-disk-blocks',
+                            type=int,
+                            default=EngineArgs.num_disk_blocks,
+                            help='total num disk blocks')
+
         parser.add_argument('--disable-sliding-window',
                             action='store_true',
                             help='Disables sliding window, '
@@ -547,6 +558,29 @@ class EngineArgs:
             "tag will take the first one.")
 
         parser.add_argument(
+            "--non-preempt",
+            action='store_true',
+            help="if use proactive reservation")
+        parser.add_argument(
+            "--lora-policy",
+            type=str,
+            default=EngineArgs.lora_policy,
+            choices=["Hermes", "LRU", "EPWQ"],
+            # "Hermes", "LRU", "Evict/Prefetch on Waiting Queue", "No-Cache", "Full-Cache"
+            help="use which lora management")
+        parser.add_argument(
+            "--cache-policy",
+            type=str,
+            default=EngineArgs.cache_policy,
+            choices=["Hermes", "LRU", "EPWQ"],
+            # "Hermes", "LRU", "Evict/Prefetch on Waiting Queue", "No-Cache", "Full-Cache"
+            help="use which kv cache management")
+        parser.add_argument(
+            "--disk-dir-path",
+            type=str,
+            default=EngineArgs.disk_dir_path
+        )
+        parser.add_argument(
             "--engine-name",
             type=str,
             default=EngineArgs.engine_name,
@@ -578,7 +612,10 @@ class EngineArgs:
                                    self.swap_space, self.kv_cache_dtype,
                                    self.num_gpu_blocks_override,
                                    model_config.get_sliding_window(),
-                                   self.enable_prefix_caching)
+                                   self.enable_prefix_caching,
+                                   self.num_disk_blocks,
+                                   self.disk_dir_path,
+                                   self.cache_policy)
         parallel_config = ParallelConfig(
             self.pipeline_parallel_size,
             self.tensor_parallel_size,
@@ -620,6 +657,8 @@ class EngineArgs:
             enable_chunked_prefill=self.enable_chunked_prefill,
             embedding_mode=model_config.embedding_mode,
             engine_name=self.engine_name,
+            non_preempt=self.non_preempt,
+            lora_policy=self.lora_policy,
         )
         lora_config = LoRAConfig(
             max_lora_rank=self.max_lora_rank,

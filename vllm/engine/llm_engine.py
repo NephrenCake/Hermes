@@ -1,6 +1,6 @@
 import time
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, ClassVar, Iterable, List, Optional
+from typing import TYPE_CHECKING, ClassVar, Iterable, List, Optional, Dict
 from typing import Sequence as GenericSequence
 from typing import Type, TypeVar, Union
 
@@ -207,6 +207,7 @@ class LLMEngine:
         self.load_config = load_config
         self.decoding_config = decoding_config or DecodingConfig()
         self.log_stats = log_stats
+        self.schedule_time_list = []
 
         if not self.model_config.skip_tokenizer_init:
             self.tokenizer = self._init_tokenizer()
@@ -219,6 +220,7 @@ class LLMEngine:
         self.generation_config_fields = _load_generation_config_dict(
             model_config)
 
+        t = time.time()
         self.model_executor = executor_class(
             model_config=model_config,
             cache_config=cache_config,
@@ -230,9 +232,14 @@ class LLMEngine:
             speculative_config=speculative_config,
             load_config=load_config,
         )
+        logger.info(">>> Model executor initialization took %.3f seconds",
+                    time.time() - t)
 
+        t = time.time()
         if not self.model_config.embedding_mode:
             self._initialize_kv_caches()
+        logger.info(">>> KV cache initialization took %.3f seconds",
+                    time.time() - t)
 
         # If usage stat is enabled, collect relevant info.
         if is_usage_stats_enabled():
@@ -301,6 +308,8 @@ class LLMEngine:
                     self.get_tokenizer_for_seq,
                 ),
             ))
+
+        self.timer = time.time()
 
     def _initialize_kv_caches(self) -> None:
         """Initialize the KV cache in the worker(s).
@@ -763,7 +772,14 @@ class LLMEngine:
             >>>     if not (engine.has_unfinished_requests() or example_inputs):
             >>>         break
         """
+        inter_step_time = time.time() - self.timer
+        self.timer = time.time()
+
         seq_group_metadata_list, scheduler_outputs = self.scheduler.schedule()
+
+        # logger.info(f"seq_group_metadata_list: {seq_group_metadata_list}, scheduler_outputs: {scheduler_outputs}")
+        schedule_time = time.time() - self.timer
+        self.timer = time.time()
 
         if not scheduler_outputs.is_empty():
             execute_model_req = ExecuteModelRequest(
@@ -771,20 +787,36 @@ class LLMEngine:
                 blocks_to_swap_in=scheduler_outputs.blocks_to_swap_in,
                 blocks_to_swap_out=scheduler_outputs.blocks_to_swap_out,
                 blocks_to_copy=scheduler_outputs.blocks_to_copy,
+                blocks_to_save=scheduler_outputs.blocks_to_save,
+                blocks_to_load=scheduler_outputs.blocks_to_load,
                 num_lookahead_slots=scheduler_outputs.num_lookahead_slots,
                 running_queue_size=scheduler_outputs.running_queue_size,
+                advised_lora=scheduler_outputs.advised_lora,
             )
-            output = self.model_executor.execute_model(
+            output, load_time, swap_time, lora_time, execute_time = self.model_executor.execute_model(
                 execute_model_req=execute_model_req)
         else:
-            output = []
+            output, load_time, swap_time, lora_time, execute_time = [], 0, 0, 0, 0
 
         request_outputs = self._process_model_outputs(
             output, scheduler_outputs.scheduled_seq_groups,
             scheduler_outputs.ignored_seq_groups, seq_group_metadata_list)
 
+        infer_time = time.time() - self.timer
+        comm_time = infer_time - swap_time - execute_time
+        cur_step_time = schedule_time + infer_time
+        self.timer = time.time()
+
         # Log stats.
-        self.do_log_stats(scheduler_outputs, output)
+        runtime_inspect = {
+            "inter_step_time": inter_step_time * 1000,
+            "schedule_time": schedule_time * 1000,
+            "comm_time": comm_time * 1000,
+            "swap_time": swap_time * 1000,
+            "execute_time": execute_time * 1000,
+            "cur_step_time": cur_step_time * 1000,
+        }
+        self.do_log_stats(scheduler_outputs, output, runtime_inspect)
 
         if not request_outputs:
             # Stop the execute model loop in parallel workers until there are
@@ -794,21 +826,38 @@ class LLMEngine:
             # queued control plane messages, such as add/remove lora adapters.
             self.model_executor.stop_remote_worker_execution_loop()
 
+        is_prefill = scheduler_outputs.num_prefill_groups > 0
+        num_tokens = scheduler_outputs.num_batched_tokens
+        self.scheduler.record_step_time(num_tokens, cur_step_time * 1000, is_prefill)
+        if not scheduler_outputs.swap_info_empty():
+            logger.info(f"num_blocks: (c2g: {len(scheduler_outputs.blocks_to_swap_in)}, "
+                        f"g2c: {len(scheduler_outputs.blocks_to_swap_out)}, "
+                        f"d2c: {len(scheduler_outputs.blocks_to_load)}, "
+                        f"c2d: {len(scheduler_outputs.blocks_to_save)}), "
+                        f"execute_time: {execute_time*1000:.2f} ms, "
+                        f"swap_time: {swap_time*1000:.2f} ms, "
+                        f"load_time: {load_time*1000:.2f} ms")
         return request_outputs
 
     def do_log_stats(
             self,
             scheduler_outputs: Optional[SchedulerOutputs] = None,
-            model_output: Optional[List[SamplerOutput]] = None) -> None:
+            model_output: Optional[List[SamplerOutput]] = None,
+            runtime_inspect: Dict = None) -> None:
+        if runtime_inspect is None:
+            runtime_inspect = {}
         """Forced log when no requests active."""
         if self.log_stats:
             self.stat_logger.log(
-                self._get_stats(scheduler_outputs, model_output))
+                self._get_stats(scheduler_outputs, model_output, runtime_inspect))
+        if not scheduler_outputs and not model_output:
+            self.scheduler.free_finished_seq_groups()
 
     def _get_stats(
             self,
             scheduler_outputs: Optional[SchedulerOutputs],
-            model_output: Optional[List[SamplerOutput]] = None) -> Stats:
+            model_output: Optional[List[SamplerOutput]] = None,
+            runtime_inspect: Dict = None) -> Stats:
         """Get Stats to be Logged to Prometheus.
 
         Args:
@@ -828,17 +877,30 @@ class LLMEngine:
         # KV Cache Usage in %
         num_total_gpu = self.cache_config.num_gpu_blocks
         gpu_cache_usage_sys = 0.
+        gpu_cached_cache_usage_sys = 0.
         if num_total_gpu is not None:
-            num_free_gpu = self.scheduler.block_manager.get_num_free_gpu_blocks(
-            )
+            num_free_gpu = self.scheduler.block_manager.get_num_free_gpu_blocks()
+            num_cached_gpu = self.scheduler.block_manager.gpu_allocator.get_num_cached_blocks()
             gpu_cache_usage_sys = 1.0 - (num_free_gpu / num_total_gpu)
+            gpu_cached_cache_usage_sys = num_cached_gpu / num_total_gpu
 
         num_total_cpu = self.cache_config.num_cpu_blocks
         cpu_cache_usage_sys = 0.
+        cpu_cached_cache_usage_sys = 0.
         if num_total_cpu is not None and num_total_cpu > 0:
-            num_free_cpu = self.scheduler.block_manager.get_num_free_cpu_blocks(
-            )
+            num_free_cpu = self.scheduler.block_manager.get_num_free_cpu_blocks()
+            num_cached_cpu = self.scheduler.block_manager.cpu_allocator.get_num_cached_blocks()
             cpu_cache_usage_sys = 1.0 - (num_free_cpu / num_total_cpu)
+            cpu_cached_cache_usage_sys = num_cached_cpu / num_total_cpu
+
+        num_total_disk = self.cache_config.num_disk_blocks
+        disk_cache_usage_sys = 0.
+        disk_cached_cache_usage_sys = 0.
+        if num_total_disk is not None and num_total_disk > 0:
+            num_free_disk = self.scheduler.block_manager.disk_allocator.get_num_free_blocks()
+            num_cached_disk = self.scheduler.block_manager.disk_allocator.get_num_cached_blocks()
+            disk_cache_usage_sys = 1.0 - (num_free_disk / num_total_disk)
+            disk_cached_cache_usage_sys = num_cached_disk / num_total_disk
 
         # Iteration stats
         num_prompt_tokens_iter = 0
@@ -948,6 +1010,10 @@ class LLMEngine:
             #   KV Cache Usage in %
             gpu_cache_usage_sys=gpu_cache_usage_sys,
             cpu_cache_usage_sys=cpu_cache_usage_sys,
+            disk_cache_usage_sys=disk_cache_usage_sys,
+            gpu_cached_cache_usage_sys=gpu_cached_cache_usage_sys,
+            cpu_cached_cache_usage_sys=cpu_cached_cache_usage_sys,
+            disk_cached_cache_usage_sys=disk_cached_cache_usage_sys,
 
             # Iteration stats
             num_prompt_tokens_iter=num_prompt_tokens_iter,
@@ -956,6 +1022,12 @@ class LLMEngine:
             time_per_output_tokens_iter=time_per_output_tokens_iter,
             spec_decode_metrics=spec_decode_metrics,
             num_preemption_iter=num_preemption_iter,
+
+            schedule_time=runtime_inspect.get("schedule_time", 0),
+            comm_time=runtime_inspect.get("comm_time", 0),
+            swap_time=runtime_inspect.get("swap_time", 0),
+            execute_time=runtime_inspect.get("execute_time", 0),
+            cur_step_time=runtime_inspect.get("cur_step_time", 0),
 
             # Request stats
             #   Latency

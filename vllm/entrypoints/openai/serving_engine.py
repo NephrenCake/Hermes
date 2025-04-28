@@ -57,6 +57,10 @@ class OpenAIServing:
                     lora_local_path=lora.local_path,
                 ) for i, lora in enumerate(lora_modules, start=1)
             ]
+            self.engine.engine.scheduler.lora_requests = {
+                lora.lora_name: lora
+                for lora in self.lora_requests
+            }
 
     async def show_available_models(self) -> ModelList:
         """Show available models. Right now we only have one model."""

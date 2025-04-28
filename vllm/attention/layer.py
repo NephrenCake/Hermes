@@ -85,7 +85,10 @@ class Attention(nn.Module):
         value: torch.Tensor,
         kv_cache: Optional[torch.Tensor],
         attn_metadata: AttentionMetadata,
+        cache_event: Optional[torch.cuda.Event],
     ) -> torch.Tensor:
+        if cache_event is not None:
+            cache_event.wait()
         return self.impl.forward(query, key, value, kv_cache, attn_metadata,
                                  self._kv_scale)
 
