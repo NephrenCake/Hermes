@@ -1,0 +1,2920 @@
+{
+    "average_jct": 4.393064796924591,
+    "test_completion_time": 441.52241349220276,
+    "task_completion_time": {
+        "factool_math--0": 3.7880494594573975,
+        "factool_math--1": 3.410964012145996,
+        "factool_math--2": 3.7656478881835938,
+        "factool_math--3": 5.169949054718018,
+        "factool_math--4": 6.185100793838501,
+        "factool_math--5": 4.840904474258423,
+        "factool_math--6": 5.247871160507202,
+        "factool_math--7": 3.0274720191955566,
+        "factool_math--8": 3.2244086265563965,
+        "factool_math--9": 3.5572431087493896,
+        "factool_math--10": 2.193331480026245,
+        "factool_math--11": 1.4425857067108154,
+        "factool_math--12": 7.456716775894165,
+        "factool_math--13": 5.534069299697876,
+        "factool_math--14": 4.204932928085327,
+        "factool_math--15": 3.2273168563842773,
+        "factool_math--16": 3.2701618671417236,
+        "factool_math--17": 4.378939151763916,
+        "factool_math--18": 5.387018918991089,
+        "factool_math--19": 3.8836381435394287,
+        "factool_math--20": 4.310214519500732,
+        "factool_math--21": 2.168344259262085,
+        "factool_math--22": 2.23144268989563,
+        "factool_math--23": 3.149947166442871,
+        "factool_math--24": 4.759066581726074,
+        "factool_math--25": 5.736557722091675,
+        "factool_math--26": 7.93984317779541,
+        "factool_math--27": 12.870083332061768,
+        "factool_math--28": 6.1245598793029785,
+        "factool_math--29": 5.80666971206665,
+        "factool_math--30": 4.341308116912842,
+        "factool_math--31": 4.731032371520996,
+        "factool_math--32": 4.675165414810181,
+        "factool_math--33": 8.405103206634521,
+        "factool_math--34": 4.8095338344573975,
+        "factool_math--35": 5.701118230819702,
+        "factool_math--36": 6.728793382644653,
+        "factool_math--37": 5.252884149551392,
+        "factool_math--38": 2.461521863937378,
+        "factool_math--39": 2.7781381607055664,
+        "factool_math--40": 3.435547113418579,
+        "factool_math--41": 4.271734237670898,
+        "factool_math--42": 3.0697035789489746,
+        "factool_math--43": 6.393767595291138,
+        "factool_math--44": 1.4640560150146484,
+        "factool_math--45": 3.9384706020355225,
+        "factool_math--46": 3.6720499992370605,
+        "factool_math--47": 3.902846574783325,
+        "factool_math--48": 2.2489709854125977,
+        "factool_math--49": 2.878662347793579,
+        "factool_math--50": 1.519557237625122,
+        "factool_math--51": 2.2677836418151855,
+        "factool_math--52": 2.811650514602661,
+        "factool_math--53": 2.2239034175872803,
+        "factool_math--54": 1.8048503398895264,
+        "factool_math--55": 3.1103861331939697,
+        "factool_math--56": 3.6606454849243164,
+        "factool_math--57": 3.0987637042999268,
+        "factool_math--58": 2.531094551086426,
+        "factool_math--59": 1.4583892822265625,
+        "factool_math--60": 1.5206718444824219,
+        "factool_math--61": 2.471571922302246,
+        "factool_math--62": 2.8268697261810303,
+        "factool_math--63": 2.2199981212615967,
+        "factool_math--64": 4.77194619178772,
+        "factool_math--65": 4.076752424240112,
+        "factool_math--66": 5.132784366607666,
+        "factool_math--67": 6.263899326324463,
+        "factool_math--68": 3.881697416305542,
+        "factool_math--69": 3.9179513454437256,
+        "factool_math--70": 3.927804946899414,
+        "factool_math--71": 12.623547554016113,
+        "factool_math--72": 4.1517064571380615,
+        "factool_math--73": 2.9900095462799072,
+        "factool_math--74": 3.862433671951294,
+        "factool_math--75": 6.372079133987427,
+        "factool_math--76": 4.330175161361694,
+        "factool_math--77": 2.790187358856201,
+        "factool_math--78": 4.006772756576538,
+        "factool_math--79": 3.888695001602173,
+        "factool_math--80": 6.722625255584717,
+        "factool_math--81": 5.70301365852356,
+        "factool_math--82": 3.9942259788513184,
+        "factool_math--83": 7.778678894042969,
+        "factool_math--84": 3.5684595108032227,
+        "factool_math--85": 3.148587942123413,
+        "factool_math--86": 4.929474592208862,
+        "factool_math--87": 3.9844093322753906,
+        "factool_math--88": 11.094892501831055,
+        "factool_math--89": 5.882788419723511,
+        "factool_math--90": 4.815932273864746,
+        "factool_math--91": 5.468121290206909,
+        "factool_math--92": 6.14875602722168,
+        "factool_math--93": 6.631831884384155,
+        "factool_math--94": 4.712452411651611,
+        "factool_math--95": 4.523298263549805,
+        "factool_math--96": 5.236215114593506,
+        "factool_math--97": 4.2291247844696045,
+        "factool_math--98": 3.910048484802246,
+        "factool_math--99": 2.85550594329834
+    },
+    "request_completion_time": {
+        "factool_math--0": {
+            "factool_math--0--0last": 2.6125707626342773,
+            "factool_math--0--2": 1.1638336181640625,
+            "factool_math--0--1": 1.175001621246338,
+            "executor": 0.00017499923706054688
+        },
+        "factool_math--1": {
+            "factool_math--1--0last": 2.2351644039154053,
+            "factool_math--1--2": 1.1640257835388184,
+            "factool_math--1--1": 1.175185203552246,
+            "executor": 0.0002999305725097656
+        },
+        "factool_math--2": {
+            "factool_math--2--0last": 2.5384931564331055,
+            "factool_math--2--2": 1.2166399955749512,
+            "factool_math--2--1": 1.2264649868011475,
+            "executor": 0.0003275871276855469
+        },
+        "factool_math--3": {
+            "factool_math--3--0last": 3.827843189239502,
+            "factool_math--3--3": 1.3227710723876953,
+            "factool_math--3--2": 1.3304946422576904,
+            "factool_math--3--1": 1.3416175842285156,
+            "executor": 0.0001862049102783203
+        },
+        "factool_math--4": {
+            "factool_math--4--0last": 4.762535572052002,
+            "factool_math--4--3": 1.401258945465088,
+            "factool_math--4--4": 1.3984780311584473,
+            "factool_math--4--2": 1.4119791984558105,
+            "factool_math--4--1": 1.4219539165496826,
+            "executor": 0.0003027915954589844
+        },
+        "factool_math--5": {
+            "factool_math--5--0last": 3.6648738384246826,
+            "factool_math--5--3": 1.1444478034973145,
+            "factool_math--5--2": 1.1540191173553467,
+            "factool_math--5--1": 1.1753456592559814,
+            "executor": 0.0003237724304199219
+        },
+        "factool_math--6": {
+            "factool_math--6--0last": 3.7743616104125977,
+            "factool_math--6--3": 1.4498121738433838,
+            "factool_math--6--4": 1.4477407932281494,
+            "factool_math--6--2": 1.4614744186401367,
+            "factool_math--6--1": 1.4729859828948975,
+            "executor": 0.0002624988555908203
+        },
+        "factool_math--7": {
+            "factool_math--7--0last": 1.9281668663024902,
+            "factool_math--7--2": 1.0869555473327637,
+            "factool_math--7--1": 1.0988383293151855,
+            "executor": 0.00017786026000976562
+        },
+        "factool_math--8": {
+            "factool_math--8--0last": 2.1534934043884277,
+            "factool_math--8--2": 1.0611505508422852,
+            "factool_math--8--1": 1.0703918933868408,
+            "executor": 0.00021409988403320312
+        },
+        "factool_math--9": {
+            "factool_math--9--0last": 2.3745789527893066,
+            "factool_math--9--2": 1.1698791980743408,
+            "factool_math--9--1": 1.182257890701294,
+            "executor": 0.00016498565673828125
+        },
+        "factool_math--10": {
+            "factool_math--10--0last": 1.2045462131500244,
+            "factool_math--10--1": 0.9882214069366455,
+            "executor": 0.0002162456512451172
+        },
+        "factool_math--11": {
+            "factool_math--11--0last": 0.8567533493041992,
+            "factool_math--11--1": 0.5853989124298096,
+            "executor": 0.0001316070556640625
+        },
+        "factool_math--12": {
+            "factool_math--12--0last": 6.393943548202515,
+            "factool_math--12--4": 1.032343864440918,
+            "factool_math--12--3": 1.0435945987701416,
+            "factool_math--12--2": 1.050811529159546,
+            "factool_math--12--5": 1.0326502323150635,
+            "factool_math--12--1": 1.061992883682251,
+            "executor": 0.0004622936248779297
+        },
+        "factool_math--13": {
+            "factool_math--13--0last": 4.27225923538208,
+            "factool_math--13--3": 1.2431206703186035,
+            "factool_math--13--2": 1.2507658004760742,
+            "factool_math--13--1": 1.2607784271240234,
+            "factool_math--13--4": 1.2399046421051025,
+            "executor": 0.00023698806762695312
+        },
+        "factool_math--14": {
+            "factool_math--14--0last": 2.8870720863342285,
+            "factool_math--14--3": 1.29862642288208,
+            "factool_math--14--2": 1.3084306716918945,
+            "factool_math--14--1": 1.317368745803833,
+            "executor": 0.0002148151397705078
+        },
+        "factool_math--15": {
+            "factool_math--15--0last": 2.2998437881469727,
+            "factool_math--15--3": 0.9107356071472168,
+            "factool_math--15--2": 0.9176578521728516,
+            "factool_math--15--1": 0.9269630908966064,
+            "executor": 0.00023174285888671875
+        },
+        "factool_math--16": {
+            "factool_math--16--0last": 2.1811459064483643,
+            "factool_math--16--2": 1.0785071849822998,
+            "factool_math--16--1": 1.0885486602783203,
+            "executor": 0.0001888275146484375
+        },
+        "factool_math--17": {
+            "factool_math--17--0last": 2.9735491275787354,
+            "factool_math--17--4": 1.379394292831421,
+            "factool_math--17--3": 1.3887345790863037,
+            "factool_math--17--2": 1.3957927227020264,
+            "factool_math--17--1": 1.404818058013916,
+            "executor": 0.0002646446228027344
+        },
+        "factool_math--18": {
+            "factool_math--18--0last": 3.896298885345459,
+            "factool_math--18--2": 1.4781074523925781,
+            "factool_math--18--3": 1.4737417697906494,
+            "factool_math--18--1": 1.4900972843170166,
+            "executor": 0.00030422210693359375
+        },
+        "factool_math--19": {
+            "factool_math--19--0last": 2.4838504791259766,
+            "factool_math--19--2": 1.3869431018829346,
+            "factool_math--19--1": 1.3991265296936035,
+            "executor": 0.0003161430358886719
+        },
+        "factool_math--20": {
+            "factool_math--20--0last": 2.7645010948181152,
+            "factool_math--20--2": 1.5332157611846924,
+            "factool_math--20--1": 1.545091152191162,
+            "executor": 0.0002868175506591797
+        },
+        "factool_math--21": {
+            "factool_math--21--0last": 1.2404181957244873,
+            "factool_math--21--1": 0.9273555278778076,
+            "executor": 0.0002105236053466797
+        },
+        "factool_math--22": {
+            "factool_math--22--0last": 1.276111364364624,
+            "factool_math--22--1": 0.9548242092132568,
+            "executor": 0.00016498565673828125
+        },
+        "factool_math--23": {
+            "factool_math--23--0last": 2.0969438552856445,
+            "factool_math--23--2": 1.043027400970459,
+            "factool_math--23--1": 1.0524623394012451,
+            "executor": 0.0002765655517578125
+        },
+        "factool_math--24": {
+            "factool_math--24--0last": 3.1567063331604004,
+            "factool_math--24--2": 1.590073585510254,
+            "factool_math--24--1": 1.6016602516174316,
+            "executor": 0.0003235340118408203
+        },
+        "factool_math--25": {
+            "factool_math--25--0last": 4.10576057434082,
+            "factool_math--25--3": 1.6085984706878662,
+            "factool_math--25--2": 1.6183769702911377,
+            "factool_math--25--1": 1.6301867961883545,
+            "executor": 0.00029540061950683594
+        },
+        "factool_math--26": {
+            "factool_math--26--0last": 6.285048723220825,
+            "factool_math--26--2": 1.6384022235870361,
+            "factool_math--26--3": 1.6371726989746094,
+            "factool_math--26--4": 1.6320157051086426,
+            "factool_math--26--1": 1.6542911529541016,
+            "executor": 0.00023436546325683594
+        },
+        "factool_math--27": {
+            "factool_math--27--0last": 10.222483158111572,
+            "factool_math--27--2": 2.6289477348327637,
+            "factool_math--27--3": 2.624246597290039,
+            "factool_math--27--4": 2.6242752075195312,
+            "factool_math--27--5": 2.6182947158813477,
+            "factool_math--27--1": 2.646209239959717,
+            "factool_math--27--6": 2.6136972904205322,
+            "executor": 0.0003762245178222656
+        },
+        "factool_math--28": {
+            "factool_math--28--0last": 4.493552207946777,
+            "factool_math--28--2": 1.617570161819458,
+            "factool_math--28--1": 1.6291875839233398,
+            "factool_math--28--3": 1.6158068180084229,
+            "executor": 0.0002067089080810547
+        },
+        "factool_math--29": {
+            "factool_math--29--0last": 4.147115707397461,
+            "factool_math--29--3": 1.6400585174560547,
+            "factool_math--29--2": 1.650402307510376,
+            "factool_math--29--1": 1.6591053009033203,
+            "executor": 0.00018143653869628906
+        },
+        "factool_math--30": {
+            "factool_math--30--0last": 3.1372270584106445,
+            "factool_math--30--3": 1.182713270187378,
+            "factool_math--30--2": 1.1931252479553223,
+            "factool_math--30--1": 1.2036123275756836,
+            "executor": 0.00019168853759765625
+        },
+        "factool_math--31": {
+            "factool_math--31--0last": 3.0946648120880127,
+            "factool_math--31--2": 1.625220775604248,
+            "factool_math--31--1": 1.6358928680419922,
+            "executor": 0.00019121170043945312
+        },
+        "factool_math--32": {
+            "factool_math--32--0last": 3.0629446506500244,
+            "factool_math--32--2": 1.6017272472381592,
+            "factool_math--32--1": 1.6117866039276123,
+            "executor": 0.00018215179443359375
+        },
+        "factool_math--33": {
+            "factool_math--33--0last": 6.3744871616363525,
+            "factool_math--33--3": 2.008519411087036,
+            "factool_math--33--4": 2.003662586212158,
+            "factool_math--33--2": 2.0176925659179688,
+            "factool_math--33--1": 2.0297763347625732,
+            "executor": 0.000537872314453125
+        },
+        "factool_math--34": {
+            "factool_math--34--0last": 3.1896934509277344,
+            "factool_math--34--2": 1.6086087226867676,
+            "factool_math--34--1": 1.61922025680542,
+            "executor": 0.0002846717834472656
+        },
+        "factool_math--35": {
+            "factool_math--35--0last": 3.8999056816101074,
+            "factool_math--35--2": 1.790379524230957,
+            "factool_math--35--1": 1.8005778789520264,
+            "executor": 0.00030612945556640625
+        },
+        "factool_math--36": {
+            "factool_math--36--0last": 4.90021014213562,
+            "factool_math--36--3": 1.8077030181884766,
+            "factool_math--36--2": 1.816335916519165,
+            "factool_math--36--1": 1.8279006481170654,
+            "executor": 0.0003674030303955078
+        },
+        "factool_math--37": {
+            "factool_math--37--0last": 4.128347158432007,
+            "factool_math--37--3": 1.1030595302581787,
+            "factool_math--37--2": 1.1139247417449951,
+            "factool_math--37--1": 1.124103307723999,
+            "executor": 0.00020313262939453125
+        },
+        "factool_math--38": {
+            "factool_math--38--0last": 1.645554542541504,
+            "factool_math--38--2": 0.8013191223144531,
+            "factool_math--38--1": 0.8150944709777832,
+            "executor": 0.00043201446533203125
+        },
+        "factool_math--39": {
+            "factool_math--39--0last": 1.96718430519104,
+            "factool_math--39--3": 0.7912983894348145,
+            "factool_math--39--2": 0.800060510635376,
+            "factool_math--39--1": 0.8100605010986328,
+            "executor": 0.0005333423614501953
+        },
+        "factool_math--40": {
+            "factool_math--40--0last": 2.266078233718872,
+            "factool_math--40--2": 1.1570796966552734,
+            "factool_math--40--1": 1.1689424514770508,
+            "executor": 0.00023126602172851562
+        },
+        "factool_math--41": {
+            "factool_math--41--0last": 3.1059601306915283,
+            "factool_math--41--3": 1.142484188079834,
+            "factool_math--41--2": 1.153080701828003,
+            "factool_math--41--1": 1.1650569438934326,
+            "executor": 0.0004258155822753906
+        },
+        "factool_math--42": {
+            "factool_math--42--0last": 2.0332610607147217,
+            "factool_math--42--2": 1.0255558490753174,
+            "factool_math--42--1": 1.0357778072357178,
+            "executor": 0.00031876564025878906
+        },
+        "factool_math--43": {
+            "factool_math--43--0last": 5.051905870437622,
+            "factool_math--43--2": 1.3303449153900146,
+            "factool_math--43--4": 1.3184092044830322,
+            "factool_math--43--3": 1.3253962993621826,
+            "factool_math--43--1": 1.3413054943084717,
+            "executor": 0.00031304359436035156
+        },
+        "factool_math--44": {
+            "factool_math--44--0last": 0.8315699100494385,
+            "factool_math--44--1": 0.6320436000823975,
+            "executor": 0.00017905235290527344
+        },
+        "factool_math--45": {
+            "factool_math--45--0last": 3.0693304538726807,
+            "factool_math--45--3": 0.8501420021057129,
+            "factool_math--45--1": 0.8673646450042725,
+            "factool_math--45--2": 0.8594081401824951,
+            "executor": 0.00019097328186035156
+        },
+        "factool_math--46": {
+            "factool_math--46--0last": 2.5669124126434326,
+            "factool_math--46--2": 1.0910325050354004,
+            "factool_math--46--3": 1.0863840579986572,
+            "factool_math--46--1": 1.1046462059020996,
+            "executor": 0.00021266937255859375
+        },
+        "factool_math--47": {
+            "factool_math--47--0last": 3.1119234561920166,
+            "factool_math--47--3": 0.771111011505127,
+            "factool_math--47--2": 0.7780747413635254,
+            "factool_math--47--4": 0.7665426731109619,
+            "factool_math--47--1": 0.7893693447113037,
+            "factool_math--47--5": 0.7633833885192871,
+            "executor": 0.0003407001495361328
+        },
+        "factool_math--48": {
+            "factool_math--48--0last": 1.6101040840148926,
+            "factool_math--48--2": 0.6238017082214355,
+            "factool_math--48--3": 0.621912956237793,
+            "factool_math--48--1": 0.6383533477783203,
+            "executor": 0.0002105236053466797
+        },
+        "factool_math--49": {
+            "factool_math--49--0last": 1.9398975372314453,
+            "factool_math--49--3": 0.9208948612213135,
+            "factool_math--49--1": 0.9378116130828857,
+            "factool_math--49--2": 0.9289894104003906,
+            "executor": 0.0001876354217529297
+        },
+        "factool_math--50": {
+            "factool_math--50--0last": 0.8031854629516602,
+            "factool_math--50--1": 0.715827226638794,
+            "executor": 0.00020074844360351562
+        },
+        "factool_math--51": {
+            "factool_math--51--0last": 1.539170265197754,
+            "factool_math--51--2": 0.7161750793457031,
+            "factool_math--51--1": 0.7279675006866455,
+            "executor": 0.0003151893615722656
+        },
+        "factool_math--52": {
+            "factool_math--52--0last": 1.8868062496185303,
+            "factool_math--52--2": 0.9130377769470215,
+            "factool_math--52--3": 0.9075894355773926,
+            "factool_math--52--1": 0.9243252277374268,
+            "executor": 0.00021958351135253906
+        },
+        "factool_math--53": {
+            "factool_math--53--0last": 1.4539272785186768,
+            "factool_math--53--2": 0.7586920261383057,
+            "factool_math--53--1": 0.7693324089050293,
+            "executor": 0.0002884864807128906
+        },
+        "factool_math--54": {
+            "factool_math--54--0last": 1.2450287342071533,
+            "factool_math--54--2": 0.5465314388275146,
+            "factool_math--54--1": 0.5591695308685303,
+            "executor": 0.0002868175506591797
+        },
+        "factool_math--55": {
+            "factool_math--55--0last": 2.2831382751464844,
+            "factool_math--55--2": 0.814070463180542,
+            "factool_math--55--3": 0.809154748916626,
+            "factool_math--55--1": 0.8267598152160645,
+            "executor": 0.00019598007202148438
+        },
+        "factool_math--56": {
+            "factool_math--56--0last": 2.7351913452148438,
+            "factool_math--56--2": 0.9096181392669678,
+            "factool_math--56--4": 0.9012117385864258,
+            "factool_math--56--3": 0.9088134765625,
+            "factool_math--56--1": 0.9246680736541748,
+            "executor": 0.0004999637603759766
+        },
+        "factool_math--57": {
+            "factool_math--57--0last": 2.2831332683563232,
+            "factool_math--57--2": 0.8037052154541016,
+            "factool_math--57--3": 0.7983095645904541,
+            "factool_math--57--1": 0.8150737285614014,
+            "executor": 0.0002143383026123047
+        },
+        "factool_math--58": {
+            "factool_math--58--0last": 1.8196947574615479,
+            "factool_math--58--2": 0.7014415264129639,
+            "factool_math--58--3": 0.6947929859161377,
+            "factool_math--58--1": 0.7108621597290039,
+            "executor": 0.00029015541076660156
+        },
+        "factool_math--59": {
+            "factool_math--59--0last": 0.8313236236572266,
+            "factool_math--59--1": 0.626549482345581,
+            "executor": 0.00020074844360351562
+        },
+        "factool_math--60": {
+            "factool_math--60--0last": 0.9785103797912598,
+            "factool_math--60--2": 0.5296754837036133,
+            "factool_math--60--1": 0.5414965152740479,
+            "executor": 0.0003151893615722656
+        },
+        "factool_math--61": {
+            "factool_math--61--0last": 1.8046743869781494,
+            "factool_math--61--2": 0.6541106700897217,
+            "factool_math--61--4": 0.6420478820800781,
+            "factool_math--61--3": 0.6502611637115479,
+            "factool_math--61--1": 0.6663544178009033,
+            "executor": 0.0003147125244140625
+        },
+        "factool_math--62": {
+            "factool_math--62--0last": 1.9708569049835205,
+            "factool_math--62--2": 0.8421666622161865,
+            "factool_math--62--3": 0.8381471633911133,
+            "factool_math--62--1": 0.855536699295044,
+            "executor": 0.00020503997802734375
+        },
+        "factool_math--63": {
+            "factool_math--63--0last": 1.5391485691070557,
+            "factool_math--63--3": 0.6623039245605469,
+            "factool_math--63--1": 0.6792032718658447,
+            "factool_math--63--2": 0.6716372966766357,
+            "executor": 0.00024390220642089844
+        },
+        "factool_math--64": {
+            "factool_math--64--0last": 3.344675064086914,
+            "factool_math--64--2": 1.4119255542755127,
+            "factool_math--64--4": 1.4025497436523438,
+            "factool_math--64--3": 1.4101078510284424,
+            "factool_math--64--1": 1.4265658855438232,
+            "executor": 0.0003650188446044922
+        },
+        "factool_math--65": {
+            "factool_math--65--0last": 2.623840808868408,
+            "factool_math--65--2": 1.4440133571624756,
+            "factool_math--65--1": 1.4525315761566162,
+            "executor": 0.0001456737518310547
+        },
+        "factool_math--66": {
+            "factool_math--66--0last": 3.5588433742523193,
+            "factool_math--66--2": 1.5617704391479492,
+            "factool_math--66--3": 1.556215524673462,
+            "factool_math--66--1": 1.5734472274780273,
+            "executor": 0.00022339820861816406
+        },
+        "factool_math--67": {
+            "factool_math--67--0last": 4.672538995742798,
+            "factool_math--67--2": 1.5776100158691406,
+            "factool_math--67--4": 1.5659794807434082,
+            "factool_math--67--3": 1.5747640132904053,
+            "factool_math--67--1": 1.5908031463623047,
+            "executor": 0.00026798248291015625
+        },
+        "factool_math--68": {
+            "factool_math--68--0last": 2.5695576667785645,
+            "factool_math--68--2": 1.2999041080474854,
+            "factool_math--68--1": 1.3115265369415283,
+            "executor": 0.0003154277801513672
+        },
+        "factool_math--69": {
+            "factool_math--69--0last": 2.5884850025177,
+            "factool_math--69--2": 1.3202390670776367,
+            "factool_math--69--1": 1.3287930488586426,
+            "executor": 0.0003559589385986328
+        },
+        "factool_math--70": {
+            "factool_math--70--0last": 2.5963263511657715,
+            "factool_math--70--2": 1.318648338317871,
+            "factool_math--70--1": 1.330777883529663,
+            "executor": 0.00036644935607910156
+        },
+        "factool_math--71": {
+            "factool_math--71--0last": 10.295010328292847,
+            "factool_math--71--9": 2.268373489379883,
+            "factool_math--71--4": 2.3012771606445312,
+            "factool_math--71--2": 2.314922332763672,
+            "factool_math--71--5": 2.296243190765381,
+            "factool_math--71--1": 2.3240323066711426,
+            "factool_math--71--6": 2.2914986610412598,
+            "factool_math--71--3": 2.310910701751709,
+            "factool_math--71--7": 2.2866318225860596,
+            "factool_math--71--8": 2.2814242839813232,
+            "executor": 0.0004584789276123047
+        },
+        "factool_math--72": {
+            "factool_math--72--0last": 2.9069182872772217,
+            "factool_math--72--3": 1.2246017456054688,
+            "factool_math--72--2": 1.235379934310913,
+            "factool_math--72--1": 1.2442991733551025,
+            "executor": 0.00022411346435546875
+        },
+        "factool_math--73": {
+            "factool_math--73--0last": 2.119636297225952,
+            "factool_math--73--2": 0.8583722114562988,
+            "factool_math--73--1": 0.8695402145385742,
+            "executor": 0.0003886222839355469
+        },
+        "factool_math--74": {
+            "factool_math--74--0last": 2.554762840270996,
+            "factool_math--74--2": 1.2971630096435547,
+            "factool_math--74--1": 1.3071825504302979,
+            "executor": 0.00020384788513183594
+        },
+        "factool_math--75": {
+            "factool_math--75--0last": 5.048443555831909,
+            "factool_math--75--2": 1.3090827465057373,
+            "factool_math--75--4": 1.297131061553955,
+            "factool_math--75--5": 1.2913224697113037,
+            "factool_math--75--3": 1.3069226741790771,
+            "factool_math--75--1": 1.3229827880859375,
+            "executor": 0.00036907196044921875
+        },
+        "factool_math--76": {
+            "factool_math--76--0last": 3.1978931427001953,
+            "factool_math--76--3": 1.1118650436401367,
+            "factool_math--76--4": 1.1061758995056152,
+            "factool_math--76--2": 1.1198337078094482,
+            "factool_math--76--1": 1.1316938400268555,
+            "executor": 0.000301361083984375
+        },
+        "factool_math--77": {
+            "factool_math--77--0last": 1.38185453414917,
+            "factool_math--77--1": 1.4076511859893799,
+            "executor": 0.00036144256591796875
+        },
+        "factool_math--78": {
+            "factool_math--78--0last": 2.6798787117004395,
+            "factool_math--78--2": 1.3160326480865479,
+            "factool_math--78--1": 1.326239824295044,
+            "executor": 0.0003085136413574219
+        },
+        "factool_math--79": {
+            "factool_math--79--0last": 2.5927202701568604,
+            "factool_math--79--2": 1.2838046550750732,
+            "factool_math--79--1": 1.295393705368042,
+            "executor": 0.000255584716796875
+        },
+        "factool_math--80": {
+            "factool_math--80--0last": 5.226503133773804,
+            "factool_math--80--3": 1.4745104312896729,
+            "factool_math--80--4": 1.469226598739624,
+            "factool_math--80--5": 1.4632441997528076,
+            "factool_math--80--2": 1.4828689098358154,
+            "factool_math--80--1": 1.4947712421417236,
+            "factool_math--80--6": 1.4610140323638916,
+            "executor": 0.0003058910369873047
+        },
+        "factool_math--81": {
+            "factool_math--81--0last": 3.7809488773345947,
+            "factool_math--81--3": 1.9043593406677246,
+            "factool_math--81--1": 1.9200963973999023,
+            "factool_math--81--2": 1.9132459163665771,
+            "executor": 0.0003924369812011719
+        },
+        "factool_math--82": {
+            "factool_math--82--0last": 2.694133758544922,
+            "factool_math--82--2": 1.286764144897461,
+            "factool_math--82--1": 1.2996315956115723,
+            "executor": 0.00017571449279785156
+        },
+        "factool_math--83": {
+            "factool_math--83--0last": 6.006840467453003,
+            "factool_math--83--3": 1.7504684925079346,
+            "factool_math--83--1": 1.7669575214385986,
+            "factool_math--83--4": 1.746427297592163,
+            "factool_math--83--2": 1.762688398361206,
+            "factool_math--83--5": 1.7425222396850586,
+            "executor": 0.0002589225769042969
+        },
+        "factool_math--84": {
+            "factool_math--84--0last": 2.560142993927002,
+            "factool_math--84--2": 0.9950037002563477,
+            "factool_math--84--3": 0.9916245937347412,
+            "factool_math--84--1": 1.0077245235443115,
+            "executor": 0.0002639293670654297
+        },
+        "factool_math--85": {
+            "factool_math--85--0last": 2.2155673503875732,
+            "factool_math--85--2": 0.9217824935913086,
+            "factool_math--85--1": 0.9323005676269531,
+            "executor": 0.00027489662170410156
+        },
+        "factool_math--86": {
+            "factool_math--86--0last": 3.503420829772949,
+            "factool_math--86--2": 1.4100162982940674,
+            "factool_math--86--3": 1.407902479171753,
+            "factool_math--86--1": 1.4251995086669922,
+            "executor": 0.00047016143798828125
+        },
+        "factool_math--87": {
+            "factool_math--87--0last": 2.6200814247131348,
+            "factool_math--87--2": 1.3534483909606934,
+            "factool_math--87--1": 1.36360764503479,
+            "executor": 0.00037097930908203125
+        },
+        "factool_math--88": {
+            "factool_math--88--0last": 9.315412759780884,
+            "factool_math--88--7": 1.7272183895111084,
+            "factool_math--88--3": 1.7544338703155518,
+            "factool_math--88--1": 1.7760365009307861,
+            "factool_math--88--2": 1.7661476135253906,
+            "factool_math--88--4": 1.7545616626739502,
+            "factool_math--88--5": 1.7484455108642578,
+            "factool_math--88--6": 1.7430846691131592,
+            "executor": 0.00038552284240722656
+        },
+        "factool_math--89": {
+            "factool_math--89--0last": 4.580029010772705,
+            "factool_math--89--1": 1.298408031463623,
+            "factool_math--89--5": 1.2698967456817627,
+            "factool_math--89--2": 1.2912509441375732,
+            "factool_math--89--4": 1.2790486812591553,
+            "factool_math--89--3": 1.2862281799316406,
+            "executor": 0.0002677440643310547
+        },
+        "factool_math--90": {
+            "factool_math--90--0last": 2.994818687438965,
+            "factool_math--90--2": 1.8081762790679932,
+            "factool_math--90--1": 1.8204588890075684,
+            "executor": 0.000324249267578125
+        },
+        "factool_math--91": {
+            "factool_math--91--0last": 4.080920219421387,
+            "factool_math--91--2": 1.3721487522125244,
+            "factool_math--91--3": 1.3702876567840576,
+            "factool_math--91--1": 1.38639497756958,
+            "executor": 0.00046324729919433594
+        },
+        "factool_math--92": {
+            "factool_math--92--0last": 4.306177616119385,
+            "factool_math--92--2": 1.8282713890075684,
+            "factool_math--92--3": 1.823202133178711,
+            "factool_math--92--1": 1.8421132564544678,
+            "executor": 0.0001976490020751953
+        },
+        "factool_math--93": {
+            "factool_math--93--0last": 4.6362903118133545,
+            "factool_math--93--2": 1.98233962059021,
+            "factool_math--93--3": 1.9775958061218262,
+            "factool_math--93--1": 1.9950783252716064,
+            "executor": 0.00019860267639160156
+        },
+        "factool_math--94": {
+            "factool_math--94--0last": 3.266390800476074,
+            "factool_math--94--2": 1.4345026016235352,
+            "factool_math--94--1": 1.4453723430633545,
+            "executor": 0.0003445148468017578
+        },
+        "factool_math--95": {
+            "factool_math--95--0last": 2.879305839538574,
+            "factool_math--95--2": 1.6290876865386963,
+            "factool_math--95--1": 1.6431655883789062,
+            "executor": 0.0004546642303466797
+        },
+        "factool_math--96": {
+            "factool_math--96--0last": 4.076376676559448,
+            "factool_math--96--4": 1.1338143348693848,
+            "factool_math--96--2": 1.1468162536621094,
+            "factool_math--96--3": 1.1415796279907227,
+            "factool_math--96--1": 1.1592299938201904,
+            "executor": 0.0003223419189453125
+        },
+        "factool_math--97": {
+            "factool_math--97--0last": 2.722075939178467,
+            "factool_math--97--2": 1.4936232566833496,
+            "factool_math--97--1": 1.5063989162445068,
+            "executor": 0.00036978721618652344
+        },
+        "factool_math--98": {
+            "factool_math--98--0last": 2.8390581607818604,
+            "factool_math--98--2": 1.0586342811584473,
+            "factool_math--98--3": 1.0539629459381104,
+            "factool_math--98--1": 1.0702967643737793,
+            "executor": 0.0004031658172607422
+        },
+        "factool_math--99": {
+            "factool_math--99--0last": 1.928659439086914,
+            "factool_math--99--2": 0.9141323566436768,
+            "factool_math--99--1": 0.9262073040008545,
+            "executor": 0.0003120899200439453
+        }
+    },
+    "token_nums": {
+        "factool_math--0": {
+            "factool_math--0--0last": {
+                "prompt_tokens": 721,
+                "completion_tokens": 75,
+                "total_tokens": 796
+            },
+            "factool_math--0--2": {
+                "prompt_tokens": 265,
+                "completion_tokens": 32,
+                "total_tokens": 297
+            },
+            "factool_math--0--1": {
+                "prompt_tokens": 259,
+                "completion_tokens": 32,
+                "total_tokens": 291
+            }
+        },
+        "factool_math--1": {
+            "factool_math--1--0last": {
+                "prompt_tokens": 744,
+                "completion_tokens": 72,
+                "total_tokens": 816
+            },
+            "factool_math--1--2": {
+                "prompt_tokens": 262,
+                "completion_tokens": 32,
+                "total_tokens": 294
+            },
+            "factool_math--1--1": {
+                "prompt_tokens": 259,
+                "completion_tokens": 32,
+                "total_tokens": 291
+            }
+        },
+        "factool_math--2": {
+            "factool_math--2--0last": {
+                "prompt_tokens": 1073,
+                "completion_tokens": 81,
+                "total_tokens": 1154
+            },
+            "factool_math--2--2": {
+                "prompt_tokens": 270,
+                "completion_tokens": 33,
+                "total_tokens": 303
+            },
+            "factool_math--2--1": {
+                "prompt_tokens": 260,
+                "completion_tokens": 33,
+                "total_tokens": 293
+            }
+        },
+        "factool_math--3": {
+            "factool_math--3--0last": {
+                "prompt_tokens": 854,
+                "completion_tokens": 123,
+                "total_tokens": 977
+            },
+            "factool_math--3--3": {
+                "prompt_tokens": 277,
+                "completion_tokens": 33,
+                "total_tokens": 310
+            },
+            "factool_math--3--2": {
+                "prompt_tokens": 261,
+                "completion_tokens": 33,
+                "total_tokens": 294
+            },
+            "factool_math--3--1": {
+                "prompt_tokens": 260,
+                "completion_tokens": 33,
+                "total_tokens": 293
+            }
+        },
+        "factool_math--4": {
+            "factool_math--4--0last": {
+                "prompt_tokens": 879,
+                "completion_tokens": 151,
+                "total_tokens": 1030
+            },
+            "factool_math--4--3": {
+                "prompt_tokens": 261,
+                "completion_tokens": 34,
+                "total_tokens": 295
+            },
+            "factool_math--4--4": {
+                "prompt_tokens": 267,
+                "completion_tokens": 34,
+                "total_tokens": 301
+            },
+            "factool_math--4--2": {
+                "prompt_tokens": 263,
+                "completion_tokens": 34,
+                "total_tokens": 297
+            },
+            "factool_math--4--1": {
+                "prompt_tokens": 261,
+                "completion_tokens": 34,
+                "total_tokens": 295
+            }
+        },
+        "factool_math--5": {
+            "factool_math--5--0last": {
+                "prompt_tokens": 802,
+                "completion_tokens": 123,
+                "total_tokens": 925
+            },
+            "factool_math--5--3": {
+                "prompt_tokens": 277,
+                "completion_tokens": 31,
+                "total_tokens": 308
+            },
+            "factool_math--5--2": {
+                "prompt_tokens": 263,
+                "completion_tokens": 31,
+                "total_tokens": 294
+            },
+            "factool_math--5--1": {
+                "prompt_tokens": 258,
+                "completion_tokens": 31,
+                "total_tokens": 289
+            }
+        },
+        "factool_math--6": {
+            "factool_math--6--0last": {
+                "prompt_tokens": 804,
+                "completion_tokens": 127,
+                "total_tokens": 931
+            },
+            "factool_math--6--3": {
+                "prompt_tokens": 250,
+                "completion_tokens": 33,
+                "total_tokens": 283
+            },
+            "factool_math--6--4": {
+                "prompt_tokens": 268,
+                "completion_tokens": 33,
+                "total_tokens": 301
+            },
+            "factool_math--6--2": {
+                "prompt_tokens": 250,
+                "completion_tokens": 33,
+                "total_tokens": 283
+            },
+            "factool_math--6--1": {
+                "prompt_tokens": 260,
+                "completion_tokens": 33,
+                "total_tokens": 293
+            }
+        },
+        "factool_math--7": {
+            "factool_math--7--0last": {
+                "prompt_tokens": 832,
+                "completion_tokens": 62,
+                "total_tokens": 894
+            },
+            "factool_math--7--2": {
+                "prompt_tokens": 255,
+                "completion_tokens": 29,
+                "total_tokens": 284
+            },
+            "factool_math--7--1": {
+                "prompt_tokens": 256,
+                "completion_tokens": 29,
+                "total_tokens": 285
+            }
+        },
+        "factool_math--8": {
+            "factool_math--8--0last": {
+                "prompt_tokens": 766,
+                "completion_tokens": 71,
+                "total_tokens": 837
+            },
+            "factool_math--8--2": {
+                "prompt_tokens": 263,
+                "completion_tokens": 30,
+                "total_tokens": 293
+            },
+            "factool_math--8--1": {
+                "prompt_tokens": 257,
+                "completion_tokens": 30,
+                "total_tokens": 287
+            }
+        },
+        "factool_math--9": {
+            "factool_math--9--0last": {
+                "prompt_tokens": 834,
+                "completion_tokens": 79,
+                "total_tokens": 913
+            },
+            "factool_math--9--2": {
+                "prompt_tokens": 261,
+                "completion_tokens": 35,
+                "total_tokens": 296
+            },
+            "factool_math--9--1": {
+                "prompt_tokens": 263,
+                "completion_tokens": 35,
+                "total_tokens": 298
+            }
+        },
+        "factool_math--10": {
+            "factool_math--10--0last": {
+                "prompt_tokens": 767,
+                "completion_tokens": 37,
+                "total_tokens": 804
+            },
+            "factool_math--10--1": {
+                "prompt_tokens": 260,
+                "completion_tokens": 33,
+                "total_tokens": 293
+            }
+        },
+        "factool_math--11": {
+            "factool_math--11--0last": {
+                "prompt_tokens": 764,
+                "completion_tokens": 24,
+                "total_tokens": 788
+            },
+            "factool_math--11--1": {
+                "prompt_tokens": 247,
+                "completion_tokens": 20,
+                "total_tokens": 267
+            }
+        },
+        "factool_math--12": {
+            "factool_math--12--0last": {
+                "prompt_tokens": 1000,
+                "completion_tokens": 215,
+                "total_tokens": 1215
+            },
+            "factool_math--12--4": {
+                "prompt_tokens": 276,
+                "completion_tokens": 21,
+                "total_tokens": 297
+            },
+            "factool_math--12--3": {
+                "prompt_tokens": 269,
+                "completion_tokens": 21,
+                "total_tokens": 290
+            },
+            "factool_math--12--2": {
+                "prompt_tokens": 263,
+                "completion_tokens": 21,
+                "total_tokens": 284
+            },
+            "factool_math--12--5": {
+                "prompt_tokens": 286,
+                "completion_tokens": 21,
+                "total_tokens": 307
+            },
+            "factool_math--12--1": {
+                "prompt_tokens": 248,
+                "completion_tokens": 21,
+                "total_tokens": 269
+            }
+        },
+        "factool_math--13": {
+            "factool_math--13--0last": {
+                "prompt_tokens": 829,
+                "completion_tokens": 141,
+                "total_tokens": 970
+            },
+            "factool_math--13--3": {
+                "prompt_tokens": 260,
+                "completion_tokens": 28,
+                "total_tokens": 288
+            },
+            "factool_math--13--2": {
+                "prompt_tokens": 255,
+                "completion_tokens": 28,
+                "total_tokens": 283
+            },
+            "factool_math--13--1": {
+                "prompt_tokens": 255,
+                "completion_tokens": 28,
+                "total_tokens": 283
+            },
+            "factool_math--13--4": {
+                "prompt_tokens": 272,
+                "completion_tokens": 28,
+                "total_tokens": 300
+            }
+        },
+        "factool_math--14": {
+            "factool_math--14--0last": {
+                "prompt_tokens": 829,
+                "completion_tokens": 97,
+                "total_tokens": 926
+            },
+            "factool_math--14--3": {
+                "prompt_tokens": 262,
+                "completion_tokens": 34,
+                "total_tokens": 296
+            },
+            "factool_math--14--2": {
+                "prompt_tokens": 249,
+                "completion_tokens": 34,
+                "total_tokens": 283
+            },
+            "factool_math--14--1": {
+                "prompt_tokens": 261,
+                "completion_tokens": 34,
+                "total_tokens": 295
+            }
+        },
+        "factool_math--15": {
+            "factool_math--15--0last": {
+                "prompt_tokens": 784,
+                "completion_tokens": 75,
+                "total_tokens": 859
+            },
+            "factool_math--15--3": {
+                "prompt_tokens": 250,
+                "completion_tokens": 23,
+                "total_tokens": 273
+            },
+            "factool_math--15--2": {
+                "prompt_tokens": 250,
+                "completion_tokens": 23,
+                "total_tokens": 273
+            },
+            "factool_math--15--1": {
+                "prompt_tokens": 250,
+                "completion_tokens": 23,
+                "total_tokens": 273
+            }
+        },
+        "factool_math--16": {
+            "factool_math--16--0last": {
+                "prompt_tokens": 884,
+                "completion_tokens": 69,
+                "total_tokens": 953
+            },
+            "factool_math--16--2": {
+                "prompt_tokens": 259,
+                "completion_tokens": 32,
+                "total_tokens": 291
+            },
+            "factool_math--16--1": {
+                "prompt_tokens": 259,
+                "completion_tokens": 32,
+                "total_tokens": 291
+            }
+        },
+        "factool_math--17": {
+            "factool_math--17--0last": {
+                "prompt_tokens": 758,
+                "completion_tokens": 101,
+                "total_tokens": 859
+            },
+            "factool_math--17--4": {
+                "prompt_tokens": 251,
+                "completion_tokens": 31,
+                "total_tokens": 282
+            },
+            "factool_math--17--3": {
+                "prompt_tokens": 249,
+                "completion_tokens": 31,
+                "total_tokens": 280
+            },
+            "factool_math--17--2": {
+                "prompt_tokens": 250,
+                "completion_tokens": 31,
+                "total_tokens": 281
+            },
+            "factool_math--17--1": {
+                "prompt_tokens": 252,
+                "completion_tokens": 31,
+                "total_tokens": 283
+            }
+        },
+        "factool_math--18": {
+            "factool_math--18--0last": {
+                "prompt_tokens": 856,
+                "completion_tokens": 132,
+                "total_tokens": 988
+            },
+            "factool_math--18--2": {
+                "prompt_tokens": 268,
+                "completion_tokens": 39,
+                "total_tokens": 307
+            },
+            "factool_math--18--3": {
+                "prompt_tokens": 273,
+                "completion_tokens": 39,
+                "total_tokens": 312
+            },
+            "factool_math--18--1": {
+                "prompt_tokens": 266,
+                "completion_tokens": 39,
+                "total_tokens": 305
+            }
+        },
+        "factool_math--19": {
+            "factool_math--19--0last": {
+                "prompt_tokens": 740,
+                "completion_tokens": 69,
+                "total_tokens": 809
+            },
+            "factool_math--19--2": {
+                "prompt_tokens": 258,
+                "completion_tokens": 33,
+                "total_tokens": 291
+            },
+            "factool_math--19--1": {
+                "prompt_tokens": 260,
+                "completion_tokens": 33,
+                "total_tokens": 293
+            }
+        },
+        "factool_math--20": {
+            "factool_math--20--0last": {
+                "prompt_tokens": 772,
+                "completion_tokens": 65,
+                "total_tokens": 837
+            },
+            "factool_math--20--2": {
+                "prompt_tokens": 257,
+                "completion_tokens": 30,
+                "total_tokens": 287
+            },
+            "factool_math--20--1": {
+                "prompt_tokens": 257,
+                "completion_tokens": 30,
+                "total_tokens": 287
+            }
+        },
+        "factool_math--21": {
+            "factool_math--21--0last": {
+                "prompt_tokens": 922,
+                "completion_tokens": 24,
+                "total_tokens": 946
+            },
+            "factool_math--21--1": {
+                "prompt_tokens": 247,
+                "completion_tokens": 20,
+                "total_tokens": 267
+            }
+        },
+        "factool_math--22": {
+            "factool_math--22--0last": {
+                "prompt_tokens": 976,
+                "completion_tokens": 25,
+                "total_tokens": 1001
+            },
+            "factool_math--22--1": {
+                "prompt_tokens": 248,
+                "completion_tokens": 21,
+                "total_tokens": 269
+            }
+        },
+        "factool_math--23": {
+            "factool_math--23--0last": {
+                "prompt_tokens": 749,
+                "completion_tokens": 45,
+                "total_tokens": 794
+            },
+            "factool_math--23--2": {
+                "prompt_tokens": 247,
+                "completion_tokens": 20,
+                "total_tokens": 267
+            },
+            "factool_math--23--1": {
+                "prompt_tokens": 247,
+                "completion_tokens": 20,
+                "total_tokens": 267
+            }
+        },
+        "factool_math--24": {
+            "factool_math--24--0last": {
+                "prompt_tokens": 813,
+                "completion_tokens": 73,
+                "total_tokens": 886
+            },
+            "factool_math--24--2": {
+                "prompt_tokens": 262,
+                "completion_tokens": 33,
+                "total_tokens": 295
+            },
+            "factool_math--24--1": {
+                "prompt_tokens": 260,
+                "completion_tokens": 33,
+                "total_tokens": 293
+            }
+        },
+        "factool_math--25": {
+            "factool_math--25--0last": {
+                "prompt_tokens": 828,
+                "completion_tokens": 95,
+                "total_tokens": 923
+            },
+            "factool_math--25--3": {
+                "prompt_tokens": 255,
+                "completion_tokens": 33,
+                "total_tokens": 288
+            },
+            "factool_math--25--2": {
+                "prompt_tokens": 255,
+                "completion_tokens": 33,
+                "total_tokens": 288
+            },
+            "factool_math--25--1": {
+                "prompt_tokens": 260,
+                "completion_tokens": 33,
+                "total_tokens": 293
+            }
+        },
+        "factool_math--26": {
+            "factool_math--26--0last": {
+                "prompt_tokens": 902,
+                "completion_tokens": 156,
+                "total_tokens": 1058
+            },
+            "factool_math--26--2": {
+                "prompt_tokens": 264,
+                "completion_tokens": 28,
+                "total_tokens": 292
+            },
+            "factool_math--26--3": {
+                "prompt_tokens": 265,
+                "completion_tokens": 28,
+                "total_tokens": 293
+            },
+            "factool_math--26--4": {
+                "prompt_tokens": 273,
+                "completion_tokens": 28,
+                "total_tokens": 301
+            },
+            "factool_math--26--1": {
+                "prompt_tokens": 255,
+                "completion_tokens": 28,
+                "total_tokens": 283
+            }
+        },
+        "factool_math--27": {
+            "factool_math--27--0last": {
+                "prompt_tokens": 1011,
+                "completion_tokens": 250,
+                "total_tokens": 1261
+            },
+            "factool_math--27--2": {
+                "prompt_tokens": 263,
+                "completion_tokens": 46,
+                "total_tokens": 309
+            },
+            "factool_math--27--3": {
+                "prompt_tokens": 272,
+                "completion_tokens": 46,
+                "total_tokens": 318
+            },
+            "factool_math--27--4": {
+                "prompt_tokens": 263,
+                "completion_tokens": 46,
+                "total_tokens": 309
+            },
+            "factool_math--27--5": {
+                "prompt_tokens": 270,
+                "completion_tokens": 46,
+                "total_tokens": 316
+            },
+            "factool_math--27--1": {
+                "prompt_tokens": 263,
+                "completion_tokens": 46,
+                "total_tokens": 309
+            },
+            "factool_math--27--6": {
+                "prompt_tokens": 272,
+                "completion_tokens": 46,
+                "total_tokens": 318
+            }
+        },
+        "factool_math--28": {
+            "factool_math--28--0last": {
+                "prompt_tokens": 782,
+                "completion_tokens": 116,
+                "total_tokens": 898
+            },
+            "factool_math--28--2": {
+                "prompt_tokens": 263,
+                "completion_tokens": 33,
+                "total_tokens": 296
+            },
+            "factool_math--28--1": {
+                "prompt_tokens": 260,
+                "completion_tokens": 33,
+                "total_tokens": 293
+            },
+            "factool_math--28--3": {
+                "prompt_tokens": 268,
+                "completion_tokens": 33,
+                "total_tokens": 301
+            }
+        },
+        "factool_math--29": {
+            "factool_math--29--0last": {
+                "prompt_tokens": 784,
+                "completion_tokens": 109,
+                "total_tokens": 893
+            },
+            "factool_math--29--3": {
+                "prompt_tokens": 260,
+                "completion_tokens": 33,
+                "total_tokens": 293
+            },
+            "factool_math--29--2": {
+                "prompt_tokens": 264,
+                "completion_tokens": 33,
+                "total_tokens": 297
+            },
+            "factool_math--29--1": {
+                "prompt_tokens": 260,
+                "completion_tokens": 33,
+                "total_tokens": 293
+            }
+        },
+        "factool_math--30": {
+            "factool_math--30--0last": {
+                "prompt_tokens": 851,
+                "completion_tokens": 71,
+                "total_tokens": 922
+            },
+            "factool_math--30--3": {
+                "prompt_tokens": 248,
+                "completion_tokens": 22,
+                "total_tokens": 270
+            },
+            "factool_math--30--2": {
+                "prompt_tokens": 249,
+                "completion_tokens": 22,
+                "total_tokens": 271
+            },
+            "factool_math--30--1": {
+                "prompt_tokens": 249,
+                "completion_tokens": 22,
+                "total_tokens": 271
+            }
+        },
+        "factool_math--31": {
+            "factool_math--31--0last": {
+                "prompt_tokens": 799,
+                "completion_tokens": 73,
+                "total_tokens": 872
+            },
+            "factool_math--31--2": {
+                "prompt_tokens": 262,
+                "completion_tokens": 33,
+                "total_tokens": 295
+            },
+            "factool_math--31--1": {
+                "prompt_tokens": 260,
+                "completion_tokens": 33,
+                "total_tokens": 293
+            }
+        },
+        "factool_math--32": {
+            "factool_math--32--0last": {
+                "prompt_tokens": 884,
+                "completion_tokens": 73,
+                "total_tokens": 957
+            },
+            "factool_math--32--2": {
+                "prompt_tokens": 255,
+                "completion_tokens": 38,
+                "total_tokens": 293
+            },
+            "factool_math--32--1": {
+                "prompt_tokens": 266,
+                "completion_tokens": 38,
+                "total_tokens": 304
+            }
+        },
+        "factool_math--33": {
+            "factool_math--33--0last": {
+                "prompt_tokens": 878,
+                "completion_tokens": 150,
+                "total_tokens": 1028
+            },
+            "factool_math--33--3": {
+                "prompt_tokens": 262,
+                "completion_tokens": 35,
+                "total_tokens": 297
+            },
+            "factool_math--33--4": {
+                "prompt_tokens": 265,
+                "completion_tokens": 35,
+                "total_tokens": 300
+            },
+            "factool_math--33--2": {
+                "prompt_tokens": 262,
+                "completion_tokens": 35,
+                "total_tokens": 297
+            },
+            "factool_math--33--1": {
+                "prompt_tokens": 262,
+                "completion_tokens": 35,
+                "total_tokens": 297
+            }
+        },
+        "factool_math--34": {
+            "factool_math--34--0last": {
+                "prompt_tokens": 734,
+                "completion_tokens": 73,
+                "total_tokens": 807
+            },
+            "factool_math--34--2": {
+                "prompt_tokens": 262,
+                "completion_tokens": 33,
+                "total_tokens": 295
+            },
+            "factool_math--34--1": {
+                "prompt_tokens": 260,
+                "completion_tokens": 33,
+                "total_tokens": 293
+            }
+        },
+        "factool_math--35": {
+            "factool_math--35--0last": {
+                "prompt_tokens": 840,
+                "completion_tokens": 89,
+                "total_tokens": 929
+            },
+            "factool_math--35--2": {
+                "prompt_tokens": 276,
+                "completion_tokens": 39,
+                "total_tokens": 315
+            },
+            "factool_math--35--1": {
+                "prompt_tokens": 263,
+                "completion_tokens": 39,
+                "total_tokens": 302
+            }
+        },
+        "factool_math--36": {
+            "factool_math--36--0last": {
+                "prompt_tokens": 821,
+                "completion_tokens": 120,
+                "total_tokens": 941
+            },
+            "factool_math--36--3": {
+                "prompt_tokens": 268,
+                "completion_tokens": 34,
+                "total_tokens": 302
+            },
+            "factool_math--36--2": {
+                "prompt_tokens": 266,
+                "completion_tokens": 34,
+                "total_tokens": 300
+            },
+            "factool_math--36--1": {
+                "prompt_tokens": 261,
+                "completion_tokens": 34,
+                "total_tokens": 295
+            }
+        },
+        "factool_math--37": {
+            "factool_math--37--0last": {
+                "prompt_tokens": 813,
+                "completion_tokens": 122,
+                "total_tokens": 935
+            },
+            "factool_math--37--3": {
+                "prompt_tokens": 273,
+                "completion_tokens": 33,
+                "total_tokens": 306
+            },
+            "factool_math--37--2": {
+                "prompt_tokens": 264,
+                "completion_tokens": 33,
+                "total_tokens": 297
+            },
+            "factool_math--37--1": {
+                "prompt_tokens": 260,
+                "completion_tokens": 33,
+                "total_tokens": 293
+            }
+        },
+        "factool_math--38": {
+            "factool_math--38--0last": {
+                "prompt_tokens": 796,
+                "completion_tokens": 52,
+                "total_tokens": 848
+            },
+            "factool_math--38--2": {
+                "prompt_tokens": 251,
+                "completion_tokens": 23,
+                "total_tokens": 274
+            },
+            "factool_math--38--1": {
+                "prompt_tokens": 250,
+                "completion_tokens": 23,
+                "total_tokens": 273
+            }
+        },
+        "factool_math--39": {
+            "factool_math--39--0last": {
+                "prompt_tokens": 770,
+                "completion_tokens": 67,
+                "total_tokens": 837
+            },
+            "factool_math--39--3": {
+                "prompt_tokens": 248,
+                "completion_tokens": 20,
+                "total_tokens": 268
+            },
+            "factool_math--39--2": {
+                "prompt_tokens": 247,
+                "completion_tokens": 20,
+                "total_tokens": 267
+            },
+            "factool_math--39--1": {
+                "prompt_tokens": 247,
+                "completion_tokens": 20,
+                "total_tokens": 267
+            }
+        },
+        "factool_math--40": {
+            "factool_math--40--0last": {
+                "prompt_tokens": 796,
+                "completion_tokens": 76,
+                "total_tokens": 872
+            },
+            "factool_math--40--2": {
+                "prompt_tokens": 262,
+                "completion_tokens": 37,
+                "total_tokens": 299
+            },
+            "factool_math--40--1": {
+                "prompt_tokens": 264,
+                "completion_tokens": 37,
+                "total_tokens": 301
+            }
+        },
+        "factool_math--41": {
+            "factool_math--41--0last": {
+                "prompt_tokens": 894,
+                "completion_tokens": 118,
+                "total_tokens": 1012
+            },
+            "factool_math--41--3": {
+                "prompt_tokens": 274,
+                "completion_tokens": 33,
+                "total_tokens": 307
+            },
+            "factool_math--41--2": {
+                "prompt_tokens": 259,
+                "completion_tokens": 33,
+                "total_tokens": 292
+            },
+            "factool_math--41--1": {
+                "prompt_tokens": 260,
+                "completion_tokens": 33,
+                "total_tokens": 293
+            }
+        },
+        "factool_math--42": {
+            "factool_math--42--0last": {
+                "prompt_tokens": 819,
+                "completion_tokens": 73,
+                "total_tokens": 892
+            },
+            "factool_math--42--2": {
+                "prompt_tokens": 262,
+                "completion_tokens": 33,
+                "total_tokens": 295
+            },
+            "factool_math--42--1": {
+                "prompt_tokens": 260,
+                "completion_tokens": 33,
+                "total_tokens": 293
+            }
+        },
+        "factool_math--43": {
+            "factool_math--43--0last": {
+                "prompt_tokens": 929,
+                "completion_tokens": 183,
+                "total_tokens": 1112
+            },
+            "factool_math--43--2": {
+                "prompt_tokens": 261,
+                "completion_tokens": 33,
+                "total_tokens": 294
+            },
+            "factool_math--43--4": {
+                "prompt_tokens": 286,
+                "completion_tokens": 33,
+                "total_tokens": 319
+            },
+            "factool_math--43--3": {
+                "prompt_tokens": 277,
+                "completion_tokens": 33,
+                "total_tokens": 310
+            },
+            "factool_math--43--1": {
+                "prompt_tokens": 260,
+                "completion_tokens": 33,
+                "total_tokens": 293
+            }
+        },
+        "factool_math--44": {
+            "factool_math--44--0last": {
+                "prompt_tokens": 754,
+                "completion_tokens": 26,
+                "total_tokens": 780
+            },
+            "factool_math--44--1": {
+                "prompt_tokens": 249,
+                "completion_tokens": 22,
+                "total_tokens": 271
+            }
+        },
+        "factool_math--45": {
+            "factool_math--45--0last": {
+                "prompt_tokens": 801,
+                "completion_tokens": 118,
+                "total_tokens": 919
+            },
+            "factool_math--45--3": {
+                "prompt_tokens": 270,
+                "completion_tokens": 35,
+                "total_tokens": 305
+            },
+            "factool_math--45--1": {
+                "prompt_tokens": 262,
+                "completion_tokens": 35,
+                "total_tokens": 297
+            },
+            "factool_math--45--2": {
+                "prompt_tokens": 261,
+                "completion_tokens": 35,
+                "total_tokens": 296
+            }
+        },
+        "factool_math--46": {
+            "factool_math--46--0last": {
+                "prompt_tokens": 816,
+                "completion_tokens": 136,
+                "total_tokens": 952
+            },
+            "factool_math--46--2": {
+                "prompt_tokens": 265,
+                "completion_tokens": 47,
+                "total_tokens": 312
+            },
+            "factool_math--46--3": {
+                "prompt_tokens": 272,
+                "completion_tokens": 47,
+                "total_tokens": 319
+            },
+            "factool_math--46--1": {
+                "prompt_tokens": 274,
+                "completion_tokens": 47,
+                "total_tokens": 321
+            }
+        },
+        "factool_math--47": {
+            "factool_math--47--0last": {
+                "prompt_tokens": 898,
+                "completion_tokens": 168,
+                "total_tokens": 1066
+            },
+            "factool_math--47--3": {
+                "prompt_tokens": 263,
+                "completion_tokens": 24,
+                "total_tokens": 287
+            },
+            "factool_math--47--2": {
+                "prompt_tokens": 253,
+                "completion_tokens": 24,
+                "total_tokens": 277
+            },
+            "factool_math--47--4": {
+                "prompt_tokens": 265,
+                "completion_tokens": 24,
+                "total_tokens": 289
+            },
+            "factool_math--47--1": {
+                "prompt_tokens": 251,
+                "completion_tokens": 24,
+                "total_tokens": 275
+            },
+            "factool_math--47--5": {
+                "prompt_tokens": 263,
+                "completion_tokens": 24,
+                "total_tokens": 287
+            }
+        },
+        "factool_math--48": {
+            "factool_math--48--0last": {
+                "prompt_tokens": 859,
+                "completion_tokens": 82,
+                "total_tokens": 941
+            },
+            "factool_math--48--2": {
+                "prompt_tokens": 253,
+                "completion_tokens": 24,
+                "total_tokens": 277
+            },
+            "factool_math--48--3": {
+                "prompt_tokens": 253,
+                "completion_tokens": 24,
+                "total_tokens": 277
+            },
+            "factool_math--48--1": {
+                "prompt_tokens": 251,
+                "completion_tokens": 24,
+                "total_tokens": 275
+            }
+        },
+        "factool_math--49": {
+            "factool_math--49--0last": {
+                "prompt_tokens": 800,
+                "completion_tokens": 100,
+                "total_tokens": 900
+            },
+            "factool_math--49--3": {
+                "prompt_tokens": 261,
+                "completion_tokens": 40,
+                "total_tokens": 301
+            },
+            "factool_math--49--1": {
+                "prompt_tokens": 267,
+                "completion_tokens": 40,
+                "total_tokens": 307
+            },
+            "factool_math--49--2": {
+                "prompt_tokens": 247,
+                "completion_tokens": 40,
+                "total_tokens": 287
+            }
+        },
+        "factool_math--50": {
+            "factool_math--50--0last": {
+                "prompt_tokens": 728,
+                "completion_tokens": 38,
+                "total_tokens": 766
+            },
+            "factool_math--50--1": {
+                "prompt_tokens": 261,
+                "completion_tokens": 37,
+                "total_tokens": 298
+            }
+        },
+        "factool_math--51": {
+            "factool_math--51--0last": {
+                "prompt_tokens": 786,
+                "completion_tokens": 79,
+                "total_tokens": 865
+            },
+            "factool_math--51--2": {
+                "prompt_tokens": 267,
+                "completion_tokens": 34,
+                "total_tokens": 301
+            },
+            "factool_math--51--1": {
+                "prompt_tokens": 261,
+                "completion_tokens": 34,
+                "total_tokens": 295
+            }
+        },
+        "factool_math--52": {
+            "factool_math--52--0last": {
+                "prompt_tokens": 833,
+                "completion_tokens": 98,
+                "total_tokens": 931
+            },
+            "factool_math--52--2": {
+                "prompt_tokens": 249,
+                "completion_tokens": 37,
+                "total_tokens": 286
+            },
+            "factool_math--52--3": {
+                "prompt_tokens": 260,
+                "completion_tokens": 37,
+                "total_tokens": 297
+            },
+            "factool_math--52--1": {
+                "prompt_tokens": 264,
+                "completion_tokens": 37,
+                "total_tokens": 301
+            }
+        },
+        "factool_math--53": {
+            "factool_math--53--0last": {
+                "prompt_tokens": 726,
+                "completion_tokens": 74,
+                "total_tokens": 800
+            },
+            "factool_math--53--2": {
+                "prompt_tokens": 262,
+                "completion_tokens": 34,
+                "total_tokens": 296
+            },
+            "factool_math--53--1": {
+                "prompt_tokens": 261,
+                "completion_tokens": 34,
+                "total_tokens": 295
+            }
+        },
+        "factool_math--54": {
+            "factool_math--54--0last": {
+                "prompt_tokens": 822,
+                "completion_tokens": 62,
+                "total_tokens": 884
+            },
+            "factool_math--54--2": {
+                "prompt_tokens": 261,
+                "completion_tokens": 23,
+                "total_tokens": 284
+            },
+            "factool_math--54--1": {
+                "prompt_tokens": 250,
+                "completion_tokens": 23,
+                "total_tokens": 273
+            }
+        },
+        "factool_math--55": {
+            "factool_math--55--0last": {
+                "prompt_tokens": 906,
+                "completion_tokens": 118,
+                "total_tokens": 1024
+            },
+            "factool_math--55--2": {
+                "prompt_tokens": 259,
+                "completion_tokens": 32,
+                "total_tokens": 291
+            },
+            "factool_math--55--3": {
+                "prompt_tokens": 275,
+                "completion_tokens": 32,
+                "total_tokens": 307
+            },
+            "factool_math--55--1": {
+                "prompt_tokens": 259,
+                "completion_tokens": 32,
+                "total_tokens": 291
+            }
+        },
+        "factool_math--56": {
+            "factool_math--56--0last": {
+                "prompt_tokens": 845,
+                "completion_tokens": 146,
+                "total_tokens": 991
+            },
+            "factool_math--56--2": {
+                "prompt_tokens": 259,
+                "completion_tokens": 32,
+                "total_tokens": 291
+            },
+            "factool_math--56--4": {
+                "prompt_tokens": 268,
+                "completion_tokens": 32,
+                "total_tokens": 300
+            },
+            "factool_math--56--3": {
+                "prompt_tokens": 261,
+                "completion_tokens": 32,
+                "total_tokens": 293
+            },
+            "factool_math--56--1": {
+                "prompt_tokens": 259,
+                "completion_tokens": 32,
+                "total_tokens": 291
+            }
+        },
+        "factool_math--57": {
+            "factool_math--57--0last": {
+                "prompt_tokens": 858,
+                "completion_tokens": 120,
+                "total_tokens": 978
+            },
+            "factool_math--57--2": {
+                "prompt_tokens": 260,
+                "completion_tokens": 32,
+                "total_tokens": 292
+            },
+            "factool_math--57--3": {
+                "prompt_tokens": 276,
+                "completion_tokens": 32,
+                "total_tokens": 308
+            },
+            "factool_math--57--1": {
+                "prompt_tokens": 259,
+                "completion_tokens": 32,
+                "total_tokens": 291
+            }
+        },
+        "factool_math--58": {
+            "factool_math--58--0last": {
+                "prompt_tokens": 838,
+                "completion_tokens": 94,
+                "total_tokens": 932
+            },
+            "factool_math--58--2": {
+                "prompt_tokens": 251,
+                "completion_tokens": 27,
+                "total_tokens": 278
+            },
+            "factool_math--58--3": {
+                "prompt_tokens": 262,
+                "completion_tokens": 27,
+                "total_tokens": 289
+            },
+            "factool_math--58--1": {
+                "prompt_tokens": 251,
+                "completion_tokens": 27,
+                "total_tokens": 278
+            }
+        },
+        "factool_math--59": {
+            "factool_math--59--0last": {
+                "prompt_tokens": 963,
+                "completion_tokens": 37,
+                "total_tokens": 1000
+            },
+            "factool_math--59--1": {
+                "prompt_tokens": 260,
+                "completion_tokens": 33,
+                "total_tokens": 293
+            }
+        },
+        "factool_math--60": {
+            "factool_math--60--0last": {
+                "prompt_tokens": 741,
+                "completion_tokens": 48,
+                "total_tokens": 789
+            },
+            "factool_math--60--2": {
+                "prompt_tokens": 247,
+                "completion_tokens": 23,
+                "total_tokens": 270
+            },
+            "factool_math--60--1": {
+                "prompt_tokens": 250,
+                "completion_tokens": 23,
+                "total_tokens": 273
+            }
+        },
+        "factool_math--61": {
+            "factool_math--61--0last": {
+                "prompt_tokens": 853,
+                "completion_tokens": 97,
+                "total_tokens": 950
+            },
+            "factool_math--61--2": {
+                "prompt_tokens": 250,
+                "completion_tokens": 22,
+                "total_tokens": 272
+            },
+            "factool_math--61--4": {
+                "prompt_tokens": 250,
+                "completion_tokens": 22,
+                "total_tokens": 272
+            },
+            "factool_math--61--3": {
+                "prompt_tokens": 249,
+                "completion_tokens": 22,
+                "total_tokens": 271
+            },
+            "factool_math--61--1": {
+                "prompt_tokens": 249,
+                "completion_tokens": 22,
+                "total_tokens": 271
+            }
+        },
+        "factool_math--62": {
+            "factool_math--62--0last": {
+                "prompt_tokens": 802,
+                "completion_tokens": 106,
+                "total_tokens": 908
+            },
+            "factool_math--62--2": {
+                "prompt_tokens": 258,
+                "completion_tokens": 36,
+                "total_tokens": 294
+            },
+            "factool_math--62--3": {
+                "prompt_tokens": 260,
+                "completion_tokens": 36,
+                "total_tokens": 296
+            },
+            "factool_math--62--1": {
+                "prompt_tokens": 263,
+                "completion_tokens": 36,
+                "total_tokens": 299
+            }
+        },
+        "factool_math--63": {
+            "factool_math--63--0last": {
+                "prompt_tokens": 821,
+                "completion_tokens": 74,
+                "total_tokens": 895
+            },
+            "factool_math--63--3": {
+                "prompt_tokens": 251,
+                "completion_tokens": 22,
+                "total_tokens": 273
+            },
+            "factool_math--63--1": {
+                "prompt_tokens": 249,
+                "completion_tokens": 22,
+                "total_tokens": 271
+            },
+            "factool_math--63--2": {
+                "prompt_tokens": 249,
+                "completion_tokens": 22,
+                "total_tokens": 271
+            }
+        },
+        "factool_math--64": {
+            "factool_math--64--0last": {
+                "prompt_tokens": 815,
+                "completion_tokens": 147,
+                "total_tokens": 962
+            },
+            "factool_math--64--2": {
+                "prompt_tokens": 265,
+                "completion_tokens": 32,
+                "total_tokens": 297
+            },
+            "factool_math--64--4": {
+                "prompt_tokens": 265,
+                "completion_tokens": 32,
+                "total_tokens": 297
+            },
+            "factool_math--64--3": {
+                "prompt_tokens": 259,
+                "completion_tokens": 32,
+                "total_tokens": 291
+            },
+            "factool_math--64--1": {
+                "prompt_tokens": 259,
+                "completion_tokens": 32,
+                "total_tokens": 291
+            }
+        },
+        "factool_math--65": {
+            "factool_math--65--0last": {
+                "prompt_tokens": 833,
+                "completion_tokens": 71,
+                "total_tokens": 904
+            },
+            "factool_math--65--2": {
+                "prompt_tokens": 260,
+                "completion_tokens": 33,
+                "total_tokens": 293
+            },
+            "factool_math--65--1": {
+                "prompt_tokens": 260,
+                "completion_tokens": 33,
+                "total_tokens": 293
+            }
+        },
+        "factool_math--66": {
+            "factool_math--66--0last": {
+                "prompt_tokens": 822,
+                "completion_tokens": 98,
+                "total_tokens": 920
+            },
+            "factool_math--66--2": {
+                "prompt_tokens": 251,
+                "completion_tokens": 34,
+                "total_tokens": 285
+            },
+            "factool_math--66--3": {
+                "prompt_tokens": 261,
+                "completion_tokens": 34,
+                "total_tokens": 295
+            },
+            "factool_math--66--1": {
+                "prompt_tokens": 261,
+                "completion_tokens": 34,
+                "total_tokens": 295
+            }
+        },
+        "factool_math--67": {
+            "factool_math--67--0last": {
+                "prompt_tokens": 893,
+                "completion_tokens": 130,
+                "total_tokens": 1023
+            },
+            "factool_math--67--2": {
+                "prompt_tokens": 249,
+                "completion_tokens": 33,
+                "total_tokens": 282
+            },
+            "factool_math--67--4": {
+                "prompt_tokens": 260,
+                "completion_tokens": 33,
+                "total_tokens": 293
+            },
+            "factool_math--67--3": {
+                "prompt_tokens": 262,
+                "completion_tokens": 33,
+                "total_tokens": 295
+            },
+            "factool_math--67--1": {
+                "prompt_tokens": 260,
+                "completion_tokens": 33,
+                "total_tokens": 293
+            }
+        },
+        "factool_math--68": {
+            "factool_math--68--0last": {
+                "prompt_tokens": 784,
+                "completion_tokens": 72,
+                "total_tokens": 856
+            },
+            "factool_math--68--2": {
+                "prompt_tokens": 261,
+                "completion_tokens": 33,
+                "total_tokens": 294
+            },
+            "factool_math--68--1": {
+                "prompt_tokens": 260,
+                "completion_tokens": 33,
+                "total_tokens": 293
+            }
+        },
+        "factool_math--69": {
+            "factool_math--69--0last": {
+                "prompt_tokens": 746,
+                "completion_tokens": 73,
+                "total_tokens": 819
+            },
+            "factool_math--69--2": {
+                "prompt_tokens": 261,
+                "completion_tokens": 34,
+                "total_tokens": 295
+            },
+            "factool_math--69--1": {
+                "prompt_tokens": 261,
+                "completion_tokens": 34,
+                "total_tokens": 295
+            }
+        },
+        "factool_math--70": {
+            "factool_math--70--0last": {
+                "prompt_tokens": 1007,
+                "completion_tokens": 71,
+                "total_tokens": 1078
+            },
+            "factool_math--70--2": {
+                "prompt_tokens": 259,
+                "completion_tokens": 34,
+                "total_tokens": 293
+            },
+            "factool_math--70--1": {
+                "prompt_tokens": 261,
+                "completion_tokens": 34,
+                "total_tokens": 295
+            }
+        },
+        "factool_math--71": {
+            "factool_math--71--0last": {
+                "prompt_tokens": 1113,
+                "completion_tokens": 315,
+                "total_tokens": 1428
+            },
+            "factool_math--71--9": {
+                "prompt_tokens": 273,
+                "completion_tokens": 34,
+                "total_tokens": 307
+            },
+            "factool_math--71--4": {
+                "prompt_tokens": 264,
+                "completion_tokens": 34,
+                "total_tokens": 298
+            },
+            "factool_math--71--2": {
+                "prompt_tokens": 249,
+                "completion_tokens": 34,
+                "total_tokens": 283
+            },
+            "factool_math--71--5": {
+                "prompt_tokens": 251,
+                "completion_tokens": 34,
+                "total_tokens": 285
+            },
+            "factool_math--71--1": {
+                "prompt_tokens": 261,
+                "completion_tokens": 34,
+                "total_tokens": 295
+            },
+            "factool_math--71--6": {
+                "prompt_tokens": 267,
+                "completion_tokens": 34,
+                "total_tokens": 301
+            },
+            "factool_math--71--3": {
+                "prompt_tokens": 262,
+                "completion_tokens": 34,
+                "total_tokens": 296
+            },
+            "factool_math--71--7": {
+                "prompt_tokens": 250,
+                "completion_tokens": 34,
+                "total_tokens": 284
+            },
+            "factool_math--71--8": {
+                "prompt_tokens": 269,
+                "completion_tokens": 34,
+                "total_tokens": 303
+            }
+        },
+        "factool_math--72": {
+            "factool_math--72--0last": {
+                "prompt_tokens": 822,
+                "completion_tokens": 85,
+                "total_tokens": 907
+            },
+            "factool_math--72--3": {
+                "prompt_tokens": 258,
+                "completion_tokens": 29,
+                "total_tokens": 287
+            },
+            "factool_math--72--2": {
+                "prompt_tokens": 249,
+                "completion_tokens": 29,
+                "total_tokens": 278
+            },
+            "factool_math--72--1": {
+                "prompt_tokens": 252,
+                "completion_tokens": 29,
+                "total_tokens": 281
+            }
+        },
+        "factool_math--73": {
+            "factool_math--73--0last": {
+                "prompt_tokens": 762,
+                "completion_tokens": 58,
+                "total_tokens": 820
+            },
+            "factool_math--73--2": {
+                "prompt_tokens": 260,
+                "completion_tokens": 20,
+                "total_tokens": 280
+            },
+            "factool_math--73--1": {
+                "prompt_tokens": 247,
+                "completion_tokens": 20,
+                "total_tokens": 267
+            }
+        },
+        "factool_math--74": {
+            "factool_math--74--0last": {
+                "prompt_tokens": 775,
+                "completion_tokens": 72,
+                "total_tokens": 847
+            },
+            "factool_math--74--2": {
+                "prompt_tokens": 261,
+                "completion_tokens": 33,
+                "total_tokens": 294
+            },
+            "factool_math--74--1": {
+                "prompt_tokens": 260,
+                "completion_tokens": 33,
+                "total_tokens": 293
+            }
+        },
+        "factool_math--75": {
+            "factool_math--75--0last": {
+                "prompt_tokens": 860,
+                "completion_tokens": 152,
+                "total_tokens": 1012
+            },
+            "factool_math--75--2": {
+                "prompt_tokens": 258,
+                "completion_tokens": 21,
+                "total_tokens": 279
+            },
+            "factool_math--75--4": {
+                "prompt_tokens": 264,
+                "completion_tokens": 21,
+                "total_tokens": 285
+            },
+            "factool_math--75--5": {
+                "prompt_tokens": 260,
+                "completion_tokens": 21,
+                "total_tokens": 281
+            },
+            "factool_math--75--3": {
+                "prompt_tokens": 249,
+                "completion_tokens": 21,
+                "total_tokens": 270
+            },
+            "factool_math--75--1": {
+                "prompt_tokens": 248,
+                "completion_tokens": 21,
+                "total_tokens": 269
+            }
+        },
+        "factool_math--76": {
+            "factool_math--76--0last": {
+                "prompt_tokens": 743,
+                "completion_tokens": 93,
+                "total_tokens": 836
+            },
+            "factool_math--76--3": {
+                "prompt_tokens": 248,
+                "completion_tokens": 22,
+                "total_tokens": 270
+            },
+            "factool_math--76--4": {
+                "prompt_tokens": 250,
+                "completion_tokens": 22,
+                "total_tokens": 272
+            },
+            "factool_math--76--2": {
+                "prompt_tokens": 247,
+                "completion_tokens": 22,
+                "total_tokens": 269
+            },
+            "factool_math--76--1": {
+                "prompt_tokens": 249,
+                "completion_tokens": 22,
+                "total_tokens": 271
+            }
+        },
+        "factool_math--77": {
+            "factool_math--77--0last": {
+                "prompt_tokens": 895,
+                "completion_tokens": 34,
+                "total_tokens": 929
+            },
+            "factool_math--77--1": {
+                "prompt_tokens": 257,
+                "completion_tokens": 41,
+                "total_tokens": 298
+            }
+        },
+        "factool_math--78": {
+            "factool_math--78--0last": {
+                "prompt_tokens": 784,
+                "completion_tokens": 76,
+                "total_tokens": 860
+            },
+            "factool_math--78--2": {
+                "prompt_tokens": 266,
+                "completion_tokens": 32,
+                "total_tokens": 298
+            },
+            "factool_math--78--1": {
+                "prompt_tokens": 259,
+                "completion_tokens": 32,
+                "total_tokens": 291
+            }
+        },
+        "factool_math--79": {
+            "factool_math--79--0last": {
+                "prompt_tokens": 774,
+                "completion_tokens": 73,
+                "total_tokens": 847
+            },
+            "factool_math--79--2": {
+                "prompt_tokens": 262,
+                "completion_tokens": 33,
+                "total_tokens": 295
+            },
+            "factool_math--79--1": {
+                "prompt_tokens": 260,
+                "completion_tokens": 33,
+                "total_tokens": 293
+            }
+        },
+        "factool_math--80": {
+            "factool_math--80--0last": {
+                "prompt_tokens": 943,
+                "completion_tokens": 155,
+                "total_tokens": 1098
+            },
+            "factool_math--80--3": {
+                "prompt_tokens": 249,
+                "completion_tokens": 24,
+                "total_tokens": 273
+            },
+            "factool_math--80--4": {
+                "prompt_tokens": 250,
+                "completion_tokens": 24,
+                "total_tokens": 274
+            },
+            "factool_math--80--5": {
+                "prompt_tokens": 251,
+                "completion_tokens": 24,
+                "total_tokens": 275
+            },
+            "factool_math--80--2": {
+                "prompt_tokens": 249,
+                "completion_tokens": 24,
+                "total_tokens": 273
+            },
+            "factool_math--80--1": {
+                "prompt_tokens": 251,
+                "completion_tokens": 24,
+                "total_tokens": 275
+            },
+            "factool_math--80--6": {
+                "prompt_tokens": 258,
+                "completion_tokens": 24,
+                "total_tokens": 282
+            }
+        },
+        "factool_math--81": {
+            "factool_math--81--0last": {
+                "prompt_tokens": 828,
+                "completion_tokens": 112,
+                "total_tokens": 940
+            },
+            "factool_math--81--3": {
+                "prompt_tokens": 260,
+                "completion_tokens": 35,
+                "total_tokens": 295
+            },
+            "factool_math--81--1": {
+                "prompt_tokens": 262,
+                "completion_tokens": 35,
+                "total_tokens": 297
+            },
+            "factool_math--81--2": {
+                "prompt_tokens": 265,
+                "completion_tokens": 35,
+                "total_tokens": 300
+            }
+        },
+        "factool_math--82": {
+            "factool_math--82--0last": {
+                "prompt_tokens": 783,
+                "completion_tokens": 77,
+                "total_tokens": 860
+            },
+            "factool_math--82--2": {
+                "prompt_tokens": 266,
+                "completion_tokens": 33,
+                "total_tokens": 299
+            },
+            "factool_math--82--1": {
+                "prompt_tokens": 260,
+                "completion_tokens": 33,
+                "total_tokens": 293
+            }
+        },
+        "factool_math--83": {
+            "factool_math--83--0last": {
+                "prompt_tokens": 881,
+                "completion_tokens": 184,
+                "total_tokens": 1065
+            },
+            "factool_math--83--3": {
+                "prompt_tokens": 260,
+                "completion_tokens": 32,
+                "total_tokens": 292
+            },
+            "factool_math--83--1": {
+                "prompt_tokens": 259,
+                "completion_tokens": 32,
+                "total_tokens": 291
+            },
+            "factool_math--83--4": {
+                "prompt_tokens": 262,
+                "completion_tokens": 32,
+                "total_tokens": 294
+            },
+            "factool_math--83--2": {
+                "prompt_tokens": 260,
+                "completion_tokens": 32,
+                "total_tokens": 292
+            },
+            "factool_math--83--5": {
+                "prompt_tokens": 270,
+                "completion_tokens": 32,
+                "total_tokens": 302
+            }
+        },
+        "factool_math--84": {
+            "factool_math--84--0last": {
+                "prompt_tokens": 826,
+                "completion_tokens": 72,
+                "total_tokens": 898
+            },
+            "factool_math--84--2": {
+                "prompt_tokens": 249,
+                "completion_tokens": 21,
+                "total_tokens": 270
+            },
+            "factool_math--84--3": {
+                "prompt_tokens": 250,
+                "completion_tokens": 21,
+                "total_tokens": 271
+            },
+            "factool_math--84--1": {
+                "prompt_tokens": 248,
+                "completion_tokens": 21,
+                "total_tokens": 269
+            }
+        },
+        "factool_math--85": {
+            "factool_math--85--0last": {
+                "prompt_tokens": 768,
+                "completion_tokens": 61,
+                "total_tokens": 829
+            },
+            "factool_math--85--2": {
+                "prompt_tokens": 261,
+                "completion_tokens": 22,
+                "total_tokens": 283
+            },
+            "factool_math--85--1": {
+                "prompt_tokens": 249,
+                "completion_tokens": 22,
+                "total_tokens": 271
+            }
+        },
+        "factool_math--86": {
+            "factool_math--86--0last": {
+                "prompt_tokens": 846,
+                "completion_tokens": 102,
+                "total_tokens": 948
+            },
+            "factool_math--86--2": {
+                "prompt_tokens": 259,
+                "completion_tokens": 32,
+                "total_tokens": 291
+            },
+            "factool_math--86--3": {
+                "prompt_tokens": 259,
+                "completion_tokens": 32,
+                "total_tokens": 291
+            },
+            "factool_math--86--1": {
+                "prompt_tokens": 259,
+                "completion_tokens": 32,
+                "total_tokens": 291
+            }
+        },
+        "factool_math--87": {
+            "factool_math--87--0last": {
+                "prompt_tokens": 777,
+                "completion_tokens": 75,
+                "total_tokens": 852
+            },
+            "factool_math--87--2": {
+                "prompt_tokens": 262,
+                "completion_tokens": 35,
+                "total_tokens": 297
+            },
+            "factool_math--87--1": {
+                "prompt_tokens": 262,
+                "completion_tokens": 35,
+                "total_tokens": 297
+            }
+        },
+        "factool_math--88": {
+            "factool_math--88--0last": {
+                "prompt_tokens": 957,
+                "completion_tokens": 286,
+                "total_tokens": 1243
+            },
+            "factool_math--88--7": {
+                "prompt_tokens": 270,
+                "completion_tokens": 27,
+                "total_tokens": 297
+            },
+            "factool_math--88--3": {
+                "prompt_tokens": 253,
+                "completion_tokens": 27,
+                "total_tokens": 280
+            },
+            "factool_math--88--1": {
+                "prompt_tokens": 254,
+                "completion_tokens": 27,
+                "total_tokens": 281
+            },
+            "factool_math--88--2": {
+                "prompt_tokens": 263,
+                "completion_tokens": 27,
+                "total_tokens": 290
+            },
+            "factool_math--88--4": {
+                "prompt_tokens": 277,
+                "completion_tokens": 27,
+                "total_tokens": 304
+            },
+            "factool_math--88--5": {
+                "prompt_tokens": 272,
+                "completion_tokens": 27,
+                "total_tokens": 299
+            },
+            "factool_math--88--6": {
+                "prompt_tokens": 276,
+                "completion_tokens": 27,
+                "total_tokens": 303
+            }
+        },
+        "factool_math--89": {
+            "factool_math--89--0last": {
+                "prompt_tokens": 856,
+                "completion_tokens": 139,
+                "total_tokens": 995
+            },
+            "factool_math--89--1": {
+                "prompt_tokens": 248,
+                "completion_tokens": 21,
+                "total_tokens": 269
+            },
+            "factool_math--89--5": {
+                "prompt_tokens": 260,
+                "completion_tokens": 21,
+                "total_tokens": 281
+            },
+            "factool_math--89--2": {
+                "prompt_tokens": 248,
+                "completion_tokens": 21,
+                "total_tokens": 269
+            },
+            "factool_math--89--4": {
+                "prompt_tokens": 260,
+                "completion_tokens": 21,
+                "total_tokens": 281
+            },
+            "factool_math--89--3": {
+                "prompt_tokens": 250,
+                "completion_tokens": 21,
+                "total_tokens": 271
+            }
+        },
+        "factool_math--90": {
+            "factool_math--90--0last": {
+                "prompt_tokens": 790,
+                "completion_tokens": 73,
+                "total_tokens": 863
+            },
+            "factool_math--90--2": {
+                "prompt_tokens": 262,
+                "completion_tokens": 33,
+                "total_tokens": 295
+            },
+            "factool_math--90--1": {
+                "prompt_tokens": 260,
+                "completion_tokens": 33,
+                "total_tokens": 293
+            }
+        },
+        "factool_math--91": {
+            "factool_math--91--0last": {
+                "prompt_tokens": 824,
+                "completion_tokens": 89,
+                "total_tokens": 913
+            },
+            "factool_math--91--2": {
+                "prompt_tokens": 252,
+                "completion_tokens": 21,
+                "total_tokens": 273
+            },
+            "factool_math--91--3": {
+                "prompt_tokens": 264,
+                "completion_tokens": 21,
+                "total_tokens": 285
+            },
+            "factool_math--91--1": {
+                "prompt_tokens": 248,
+                "completion_tokens": 21,
+                "total_tokens": 269
+            }
+        },
+        "factool_math--92": {
+            "factool_math--92--0last": {
+                "prompt_tokens": 749,
+                "completion_tokens": 87,
+                "total_tokens": 836
+            },
+            "factool_math--92--2": {
+                "prompt_tokens": 252,
+                "completion_tokens": 30,
+                "total_tokens": 282
+            },
+            "factool_math--92--3": {
+                "prompt_tokens": 253,
+                "completion_tokens": 30,
+                "total_tokens": 283
+            },
+            "factool_math--92--1": {
+                "prompt_tokens": 257,
+                "completion_tokens": 30,
+                "total_tokens": 287
+            }
+        },
+        "factool_math--93": {
+            "factool_math--93--0last": {
+                "prompt_tokens": 795,
+                "completion_tokens": 92,
+                "total_tokens": 887
+            },
+            "factool_math--93--2": {
+                "prompt_tokens": 248,
+                "completion_tokens": 32,
+                "total_tokens": 280
+            },
+            "factool_math--93--3": {
+                "prompt_tokens": 260,
+                "completion_tokens": 32,
+                "total_tokens": 292
+            },
+            "factool_math--93--1": {
+                "prompt_tokens": 259,
+                "completion_tokens": 32,
+                "total_tokens": 291
+            }
+        },
+        "factool_math--94": {
+            "factool_math--94--0last": {
+                "prompt_tokens": 877,
+                "completion_tokens": 64,
+                "total_tokens": 941
+            },
+            "factool_math--94--2": {
+                "prompt_tokens": 262,
+                "completion_tokens": 24,
+                "total_tokens": 286
+            },
+            "factool_math--94--1": {
+                "prompt_tokens": 251,
+                "completion_tokens": 24,
+                "total_tokens": 275
+            }
+        },
+        "factool_math--95": {
+            "factool_math--95--0last": {
+                "prompt_tokens": 813,
+                "completion_tokens": 77,
+                "total_tokens": 890
+            },
+            "factool_math--95--2": {
+                "prompt_tokens": 264,
+                "completion_tokens": 43,
+                "total_tokens": 307
+            },
+            "factool_math--95--1": {
+                "prompt_tokens": 262,
+                "completion_tokens": 43,
+                "total_tokens": 305
+            }
+        },
+        "factool_math--96": {
+            "factool_math--96--0last": {
+                "prompt_tokens": 817,
+                "completion_tokens": 120,
+                "total_tokens": 937
+            },
+            "factool_math--96--4": {
+                "prompt_tokens": 266,
+                "completion_tokens": 21,
+                "total_tokens": 287
+            },
+            "factool_math--96--2": {
+                "prompt_tokens": 260,
+                "completion_tokens": 21,
+                "total_tokens": 281
+            },
+            "factool_math--96--3": {
+                "prompt_tokens": 247,
+                "completion_tokens": 21,
+                "total_tokens": 268
+            },
+            "factool_math--96--1": {
+                "prompt_tokens": 248,
+                "completion_tokens": 21,
+                "total_tokens": 269
+            }
+        },
+        "factool_math--97": {
+            "factool_math--97--0last": {
+                "prompt_tokens": 827,
+                "completion_tokens": 77,
+                "total_tokens": 904
+            },
+            "factool_math--97--2": {
+                "prompt_tokens": 260,
+                "completion_tokens": 39,
+                "total_tokens": 299
+            },
+            "factool_math--97--1": {
+                "prompt_tokens": 266,
+                "completion_tokens": 39,
+                "total_tokens": 305
+            }
+        },
+        "factool_math--98": {
+            "factool_math--98--0last": {
+                "prompt_tokens": 754,
+                "completion_tokens": 81,
+                "total_tokens": 835
+            },
+            "factool_math--98--2": {
+                "prompt_tokens": 247,
+                "completion_tokens": 22,
+                "total_tokens": 269
+            },
+            "factool_math--98--3": {
+                "prompt_tokens": 260,
+                "completion_tokens": 22,
+                "total_tokens": 282
+            },
+            "factool_math--98--1": {
+                "prompt_tokens": 249,
+                "completion_tokens": 22,
+                "total_tokens": 271
+            }
+        },
+        "factool_math--99": {
+            "factool_math--99--0last": {
+                "prompt_tokens": 731,
+                "completion_tokens": 52,
+                "total_tokens": 783
+            },
+            "factool_math--99--2": {
+                "prompt_tokens": 252,
+                "completion_tokens": 22,
+                "total_tokens": 274
+            },
+            "factool_math--99--1": {
+                "prompt_tokens": 249,
+                "completion_tokens": 22,
+                "total_tokens": 271
+            }
+        }
+    }
+}

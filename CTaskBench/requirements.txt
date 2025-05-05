@@ -1,0 +1,12 @@
+numpy
+openai
+pyyaml
+jsonlines
+requests
+aiohttp
+pydantic-settings
+gym
+beautifulsoup4
+langchain
+langgraph
+backoff
