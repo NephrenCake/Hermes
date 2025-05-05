@@ -1,0 +1,78 @@
+{
+    "chatgpt" : {
+        "model_id": "gpt-3.5-turbo",
+        "prompt_token_cost": 0.0015,
+        "response_token_cost": 0.002,
+        "temperature": 1.0,
+        "max_tokens": 1536,
+        "stop": null,
+        "organization": "",
+        "api_key": ""
+    },
+    "chatgpt4" : {
+        "model_id": "gpt-4",
+        "prompt_token_cost": 0.03,
+        "response_token_cost": 0.06,
+        "temperature": 1.0,
+        "max_tokens": 4096,
+        "stop": null,
+        "organization": "",
+        "api_key": ""
+    },
+    "llama7b-hf" : {
+        "model_id": "/workspace/Llama-2-7b-chat-hf",
+        "cache_dir": "/workspace",
+        "prompt_token_cost": 0.0001,
+        "response_token_cost": 0.0002,
+        "temperature": 0.6,
+        "top_k": 10,
+        "max_tokens": 2048,
+        "stop": null,
+        "organization": "",
+        "api_key": "EMPTY"
+    },
+    "mistral-7b" : {
+        "model_id": "/workspace/mistral-7b",
+        "cache_dir": "/workspace",
+        "prompt_token_cost": 0.0001,
+        "response_token_cost": 0.0002,
+        "temperature": 0.6,
+        "top_k": 10,
+        "max_tokens": 8192,
+        "stop": null,
+        "organization": "",
+        "api_key": "EMPTY"
+    },
+    "deepseek-chat" : {
+        "model_id": "deepseek-chat",
+        "prompt_token_cost": 0.0001,
+        "response_token_cost": 0.0002,
+        "temperature": 0.6,
+        "max_tokens": 1000,
+        "stop": null,
+        "organization": "",
+        "base_url": "https://api.deepseek.com",
+        "api_key": "sk-3792751bf6634f20bd8925701c4ae64e"
+    },
+    "llama3.1-8b" : {
+        "model_id": "/workspace/Llama-3.1-8b-Instruct",
+        "cache_dir": "/workspace",
+        "prompt_token_cost": 0.0001,
+        "response_token_cost": 0.0002,
+        "temperature": 0.6,
+        "top_k": 10,
+        "max_tokens": 8192,
+        "stop": null,
+        "organization": "",
+        "api_key": "EMPTY"
+    },
+    "llama70b-hf" : {
+        "model_id": "Llama-2-70b-chat-hf",
+        "cache_dir": "/llama",
+        "prompt_token_cost": 0.0,
+        "response_token_cost": 0.0,
+        "temperature": 0.6,
+        "top_k": 10,
+        "max_tokens": 4096
+    }
+}

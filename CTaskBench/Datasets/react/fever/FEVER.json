@@ -1,0 +1,2948 @@
+[
+    {
+        "thought": [
+            " I should search Paramore and find if they are from Tennessee.\nAction 1: Search[Paramore]",
+            " The observation says that Paramore is from Franklin, Tennessee, so it supports the claim.\nAction 2: Finish[SUPPORTS]"
+        ],
+        "observation": [
+            "Paramore is an American rock band formed in Franklin, Tennessee, in 2004. Since 2017, the band's lineup includes lead vocalist Hayley Williams, lead guitarist Taylor York, and drummer Zac Farro. Williams and Farro are founding members of the group, while York, a high school friend of the original lineup, joined in 2007. Williams is the only member to appear on all six of Paramore's studio albums.. The band was signed to Fueled by Ramen, a subsidiary of Atlantic Records.",
+            "Episode finished, reward = 0\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Paramore is not from Tennessee.",
+        "completion_time": 3.756220817565918,
+        "uasge": [
+            {
+                "prompt_tokens": 1023,
+                "completion_tokens": 30,
+                "total_tokens": 1053
+            },
+            {
+                "prompt_tokens": 1184,
+                "completion_tokens": 32,
+                "total_tokens": 1216
+            }
+        ],
+        "act_time": [
+            2.2588770389556885
+        ]
+    },
+    {
+        "thought": [
+            " I should search Eric Church and find if he is a sound mixer.\nAction 1: Search[Eric Church]",
+            " Since he is a country music singer-songwriter, he is not a sound mixer.\nAction 2: Finish[NOT ENOUGH INFO]"
+        ],
+        "observation": [
+            "Kenneth Eric Church (born May 3, 1977) is an American country music singer-songwriter. He has released nine studio albums through Capitol Nashville since 2005. His debut album, 2006's Sinners Like Me, produced three singles on the Billboard country charts including the top 20 hits \"How 'Bout You\", \"Two Pink Lines\", and \"Guys Like Me\".. His second album, 2009's Carolina, produced three more singles: \"Smoke a Little Smoke\" and his first top 10 hits, \"Love Your Love the Most\" and \"Hell on the Heart\". 2011's Chief, his first No.",
+            "Episode finished, reward = 1\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Eric Church is a sound mixer.",
+        "completion_time": 3.5963966846466064,
+        "uasge": [
+            {
+                "prompt_tokens": 1004,
+                "completion_tokens": 33,
+                "total_tokens": 1037
+            },
+            {
+                "prompt_tokens": 1204,
+                "completion_tokens": 35,
+                "total_tokens": 1239
+            }
+        ],
+        "act_time": [
+            2.0267083644866943
+        ]
+    },
+    {
+        "thought": [
+            " I should search Victoria Palace Theatre and find if it is barely in the West End.\nAction 1: Search[Victoria Palace Theatre]",
+            " The observation does not mention anything about the theatre being barely in the West End.\nAction 2: Finish[NOT ENOUGH INFO]"
+        ],
+        "observation": [
+            "The Victoria Palace Theatre is a West End theatre in Victoria Street, in the City of Westminster. The theatre was designed by Frank Matcham in 1911 and was the last London theatre he designed before his retirement. The building was designated as a Grade II* listed building by Historic England in 1972.. The theatre began life as a small concert room above the stables of the Royal Standard Hotel, a small hotel and tavern built in 1832 at what was then 522 Stockbridge Terrace, on the site of the present theatre \u2013 not, as sometimes stated, on land where the train station now stands. The proprietor, John Moy, enlarged the building, and by 1850 it became known as Moy's Music Hall.",
+            "Episode finished, reward = 0\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Victoria Palace Theatre is barely in the West End.",
+        "completion_time": 2.8830151557922363,
+        "uasge": [
+            {
+                "prompt_tokens": 1008,
+                "completion_tokens": 38,
+                "total_tokens": 1046
+            },
+            {
+                "prompt_tokens": 1222,
+                "completion_tokens": 33,
+                "total_tokens": 1255
+            }
+        ],
+        "act_time": [
+            1.2659211158752441
+        ]
+    },
+    {
+        "thought": [
+            " I should search for Civilization IV and see if it was hailed as a masterwork of filmmaking.\nAction 1: Search[Civilization IV]",
+            " The observation does not mention anything about filmmaking, so it does not support the claim.\nAction 2: Finish[NOT ENOUGH INFO]"
+        ],
+        "observation": [
+            "Civilization IV (also known as Sid Meier's Civilization IV) is a 4X turn-based strategy computer game and the fourth installment of the Civilization series, and developed by Firaxis Games. It was designed by Soren Johnson. It was released in North America, Europe, and Australia, between October 25 and November 4, 2005, and followed by Civilization V.. Civilization IV uses the 4X empire-building model for turn-based strategy gameplay, in which the player's main objective is to construct a civilization from limited initial resources. Most standard full-length games start the player with a settler unit and/or a city unit in the year 4000 BC.",
+            "Episode finished, reward = 1\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Civilization IV was hailed as a masterwork of filmmaking.",
+        "completion_time": 3.555776834487915,
+        "uasge": [
+            {
+                "prompt_tokens": 1004,
+                "completion_tokens": 35,
+                "total_tokens": 1039
+            },
+            {
+                "prompt_tokens": 1210,
+                "completion_tokens": 34,
+                "total_tokens": 1244
+            }
+        ],
+        "act_time": [
+            1.9666802883148193
+        ]
+    },
+    {
+        "thought": [
+            " I should search for Marnie to see if it is a film.\nAction 1: Search[Marnie]",
+            " From suggestions, I should search \"Marnie (film)\" to find the film.\nAction 2: Search[Marnie (film)]",
+            " It seems like Marnie is a film, so the claim is supported.\nAction 3: Finish[SUPPORTS]"
+        ],
+        "observation": [
+            "Could not find [Marnie]. Similar: ['Marnie (film)', 'Marnie', 'When Marnie Was There (film)', 'Marnie Oursler', 'When Marnie Was There'].",
+            "Marnie is a 1964 American psychological thriller film directed by Alfred Hitchcock from a screenplay by Jay Presson Allen, based on the 1961 novel of the same name by Winston Graham. The film stars Tippi Hedren and Sean Connery.. Marnie became a milestone for several reasons. It was the last time a \"Hitchcock blonde\" would have a central role in one of his films. It also marked the end of Hitchcock's collaborations with cinematographer Robert Burks, who died in 1968; editor George Tomasini, who died soon after Marnie's release; and composer Bernard Herrmann, who was fired during Hitchcock's next film, Torn Curtain (1966), when Hitchcock and Universal studio executives wanted a pop-and-jazz-influenced score for the film..",
+            "Episode finished, reward = 1\n"
+        ],
+        "n_calls": 3,
+        "n_badcalls": 0,
+        "question": "Claim: Marnie is a film.",
+        "completion_time": 7.534241676330566,
+        "uasge": [
+            {
+                "prompt_tokens": 1006,
+                "completion_tokens": 32,
+                "total_tokens": 1038
+            },
+            {
+                "prompt_tokens": 1091,
+                "completion_tokens": 38,
+                "total_tokens": 1129
+            },
+            {
+                "prompt_tokens": 1334,
+                "completion_tokens": 29,
+                "total_tokens": 1363
+            }
+        ],
+        "act_time": [
+            3.288997173309326,
+            1.8715004920959473
+        ]
+    },
+    {
+        "thought": [
+            " I should search for Buffy Summers to find if she appears only in a television series.\nAction 1: Search[Buffy Summers]",
+            " From the observation, it seems that Buffy Summers appears in both a television series and a film.\nAction 2: Finish[SUPPORTS]"
+        ],
+        "observation": [
+            "Buffy Anne Summers is the title character of the Buffy the Vampire Slayer franchise. She first appeared in the 1992 film Buffy the Vampire Slayer before going on to appear in The WB/UPN 1997\u20132003 television series and subsequent 1998\u20132018 Dark Horse and 2019\u2013present Boom! Studios comic series of the same name. The character has also appeared in the spin-off series Angel, as well as numerous expanded universe materials such as novels and video games. Buffy was portrayed by Kristy Swanson in the film and by Sarah Michelle Gellar in the television series. Giselle Loren has lent her voice to the character in both the Buffy video games and an unproduced animated series, while Kelly Albanese lent her voice to the character in the Buffy the Vampire Slayer Season Eight motion comics..",
+            "Episode finished, reward = 0\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Buffy Summers appears only in a television series.",
+        "completion_time": 3.746673345565796,
+        "uasge": [
+            {
+                "prompt_tokens": 1013,
+                "completion_tokens": 39,
+                "total_tokens": 1052
+            },
+            {
+                "prompt_tokens": 1267,
+                "completion_tokens": 35,
+                "total_tokens": 1302
+            }
+        ],
+        "act_time": [
+            2.045044183731079
+        ]
+    },
+    {
+        "thought": [
+            " I should search Robert Palmer to find if he is a journalist.\nAction 1: Search[Robert Palmer]",
+            " Since he is known for his singing and songwriting, he is likely not a journalist.\nAction 2: Finish[SUPPORTS]"
+        ],
+        "observation": [
+            "Robert Allen Palmer (19 January 1949\u00a0\u2013 26 September 2003) was an English singer and songwriter. He was known for his powerful, soulful voice, and sartorial elegance, and his stylistic explorations, combining soul, funk, jazz, rock, pop, reggae, and blues. Over his four-decade career, Palmer is perhaps best known for the song \"Addicted to Love\" and its accompanying video, which came to \"epitomise the glamour and excesses of the 1980s\".[1]. Having started in the music industry in the 1960s, including a spell with Vinegar Joe, he found success in the 1980s, both in his solo career and with The Power Station, scoring Top 10 hits in the United Kingdom and the United States.[2][3] Three of his hit singles including \"Addicted to Love\", featured music videos directed by British fashion photographer Terence Donovan.[4]. Palmer received a number of awards throughout his career, including two Grammy Awards for Best Male Rock Vocal Performance and an MTV Video Music Award.",
+            "Episode finished, reward = 0\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Robert Palmer (writer) isn't a journalist.",
+        "completion_time": 2.9148077964782715,
+        "uasge": [
+            {
+                "prompt_tokens": 1006,
+                "completion_tokens": 33,
+                "total_tokens": 1039
+            },
+            {
+                "prompt_tokens": 1305,
+                "completion_tokens": 32,
+                "total_tokens": 1337
+            }
+        ],
+        "act_time": [
+            1.3583800792694092
+        ]
+    },
+    {
+        "thought": [
+            " I should search for Tijuana and find its size compared to other cities in Baja California.\nAction 1: Search[Tijuana]",
+            " The observation does not mention any other cities in Baja California, so I cannot determine if Tijuana is smaller than them.\nAction 2: Finish[NOT ENOUGH INFO]"
+        ],
+        "observation": [
+            "Tijuana[a] is the largest city in the state of Baja California, located on the northwestern Pacific Coast of Mexico. Tijuana is the municipal seat of the Tijuana Municipality and the hub of the Tijuana metropolitan area. It has a close proximity to the Mexico\u2013United States border, which is part of the San Diego\u2013Tijuana metro area.. Tijuana is the 27th largest city in the Americas and is the westernmost city in Mexico. According to the 2020 census, the Tijuana metropolitan area was the sixth-largest in Mexico with a population of 2,157,853, while the city was second-largest nationally with 1,810,645 inhabitants.[9] The international metropolitan region was estimated at 5,158,459 in 2016,[10] making it the third-largest metropolitan area in The Californias, 19th-largest metropolitan area in the Americas,[11] and the largest bi-national conurbation that is shared between US and Mexico.",
+            "Episode finished, reward = 0\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Tijuana is smaller than 3 other cities in Baja California.",
+        "completion_time": 4.1207475662231445,
+        "uasge": [
+            {
+                "prompt_tokens": 1004,
+                "completion_tokens": 35,
+                "total_tokens": 1039
+            },
+            {
+                "prompt_tokens": 1303,
+                "completion_tokens": 42,
+                "total_tokens": 1345
+            }
+        ],
+        "act_time": [
+            2.384809732437134
+        ]
+    },
+    {
+        "thought": [
+            " I should search for Folklore and see if it includes pratfalls.\nAction 1: Search[Folklore]",
+            " It does not mention pratfalls, so it does not support the claim.\nAction 2: Finish[NOT ENOUGH INFO]"
+        ],
+        "observation": [
+            "Folklore is the body of expressive culture shared by a particular group of people, culture or subculture.[1] This includes oral traditions such as tales, myths, legends,[a] proverbs, poems, jokes, and other oral traditions.[3][4] This also includes material culture, such as traditional building styles common to the group. Folklore also encompasses customary lore, taking actions for folk beliefs, and the forms and rituals of celebrations such as Christmas, weddings, folk dances, and initiation rites.[3]. Each one of these, either singly or in combination, is considered a folklore artifact or traditional cultural expression. Just as essential as the form, folklore also encompasses the transmission of these artifacts from one region to another or from one generation to the next. Folklore is not something one can typically gain from a formal school curriculum or study in the fine arts.",
+            "Episode finished, reward = 1\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Folklore includes pratfalls.",
+        "completion_time": 5.857787370681763,
+        "uasge": [
+            {
+                "prompt_tokens": 1015,
+                "completion_tokens": 35,
+                "total_tokens": 1050
+            },
+            {
+                "prompt_tokens": 1268,
+                "completion_tokens": 32,
+                "total_tokens": 1300
+            }
+        ],
+        "act_time": [
+            4.298381328582764
+        ]
+    },
+    {
+        "thought": [
+            " I should search for The Beach and find if it has multiple genres.\nAction 1: Search[The Beach]",
+            " It does not mention any genres, so I cannot confirm if the claim is true or not.\nAction 2: Finish[NOT ENOUGH INFO]"
+        ],
+        "observation": [
+            "A beach is a geological formation consisting of loose rock particles along the shoreline of a body of water.. Beach, Beaches or beaching may also refer to:. Main pageContentsCurrent eventsRandom articleAbout WikipediaContact usDonate. HelpLearn to editCommunity portalRecent changesUpload file. Create account.",
+            "Episode finished, reward = 0\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: The Beach is a film with multiple genres.",
+        "completion_time": 2.969108819961548,
+        "uasge": [
+            {
+                "prompt_tokens": 1002,
+                "completion_tokens": 32,
+                "total_tokens": 1034
+            },
+            {
+                "prompt_tokens": 1108,
+                "completion_tokens": 36,
+                "total_tokens": 1144
+            }
+        ],
+        "act_time": [
+            1.4210779666900635
+        ]
+    },
+    {
+        "thought": [
+            " I should search Rick Yune to find if he was on an HBO show.\nAction 1: Search[Rick Yune]",
+            " He was part of the main cast of the Netflix original series Marco Polo, but not an HBO show.\nAction 2: Finish[NOT ENOUGH INFO]"
+        ],
+        "observation": [
+            "Rick Yune (born August 22, 1971)[1] is an American  actor, screenwriter, producer and martial artist of Korean descent. His most notable roles have been in the movies Snow Falling on Cedars, the first Fast and Furious film The Fast and the Furious, the James Bond movie Die Another Day, and Olympus Has Fallen. He was part of the main cast of the Netflix original series Marco Polo.. Yune was born in Washington D.C. to mother Park Wonhui and father Yun Taeho,[2] who were both Korean.[2][3] His younger brother is actor Karl Yune.[4].",
+            "Episode finished, reward = 1\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Rick Yune was on an HBO show.",
+        "completion_time": 4.707597732543945,
+        "uasge": [
+            {
+                "prompt_tokens": 1014,
+                "completion_tokens": 36,
+                "total_tokens": 1050
+            },
+            {
+                "prompt_tokens": 1203,
+                "completion_tokens": 41,
+                "total_tokens": 1244
+            }
+        ],
+        "act_time": [
+            2.9503493309020996
+        ]
+    },
+    {
+        "thought": [
+            " I should search for the Armenian Genocide and find if it occurred during the Reconstruction.\nAction 1: Search[Armenian Genocide]",
+            " The observation does not mention the Reconstruction, so it does not support the claim.\nAction 2: Finish[NOT ENOUGH INFO]"
+        ],
+        "observation": [
+            "The Armenian genocide[a] was the systematic destruction of the Armenian people and identity in the Ottoman Empire during World War\u00a0I. Spearheaded by the ruling Committee of Union and Progress (CUP), it was implemented primarily through the mass murder of around one million Armenians during death marches to the Syrian Desert and the forced Islamization of others, primarily women and children.. Before World War I, Armenians occupied a somewhat protected, but subordinate, place in Ottoman society. Large-scale massacres of Armenians had occurred in the 1890s and 1909. The Ottoman Empire suffered a series of military defeats and territorial losses\u2014especially during the 1912\u20131913 Balkan Wars\u2014leading to fear among CUP leaders that the Armenians would seek independence.",
+            "Episode finished, reward = 1\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: The Armenian Genocide occurred during the Reconstruction.",
+        "completion_time": 5.094701051712036,
+        "uasge": [
+            {
+                "prompt_tokens": 1001,
+                "completion_tokens": 31,
+                "total_tokens": 1032
+            },
+            {
+                "prompt_tokens": 1233,
+                "completion_tokens": 34,
+                "total_tokens": 1267
+            }
+        ],
+        "act_time": [
+            3.5748040676116943
+        ]
+    },
+    {
+        "thought": [
+            " I should search for Martin Van Buren and find if he was Secretary of State.\nAction 1: Search[Martin Van Buren]",
+            " Since he was Secretary of State, he should have worked with the Secretary of State.\nAction 2: Finish[SUPPORTS]"
+        ],
+        "observation": [
+            "Martin Van Buren (/v\u00e6n \u02c8bj\u028a\u0259r\u0259n/ van BURE-\u0259n; Dutch: Maarten van Buren [\u02c8ma\u02d0rt\u0259(n) v\u0251m \u02c8by\u02d0r\u0259(n)] \u24d8; December 5, 1782 \u2013 July 24, 1862) was an American lawyer, diplomat, and statesman who served as the eighth president of the United States from 1837 to 1841. A primary founder of the Democratic Party, he served as New York's attorney general and U.S. senator, then briefly as the ninth governor of New York before joining Andrew Jackson's administration as the tenth United States secretary of state, minister to Great Britain, and ultimately the eighth vice president from 1833 to 1837, after being elected on Jackson's ticket in 1832. Van Buren won the presidency in 1836 against divided Whig opponents. Van Buren lost re-election in 1840, and failed to win the Democratic nomination in 1844.",
+            "Episode finished, reward = 1\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Martin Van Buren was Secretary of State.",
+        "completion_time": 3.778947114944458,
+        "uasge": [
+            {
+                "prompt_tokens": 1002,
+                "completion_tokens": 33,
+                "total_tokens": 1035
+            },
+            {
+                "prompt_tokens": 1301,
+                "completion_tokens": 31,
+                "total_tokens": 1332
+            }
+        ],
+        "act_time": [
+            2.274390459060669
+        ]
+    },
+    {
+        "thought": [
+            " I should search for Mirny (sloop-of-war) to find if it traveled the globe.\nAction 1: Search[Mirny (sloop-of-war)]",
+            " The observation does not mention if the Mirny traveled the globe after its reconstruction.\nAction 2: Finish[NOT ENOUGH INFO]"
+        ],
+        "observation": [
+            "Mirny (Russian: \u041c\u0438\u0301\u0440\u043d\u044b\u0439, literally \"Peaceful\")  was a 20-gun sloop-of-war of the Imperial Russian Navy, the second ship of the First Russian Antarctic Expedition in 1819\u20131821, during which Fabian Gottlieb von Bellingshausen (commander of the lead ship Vostok) and Mikhail Lazarev (commanding Mirny) circumnavigated the globe, discovered the continent of Antarctica and twice circumnavigated it, and discovered a number of islands and archipelagos in the Southern Ocean and the Pacific.[1]. Mirny was under construction  in 1818 at Olonetskaya Shipyards, Lodeynoye Pole. It was initially named Ladoga (after Lake Ladoga), but when the need arose for a new ship for an Antarctic expedition, the decision was taken not to build a completely new one, but to refit Ladoga. It was reconstructed under surveillance of its future commander Mikhail Lazarev.[1]. On 14 July\u00a0[O.S.",
+            "Episode finished, reward = 0\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: The Mirny (sloop-of-war) traveled the globe.",
+        "completion_time": 3.0996451377868652,
+        "uasge": [
+            {
+                "prompt_tokens": 1008,
+                "completion_tokens": 39,
+                "total_tokens": 1047
+            },
+            {
+                "prompt_tokens": 1319,
+                "completion_tokens": 36,
+                "total_tokens": 1355
+            }
+        ],
+        "act_time": [
+            1.3588755130767822
+        ]
+    },
+    {
+        "thought": [
+            " I should search Andrew Kevin Walker to find if he is from North America.\nAction 1: Search[Andrew Kevin Walker]",
+            " From the observation, Andrew Kevin Walker is from Pennsylvania, which is not North America.\nAction 2: Finish[REFUTES]"
+        ],
+        "observation": [
+            "Andrew Kevin Walker (born August 14, 1964) is an American screenwriter. He is known for having written Seven (1995), for which he earned a nomination for the BAFTA Award for Best Original Screenplay, as well as several other films, including 8mm (1999), Sleepy Hollow (1999) and many uncredited script rewrites.. Walker was born in Altoona, Pennsylvania, though some time during his childhood, he moved to Mechanicsburg, Pennsylvania, where he was raised. He attended the Mechanicsburg Area Senior High School until his graduation in 1982. Walker soon enrolled in Penn State University to pursue a career in film production.",
+            "Episode finished, reward = 0\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Andrew Kevin Walker is from North America.",
+        "completion_time": 3.2330307960510254,
+        "uasge": [
+            {
+                "prompt_tokens": 1005,
+                "completion_tokens": 34,
+                "total_tokens": 1039
+            },
+            {
+                "prompt_tokens": 1208,
+                "completion_tokens": 30,
+                "total_tokens": 1238
+            }
+        ],
+        "act_time": [
+            1.7084136009216309
+        ]
+    },
+    {
+        "thought": [
+            " I should search Johanna Braddy to find if she was in a TV series.\nAction 1: Search[Johanna Braddy]",
+            " She has appeared in several movies and TV series, but I cannot find any information about her being in a TV series.\nAction 2: Finish[NOT ENOUGH INFO]"
+        ],
+        "observation": [
+            "Johanna Braddy is an American actress. She played the leading role in the 2009 horror film The Grudge 3, and has appeared in Pop Rocks (2004), Hurt (2009), Easy A (2010), Paranormal Activity 3 (2011), and The Levenger Tapes (2011). She starred as Jenny Matrix in the web series Video Game High School from 2012 to 2014. In 2015, Braddy co-starred as Anna Martin in the Lifetime dark comedy-drama series Unreal. She also starred as Shelby Wyatt in the ABC thriller series Quantico..",
+            "Episode finished, reward = 0\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Johanna Braddy was in a TV series.",
+        "completion_time": 3.1451709270477295,
+        "uasge": [
+            {
+                "prompt_tokens": 1008,
+                "completion_tokens": 37,
+                "total_tokens": 1045
+            },
+            {
+                "prompt_tokens": 1213,
+                "completion_tokens": 41,
+                "total_tokens": 1254
+            }
+        ],
+        "act_time": [
+            1.3801517486572266
+        ]
+    },
+    {
+        "thought": [
+            " I should search for the Colosseum and see if it is a tourist attraction in Rome.\nAction 1: Search[Colosseum]",
+            " It seems that the Colosseum is a tourist attraction in Rome, based on the description.\nAction 2: Finish[SUPPORTS]"
+        ],
+        "observation": [
+            "The Colosseum (/\u02cck\u0252l\u0259\u02c8si\u02d0\u0259m/ KOL-\u0259-SEE-\u0259m; Italian: Colosseo [kolos\u02c8s\u025b\u02d0o]) is an elliptical amphitheatre in the centre of the city of Rome, Italy, just east of the Roman Forum. It is the largest ancient amphitheatre ever built, and is still the largest standing amphitheatre in the world, despite its age. Construction began under the Emperor Vespasian (r.\u200969\u201379\u00a0AD) in 72[1] and was completed in AD 80 under his successor and heir, Titus (r.\u200979\u201381).[2] Further modifications were made during the reign of Domitian (r.\u200981\u201396).[3] The three emperors who were patrons of the work are known as the Flavian dynasty, and the amphitheatre was named the Flavian Amphitheatre (Latin: Amphitheatrum Flavium; Italian: Anfiteatro Flavio [a\u0271fite\u02c8a\u02d0tro \u02c8fla\u02d0vjo]) by later classicists and archaeologists for its association with their family name (Flavius).. The Colosseum is built of travertine limestone, tuff (volcanic rock), and brick-faced concrete. It could hold an estimated 50,000 to 80,000 spectators at various points in its history,[4][5] having an average audience of some 65,000;[6] it was used for gladiatorial contests and public spectacles including animal hunts, executions, re-enactments of famous battles, dramas based on Roman mythology, and briefly mock sea battles.",
+            "Episode finished, reward = 1\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: The Colosseum is a tourist attraction in Rome.",
+        "completion_time": 4.390450954437256,
+        "uasge": [
+            {
+                "prompt_tokens": 1006,
+                "completion_tokens": 36,
+                "total_tokens": 1042
+            },
+            {
+                "prompt_tokens": 1468,
+                "completion_tokens": 36,
+                "total_tokens": 1504
+            }
+        ],
+        "act_time": [
+            2.6848983764648438
+        ]
+    },
+    {
+        "thought": [
+            " I should search Margaret Thatcher and find if she implemented laws that have come to be known as Thatcherism.\nAction 1: Search[Margaret Thatcher]",
+            " The observation says she implemented economic policies known as Thatcherism, so it supports the claim.\nAction 2: Finish[SUPPORTS]"
+        ],
+        "observation": [
+            "Margaret Hilda Thatcher, Baroness Thatcher, LG, OM, DStJ, PC, FRS, HonFRSC (n\u00e9e\u00a0Roberts; 13\u00a0October 1925\u00a0\u2013 8\u00a0April 2013) was a British stateswoman and Conservative politician who was Prime Minister of the United Kingdom from 1979 to 1990 and Leader of the Conservative Party from 1975 to 1990. She was the longest-serving British prime minister of the 20th century and the first woman to hold the position. As prime minister, she implemented economic policies known as Thatcherism. A Soviet journalist dubbed her the \"Iron Lady\", a nickname that became associated with her uncompromising politics and leadership style.. Thatcher studied chemistry at Somerville College, Oxford, and worked briefly as a research chemist before becoming a barrister.",
+            "Episode finished, reward = 0\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Margaret Thatcher implemented laws that have come to be known as Thatcherism.",
+        "completion_time": 5.413057804107666,
+        "uasge": [
+            {
+                "prompt_tokens": 1003,
+                "completion_tokens": 34,
+                "total_tokens": 1037
+            },
+            {
+                "prompt_tokens": 1267,
+                "completion_tokens": 34,
+                "total_tokens": 1301
+            }
+        ],
+        "act_time": [
+            3.847177505493164
+        ]
+    },
+    {
+        "thought": [
+            " I should search for James VI and I to find if he was a person.\nAction 1: Search[James VI and I]",
+            " From the observation, it seems that James VI and I was a person.\nAction 2: Finish[SUPPORTS]"
+        ],
+        "observation": [
+            "James VI and I (James Charles Stuart; 19 June 1566 \u2013 27 March 1625) was King of Scotland as James VI from 24 July 1567 and King of England and Ireland as James I from the union of the Scottish and English crowns on 24\u00a0March 1603 until his death in 1625. Although he long tried to get both countries to adopt a closer political union, the kingdoms of Scotland and England remained sovereign states, with their own parliaments, judiciaries, and laws, ruled by James in personal union. He was the longest-reigning monarch of the Kingdom of Scotland.. James was the son of Mary, Queen of Scots, and a great-great-grandson of Henry VII, King of England and Lord of Ireland, and thus a potential successor to all three thrones. He acceded to the Scottish throne at the age of thirteen months, after his mother was forced to abdicate in his favour.",
+            "Episode finished, reward = 1\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: James VI and I was a person.",
+        "completion_time": 3.3924007415771484,
+        "uasge": [
+            {
+                "prompt_tokens": 1015,
+                "completion_tokens": 35,
+                "total_tokens": 1050
+            },
+            {
+                "prompt_tokens": 1279,
+                "completion_tokens": 29,
+                "total_tokens": 1308
+            }
+        ],
+        "act_time": [
+            1.8733947277069092
+        ]
+    },
+    {
+        "thought": [
+            " I should search for Jackpot to see if it is a film.\nAction 1: Search[Jackpot]",
+            " From suggestions, I should search \"Jackpot (2024 film)\" to find the film.\nAction 2: Search[Jackpot (2024 film)]",
+            " It seems like Jackpot is a film, so the claim is supported.\nAction 3: Finish[SUPPORTS]"
+        ],
+        "observation": [
+            "Could not find [Jackpot]. Similar: ['Jackpot', 'Progressive jackpot', 'Jackpot (2024 film)', 'Lottery jackpot records', 'Mega Millions (redirect from Just the Jackpot)'].",
+            "Jackpot! is an 2024 upcoming American action comedy film directed by Paul Feig and written by Rob Yescombe. The film stars Awkwafina, John Cena and Simu Liu.. Jackpot! is scheduled to be released by Amazon MGM Studios via Prime Video on August 15, 2024.[1]. In March 2023, it was announced that an action comedy film titled Grand Death Lotto was in development at Amazon Studios. Paul Feig had been hired to direct, written by Rob Yescombe, and produced by Joe Roth, Jeff Kirschenbaum, Feig, and Laura Fischer.",
+            "Episode finished, reward = 1\n"
+        ],
+        "n_calls": 3,
+        "n_badcalls": 0,
+        "question": "Claim: Jackpot is a film.",
+        "completion_time": 6.367758750915527,
+        "uasge": [
+            {
+                "prompt_tokens": 1011,
+                "completion_tokens": 31,
+                "total_tokens": 1042
+            },
+            {
+                "prompt_tokens": 1100,
+                "completion_tokens": 44,
+                "total_tokens": 1144
+            },
+            {
+                "prompt_tokens": 1289,
+                "completion_tokens": 29,
+                "total_tokens": 1318
+            }
+        ],
+        "act_time": [
+            2.6631805896759033,
+            1.2648210525512695
+        ]
+    },
+    {
+        "thought": [
+            " I should search for Chris Eubank Jr. and find if he was an only child.\nAction 1: Search[Chris Eubank Jr.]",
+            " The observation does not mention anything about him being an only child.\nAction 2: Finish[NOT ENOUGH INFO]"
+        ],
+        "observation": [
+            "Christopher Livingstone Eubank Jr. (born 18 September 1989) is a British professional boxer. He held the  World Boxing Association (WBA) interim middleweight title twice between 2015 and 2021. He also held the International Boxing Organization (IBO) super-middleweight title twice between 2017 and 2019. At regional level, he held the British middleweight title in 2016.",
+            "Episode finished, reward = 1\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Chris Eubank Jr. was an only child.",
+        "completion_time": 3.059854030609131,
+        "uasge": [
+            {
+                "prompt_tokens": 1006,
+                "completion_tokens": 34,
+                "total_tokens": 1040
+            },
+            {
+                "prompt_tokens": 1160,
+                "completion_tokens": 29,
+                "total_tokens": 1189
+            }
+        ],
+        "act_time": [
+            1.5666117668151855
+        ]
+    },
+    {
+        "thought": [
+            " I should search for Noel Fisher and find if he acted in the role of Cael Malloy.\nAction 1: Search[Noel Fisher]",
+            " The observation mentions that he played Cael Malloy on the FX series The Riches, which supports the claim.\nAction 2: Finish[SUPPORTS]"
+        ],
+        "observation": [
+            "Noel Roeim Fisher[2][3] (born March 13, 1984[4]) is a Canadian actor. He is known for his portrayal of Mickey Milkovich on the Showtime series Shameless, as well as his portrayal of Cael Malloy on the FX series The Riches. He played Ellison \"Cotton Top\" Mounts in the Emmy Award-winning miniseries Hatfields & McCoys as well as bully Troy McGinty in Max Keeble's Big Move, Vladimir, a 1,500-year-old vampire in The Twilight Saga: Breaking Dawn \u2013 Part 2 (2012), and Michelangelo in Teenage Mutant Ninja Turtles (2014) and its sequel Teenage Mutant Ninja Turtles: Out of the Shadows (2016). Fisher has also acted in shows such as Criminal Minds: Suspect Behavior, Lie to Me, and Bones.. Fisher was born in Vancouver, British Columbia.",
+            "Episode finished, reward = 0\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Noel Fisher acted in the role of Cael Malloy.",
+        "completion_time": 3.469174385070801,
+        "uasge": [
+            {
+                "prompt_tokens": 1012,
+                "completion_tokens": 41,
+                "total_tokens": 1053
+            },
+            {
+                "prompt_tokens": 1307,
+                "completion_tokens": 38,
+                "total_tokens": 1345
+            }
+        ],
+        "act_time": [
+            1.7061171531677246
+        ]
+    },
+    {
+        "thought": [
+            " I should search for Mary-Kate Olsen and Ashley Olsen to see if they are referred to as the Olsen twins.\nAction 1: Search[Mary-Kate Olsen]",
+            " From the observation, it seems that Mary-Kate Olsen and Ashley Olsen are not always referred to as the Olsen twins.\nAction 2: Finish[NOT ENOUGH INFO]"
+        ],
+        "observation": [
+            "Mary-Kate Olsen (born June 13, 1986[1]) is an American businesswoman, fashion designer, equestrian, and former actress. Her acting career began at the age of nine months, with her sharing the role of Michelle Tanner with her twin sister Ashley Olsen in the television sitcom Full House (1987\u20131995). They also starred in numerous films together.. In 1993, the production company Dualstar Entertainment Group was founded, which produced a long string of television films and direct-to-video releases featuring the girls; they starred in Passport to Paris (1999), Our Lips Are Sealed (2000), Winning London (2001), Holiday in the Sun (2001) and in the television series, So Little Time (2001\u20132002), for which she was nominated for a Daytime Emmy Award for Outstanding Performer in Children's Programming. They starred in Getting There (2002), When in Rome (2002), The Challenge (2003) and made cameos in Charlie's Angels: Full Throttle (2003).",
+            "Episode finished, reward = 0\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Mary-Kate Olsen and Ashley Olsen are also known as the Olsen twins when referred to collectively.",
+        "completion_time": 4.832456827163696,
+        "uasge": [
+            {
+                "prompt_tokens": 1002,
+                "completion_tokens": 32,
+                "total_tokens": 1034
+            },
+            {
+                "prompt_tokens": 1338,
+                "completion_tokens": 49,
+                "total_tokens": 1387
+            }
+        ],
+        "act_time": [
+            2.9872028827667236
+        ]
+    },
+    {
+        "thought": [
+            " I should search for Renato Balestra and find if he came from an architect family.\nAction 1: Search[Renato Balestra]",
+            " The observation says he came from a family of architects and engineers, so he did come from an architect family.\nAction 2: Finish[SUPPORTS]"
+        ],
+        "observation": [
+            "Renato Balestra OMRI (3 May 1924 \u2013 26 November 2022) was an Italian fashion designer, the founder of the Balestra brand and company.[1]. Born in Trieste, Renato Balestra grew up immersed in the Mid-European cultural environment. In a family of architects and engineers, he stood out for his artistic spirit and explored painting, music and scenography in his free time.. His career in fashion began almost by chance, when friends sent one of his sketches to the Italian Fashion Center (Centro Italiano della Moda, CMI): immediately noticed for his talent, he was invited to take part in a Haute Couture show. By 1953, he had achieved such success that he quit his studies in engineering and completed his apprenticeship at Jole Veneziani's atelier..",
+            "Episode finished, reward = 1\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Renato Balestra came from an architect family.",
+        "completion_time": 2.986302137374878,
+        "uasge": [
+            {
+                "prompt_tokens": 1005,
+                "completion_tokens": 36,
+                "total_tokens": 1041
+            },
+            {
+                "prompt_tokens": 1241,
+                "completion_tokens": 38,
+                "total_tokens": 1279
+            }
+        ],
+        "act_time": [
+            1.2939095497131348
+        ]
+    },
+    {
+        "thought": [
+            " I should search Tenacious D and find if it was formed in 1942.\nAction 1: Search[Tenacious D]",
+            " It does not mention the year 1942, so it is NOT ENOUGH INFORMATION to support the claim.\nAction 2: Finish[NOT ENOUGH INFO]"
+        ],
+        "observation": [
+            "Tenacious D is an American comedy rock duo formed in Los Angeles in 1994 by the actors Jack Black and Kyle Gass. The name is derived from \"tenacious defense\", a phrase used by the NBA basketball sportscasters Walt Frazier and Marv Albert.[2] Their music showcases Black's theatrical vocal delivery and Gass' acoustic guitar playing.[3] Critics have described their fusion of vulgar absurdist comedy with rock music as \"mock rock\".[4][5] Their songs discuss the duo's purported musical and sexual prowess, their friendship and cannabis usage, in a style critics have compared with the storyteller-style lyrics of rock opera.[6][7]. Prior to the release of the 2001 debut album Tenacious D, the duo had a three-episode TV series released on HBO between 1997-2000. The series came about after they met David Cross on the LA music scene and Black featured in episodes of Mr. Show with Bob and David.[clarification needed] The band befriended the musician Dave Grohl, which began a relationship between Grohl's band Foo Fighters and Tenacious D.[8] Towards the end of the 1990s, the duo supported large rock acts such as Weezer, Pearl Jam, Tool, and Beck.[4] In 2000, they signed with Epic Records and the year after they released Tenacious D, their debut album featuring a full band, including Grohl.",
+            "Episode finished, reward = 0\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Tenacious D was formed in 1942.",
+        "completion_time": 3.7214324474334717,
+        "uasge": [
+            {
+                "prompt_tokens": 1003,
+                "completion_tokens": 34,
+                "total_tokens": 1037
+            },
+            {
+                "prompt_tokens": 1398,
+                "completion_tokens": 44,
+                "total_tokens": 1442
+            }
+        ],
+        "act_time": [
+            1.958059549331665
+        ]
+    },
+    {
+        "thought": [
+            " I should search for Sheryl Lee and find if she reprised her role of Phoebe Buffay.\nAction 1: Search[Sheryl Lee]",
+            " She has reprised her role of Laura Palmer in the Showtime revival of Twin Peaks in 2017.\nAction 2: Finish[SUPPORTS]"
+        ],
+        "observation": [
+            "Sheryl Lee (born April 22, 1967) is a German-American film, stage, and television actress. After studying acting in college, Lee relocated to Seattle, Washington to work in theater, where she was cast by David Lynch as Laura Palmer and Maddy Ferguson on the 1990 television series Twin Peaks and in the 1992 film Twin Peaks: Fire Walk with Me. After completing Twin Peaks, she returned to theater, appearing in the title role of Salome on Broadway opposite Al Pacino.. Her film roles include Astrid Kirchherr in Backbeat (1994), as well as a lead role in the drama Mother Night (1996), the role of Katrina in John Carpenter's Vampires (1998) and the part of April in Winter's Bone (2010). She has had recurring roles on such television series as One Tree Hill (2005\u201306) and Dirty Sexy Money (2007\u20132009), and later reprised her role of Laura Palmer in the Showtime revival of Twin Peaks in 2017..",
+            "Episode finished, reward = 0\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Sheryl Lee reprised her role of Phoebe Buffay.",
+        "completion_time": 3.7889466285705566,
+        "uasge": [
+            {
+                "prompt_tokens": 1006,
+                "completion_tokens": 37,
+                "total_tokens": 1043
+            },
+            {
+                "prompt_tokens": 1328,
+                "completion_tokens": 42,
+                "total_tokens": 1370
+            }
+        ],
+        "act_time": [
+            1.9843246936798096
+        ]
+    },
+    {
+        "thought": [
+            " I should search for James VI and I and the Plantation of UIster to find if he razed it.\nAction 1: Search[James VI and I]",
+            " Since he was the King of Scotland, he should have razed the Plantation of UIster.\nAction 2: Finish[SUPPORTS]"
+        ],
+        "observation": [
+            "James VI and I (James Charles Stuart; 19 June 1566 \u2013 27 March 1625) was King of Scotland as James VI from 24 July 1567 and King of England and Ireland as James I from the union of the Scottish and English crowns on 24\u00a0March 1603 until his death in 1625. Although he long tried to get both countries to adopt a closer political union, the kingdoms of Scotland and England remained sovereign states, with their own parliaments, judiciaries, and laws, ruled by James in personal union. He was the longest-reigning monarch of the Kingdom of Scotland.. James was the son of Mary, Queen of Scots, and a great-great-grandson of Henry VII, King of England and Lord of Ireland, and thus a potential successor to all three thrones. He acceded to the Scottish throne at the age of thirteen months, after his mother was forced to abdicate in his favour.",
+            "Episode finished, reward = 0\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: James VI and I razed the Plantation of UIster.",
+        "completion_time": 7.315633773803711,
+        "uasge": [
+            {
+                "prompt_tokens": 1010,
+                "completion_tokens": 42,
+                "total_tokens": 1052
+            },
+            {
+                "prompt_tokens": 1281,
+                "completion_tokens": 34,
+                "total_tokens": 1315
+            }
+        ],
+        "act_time": [
+            5.564845323562622
+        ]
+    },
+    {
+        "thought": [
+            " I should search for DJ Quik and find if he was conceived on January 22nd, 1970.\nAction 1: Search[DJ Quik]",
+            " The observation does not mention the date of January 22nd, 1970, so I cannot confirm or deny the claim.\nAction 2: Finish[NOT ENOUGH INFO]"
+        ],
+        "observation": [
+            "David Marvin Blake (born January 18, 1970),[3] better known by his stage names DJ Quik or Da Quiksta, is an American rapper and record producer from Compton, California, known for his production in the G-funk style of West Coast hip-hop. Blake has collaborated with Snoop Dogg, Kurupt, Tupac, Chingy, R. Kelly and Shaquille O'Neal, among others. Blake's stage name reflects his ability to produce songs in a short period of time.[4] Some of his top songs include \"Dollaz + Sense\", \"Tonite\", \"Born and Raised in Compton\" and \"Jus Lyke Compton.\"[5]. Blake was born in Compton, California.",
+            "Episode finished, reward = 0\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: DJ Quik was conceived on January 22nd, 1970.",
+        "completion_time": 3.5111427307128906,
+        "uasge": [
+            {
+                "prompt_tokens": 1012,
+                "completion_tokens": 45,
+                "total_tokens": 1057
+            },
+            {
+                "prompt_tokens": 1245,
+                "completion_tokens": 46,
+                "total_tokens": 1291
+            }
+        ],
+        "act_time": [
+            1.5581121444702148
+        ]
+    },
+    {
+        "thought": [
+            " I should search for CHiPs and Rick Rosner to find if the show is based on a TV episode written by Rick Rosner.\nAction 1: Search[CHiPs]",
+            " The observation does not mention Rick Rosner, so it is not based on a TV episode written by him.\nAction 2: Finish[NOT ENOUGH INFO]"
+        ],
+        "observation": [
+            "CHiPs is an American crime drama television series created by Rick Rosner and originally aired on NBC from September 15, 1977 to May 1, 1983. It follows the lives of two motorcycle officers of the California Highway Patrol (CHP). The series ran for 139 episodes over six seasons, plus one reunion television film in October 1998.. CHiPs is an action crime drama in a standard hour-long time slot, which at the time required 48 minutes of actual programming. A signature of the show, especially in the later seasons, were frequent over-the-top freeway pileups.",
+            "Episode finished, reward = 1\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: CHiPs is based on a TV episode written by Rick Rosner.",
+        "completion_time": 3.275290012359619,
+        "uasge": [
+            {
+                "prompt_tokens": 1021,
+                "completion_tokens": 48,
+                "total_tokens": 1069
+            },
+            {
+                "prompt_tokens": 1223,
+                "completion_tokens": 38,
+                "total_tokens": 1261
+            }
+        ],
+        "act_time": [
+            1.3195850849151611
+        ]
+    },
+    {
+        "thought": [
+            " I should search Luis Fonsi to find if he is Chinese.\nAction 1: Search[Luis Fonsi]",
+            " The observation does not mention China, so it is not Chinese.\nAction 2: Finish[NOT ENOUGH INFO]"
+        ],
+        "observation": [
+            "Luis Alfonso Rodr\u00edguez L\u00f3pez-Cepero (born April 15, 1978), known by his stage name Luis Fonsi (Spanish pronunciation: [\u02c8lwis \u02c8fonsi]), is a Puerto Rican singer. He is known for his soulful and dance oriented songs, most notably 2017's \"Despacito\".. Fonsi received his first Latin Grammy Award nominations in the Record of the Year category and won Song of the Year thanks to the song \"Aqu\u00ed Estoy Yo\". The song also won three Billboard Latin Music Awards. \"Despacito\" became Fonsi's biggest success, winning four Latin Grammy Awards, seven Billboard Latin Music Awards, five Billboard Music Awards and three Grammy Awards nominations.",
+            "Episode finished, reward = 0\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Luis Fonsi is Chinese.",
+        "completion_time": 3.20273494720459,
+        "uasge": [
+            {
+                "prompt_tokens": 1009,
+                "completion_tokens": 30,
+                "total_tokens": 1039
+            },
+            {
+                "prompt_tokens": 1222,
+                "completion_tokens": 29,
+                "total_tokens": 1251
+            }
+        ],
+        "act_time": [
+            1.7743916511535645
+        ]
+    },
+    {
+        "thought": [
+            " I should search for David Spade and Black Sheep to find if he was fired from being in it.\nAction 1: Search[David Spade Black Sheep]",
+            " From suggestions, I should search \"Black Sheep (1996 film)\" to find the movie.\nAction 2: Search[Black Sheep (1996 film)]",
+            " It does not mention David Spade being fired, so I am not sure if this claim is true or not.\nAction 3: Finish[NOT ENOUGH INFO]"
+        ],
+        "observation": [
+            "Could not find David Spade Black Sheep. Similar: ['Black Sheep (1996 film)', 'David Spade', 'Black sheep (disambiguation)', 'Chris Farley', 'List of Black Clover characters'].",
+            "Black Sheep is a 1996 American comedy film directed by Penelope Spheeris, written by Fred Wolf, starring Chris Farley and David Spade, co-starring Tim Matheson, Christine Ebersole, and Gary Busey. The film follows a political aide who is assigned to control the brother of a candidate for Governor of Washington, who helps his brother's campaign. It grossed $32.3 million during its U.S. theatrical run.[2]. Mike Donnelly, a good-natured but loud and bumbling oddball of his family, is driving an advertisement truck to support his brother Al Donnelly's campaign for Governor of Washington.",
+            "Episode finished, reward = 0\n"
+        ],
+        "n_calls": 3,
+        "n_badcalls": 0,
+        "question": "Claim: David Spade was fired from being in Black Sheep.",
+        "completion_time": 5.9555604457855225,
+        "uasge": [
+            {
+                "prompt_tokens": 1003,
+                "completion_tokens": 33,
+                "total_tokens": 1036
+            },
+            {
+                "prompt_tokens": 1102,
+                "completion_tokens": 46,
+                "total_tokens": 1148
+            },
+            {
+                "prompt_tokens": 1312,
+                "completion_tokens": 39,
+                "total_tokens": 1351
+            }
+        ],
+        "act_time": [
+            1.6697165966033936,
+            1.6283156871795654
+        ]
+    },
+    {
+        "thought": [
+            " I should search for information on global warming and permafrost to see if it is true.\nAction 1: Search[global warming permafrost]",
+            " From suggestions, I should search \"permafrost\" to find information on it.\nAction 2: Search[permafrost]",
+            " From the observation, it seems that permafrost is a significant issue and global warming is expected to exacerbate it.\nAction 3: Finish[SUPPORTS]"
+        ],
+        "observation": [
+            "Could not find global warming permafrost. Similar: ['Permafrost', 'Climate change (redirect from Global Warming)', 'Permafrost carbon cycle', 'Effects of climate change (redirect from Effects of global warming on animals)', 'Tipping points in the climate system (redirect from Runaway global warming)'].",
+            "Permafrost (from  perma-\u00a0'permanent', and  frost) is soil or underwater sediment which continuously remains below 0\u00a0\u00b0C (32\u00a0\u00b0F) for two years or more: the oldest permafrost had been continuously frozen for around 700,000 years.[1] Whilst the shallowest permafrost has a vertical extent of below a meter (3\u00a0ft), the deepest is greater than 1,500\u00a0m (4,900\u00a0ft).[2] Similarly, the area of individual permafrost zones may be limited to narrow mountain summits or extend across vast Arctic regions.[3] The ground beneath glaciers and ice sheets is not usually defined as permafrost, so on land, permafrost is generally located beneath a so-called active layer of soil which freezes and thaws depending on the season.[4]. Around 15% of the Northern Hemisphere or 11% of the global surface is underlain by permafrost,[5] covering a total area of around 18\u00a0million\u00a0km2 (6.9\u00a0million\u00a0sq\u00a0mi).[6] This includes large areas of Alaska, Canada, Greenland, and Siberia. It is also located in high mountain regions, with the Tibetan Plateau being a prominent example. Only a minority of permafrost exists in the Southern Hemisphere, where it is consigned to mountain slopes like in the Andes of Patagonia, the Southern Alps of New Zealand, or the highest mountains of Antarctica.[3][1]. Permafrost contains large amounts of dead biomass that have accumulated throughout millennia without having had the chance to fully decompose and release their carbon, making tundra soil a carbon sink.[3] As global warming heats the ecosystem, frozen soil thaws and becomes warm enough for decomposition to start anew, accelerating the permafrost carbon cycle.",
+            "Episode finished, reward = 0\n"
+        ],
+        "n_calls": 3,
+        "n_badcalls": 0,
+        "question": "Claim: Global warming is expected to exacerbate with the retreat of permafrost.",
+        "completion_time": 11.925781488418579,
+        "uasge": [
+            {
+                "prompt_tokens": 1007,
+                "completion_tokens": 38,
+                "total_tokens": 1045
+            },
+            {
+                "prompt_tokens": 1134,
+                "completion_tokens": 37,
+                "total_tokens": 1171
+            },
+            {
+                "prompt_tokens": 1626,
+                "completion_tokens": 42,
+                "total_tokens": 1668
+            }
+        ],
+        "act_time": [
+            2.027066707611084,
+            7.208455562591553
+        ]
+    },
+    {
+        "thought": [
+            " I should search Ashton Kutcher to find if he is a romantic comedy actor.\nAction 1: Search[Ashton Kutcher]",
+            " He has starred in romantic comedies, so he should be a romantic comedy actor.\nAction 2: Finish[SUPPORTS]"
+        ],
+        "observation": [
+            "Christopher Ashton Kutcher (/\u02c8k\u028at\u0283\u0259r/; born February 7, 1978) is an American actor, producer and entrepreneur. Kutcher began his acting career portraying Michael Kelso in the Fox sitcom That '70s Show (1998\u20132006). He made his film debut in the romantic comedy Coming Soon (1999), followed by the comedy film Dude, Where's My Car? (2000), which was a box office success. In 2003, Kutcher starred in the romantic comedies Just Married and My Boss's Daughter. That year, he created and produced the television series Punk'd, also serving as host for the first eight of its ten seasons.",
+            "Episode finished, reward = 1\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Ashton Kutcher is a romantic comedy actor.",
+        "completion_time": 4.59372615814209,
+        "uasge": [
+            {
+                "prompt_tokens": 1010,
+                "completion_tokens": 41,
+                "total_tokens": 1051
+            },
+            {
+                "prompt_tokens": 1237,
+                "completion_tokens": 35,
+                "total_tokens": 1272
+            }
+        ],
+        "act_time": [
+            2.8653528690338135
+        ]
+    },
+    {
+        "thought": [
+            " I should search for Larry Wilmore to find if he is a singer.\nAction 1: Search[Larry Wilmore]",
+            " From the observation, it seems that Larry Wilmore is not a singer.\nAction 2: Finish[NOT ENOUGH INFO]"
+        ],
+        "observation": [
+            "Elister Larry Wilmore III (born October 30, 1961)[1][2] is an American comedian, writer, producer, and actor. He served as the \"Senior Black Correspondent\" on The Daily Show from 2006 to 2014, and hosted The Nightly Show with Larry Wilmore in 2015 and 2016. He is also the creator of the sitcom The Bernie Mac Show. He served as an executive producer for the ABC television series Black-ish, and is the co-creator, with Issa Rae, of the HBO television series Insecure. Since May 2017, he has hosted a podcast, Black on the Air, where he discusses current events and interviews guests.[3] He was the host of the talk show Wilmore..",
+            "Episode finished, reward = 1\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Larry Wilmore is a singer.",
+        "completion_time": 2.9449710845947266,
+        "uasge": [
+            {
+                "prompt_tokens": 1005,
+                "completion_tokens": 34,
+                "total_tokens": 1039
+            },
+            {
+                "prompt_tokens": 1233,
+                "completion_tokens": 31,
+                "total_tokens": 1264
+            }
+        ],
+        "act_time": [
+            1.4313256740570068
+        ]
+    },
+    {
+        "thought": [
+            " I should search for Thomas Jefferson to find if he retired from a position.\nAction 1: Search[Thomas Jefferson]",
+            " He was the U.S. secretary of state under George Washington, so he did not retire from that position.\nAction 2: Finish[NOT ENOUGH INFO]"
+        ],
+        "observation": [
+            "Thomas Jefferson (April 13, 1743[b] \u2013 July 4, 1826) was an American statesman, diplomat, lawyer, architect, philosopher, and Founding Father who served as the third president of the United States from 1801 to 1809.[6] He was the primary author of the Declaration of Independence. Following the American Revolutionary War and prior to becoming president in 1801, Jefferson was the nation's first U.S. secretary of state under George Washington and then the nation's second vice president under John Adams. Jefferson was a leading proponent of democracy, republicanism, and individual rights, and produced formative documents and decisions at the state, national, and international levels. His writings and advocacy for human rights, including freedom of thought, speech, and religion, served as substantial inspirations to the American Revolution, American Enlightenment, and subsequent Revolutionary War in which the Thirteen Colonies succeeded in breaking from British America and establishing the United States as a sovereign nation.[7].",
+            "Episode finished, reward = 1\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Thomas Jefferson retired from a position.",
+        "completion_time": 4.442733526229858,
+        "uasge": [
+            {
+                "prompt_tokens": 1013,
+                "completion_tokens": 33,
+                "total_tokens": 1046
+            },
+            {
+                "prompt_tokens": 1294,
+                "completion_tokens": 40,
+                "total_tokens": 1334
+            }
+        ],
+        "act_time": [
+            2.7841906547546387
+        ]
+    },
+    {
+        "thought": [
+            " I should search for CHiPs to find if it is a film made in the United States and categorized as a buddy cop.\nAction 1: Search[CHiPs]",
+            " The observation does not mention if it is a film or categorized as a buddy cop.\nAction 2: Finish[NOT ENOUGH INFO]"
+        ],
+        "observation": [
+            "CHiPs is an American crime drama television series created by Rick Rosner and originally aired on NBC from September 15, 1977 to May 1, 1983. It follows the lives of two motorcycle officers of the California Highway Patrol (CHP). The series ran for 139 episodes over six seasons, plus one reunion television film in October 1998.. CHiPs is an action crime drama in a standard hour-long time slot, which at the time required 48 minutes of actual programming. A signature of the show, especially in the later seasons, were frequent over-the-top freeway pileups.",
+            "Episode finished, reward = 1\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: CHiPs is a film that was made in the United States and categorized as buddy cop.",
+        "completion_time": 2.912821054458618,
+        "uasge": [
+            {
+                "prompt_tokens": 1004,
+                "completion_tokens": 35,
+                "total_tokens": 1039
+            },
+            {
+                "prompt_tokens": 1206,
+                "completion_tokens": 35,
+                "total_tokens": 1241
+            }
+        ],
+        "act_time": [
+            1.3095803260803223
+        ]
+    },
+    {
+        "thought": [
+            " I should search Duff McKagan and find if he is a Scientologist.\nAction 1: Search[Duff McKagan]",
+            " Since he did not mention anything about Scientology, I cannot find any information that supports or refutes the claim.\nAction 2: Finish[NOT ENOUGH INFO]"
+        ],
+        "observation": [
+            "Michael Andrew \"Duff\" McKagan (born February 5, 1964) is an American musician. He was the bassist of hard rock band Guns N' Roses for twelve years, with whom he achieved worldwide success in the late 1980s and early 1990s. McKagan rejoined the band in 2016, following their induction into the Rock and Roll Hall of Fame.[1]. Toward the end of his first tenure with Guns N' Roses, McKagan released the solo album Believe in Me (1993) and formed the short-lived supergroup Neurotic Outsiders. Following his departure from Guns N' Roses in 1997, McKagan briefly reunited with his pre-success Seattle punk band 10 Minute Warning, before forming the still-active hard rock band Loaded, in which he performs lead vocals and rhythm guitar.",
+            "Episode finished, reward = 1\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Duff McKagan is a Scientologist.",
+        "completion_time": 3.805392265319824,
+        "uasge": [
+            {
+                "prompt_tokens": 1007,
+                "completion_tokens": 35,
+                "total_tokens": 1042
+            },
+            {
+                "prompt_tokens": 1255,
+                "completion_tokens": 39,
+                "total_tokens": 1294
+            }
+        ],
+        "act_time": [
+            2.134578227996826
+        ]
+    },
+    {
+        "thought": [
+            " I should search for Flaked and find if it was renewed for a six episode season.\nAction 1: Search[Flaked]",
+            " The observation says that the series was renewed for a six-episode season, which supports the claim.\nAction 2: Finish[SUPPORTS]"
+        ],
+        "observation": [
+            "Flaked is an American comedy drama television series created by Will Arnett and Mark Chappell. It stars Arnett as Chip, a self-appointed \"guru\" who falls in love while he and many other members of the ensemble cast struggle with alcoholism and Alcoholics Anonymous.[1][2] The first season consisted of eight episodes and was released on Netflix on March 11, 2016.[3] In July 2016, the series was renewed for a six-episode second season,[4] which premiered on June 2, 2017.[5]. The show is in-part inspired by Arnett's own struggles with alcoholism. He relapsed while Flaked was in production,[6] and has attested that Alcoholics Anonymous has played a role in reclaiming sobriety.[7]. The first season received poor reviews from critics.",
+            "Episode finished, reward = 1\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Flaked was renewed for a six episode season.",
+        "completion_time": 3.245455026626587,
+        "uasge": [
+            {
+                "prompt_tokens": 1005,
+                "completion_tokens": 38,
+                "total_tokens": 1043
+            },
+            {
+                "prompt_tokens": 1256,
+                "completion_tokens": 37,
+                "total_tokens": 1293
+            }
+        ],
+        "act_time": [
+            1.5295908451080322
+        ]
+    },
+    {
+        "thought": [
+            " I should search for Taking Back Sunday and see if Tom DeLonge is a member.\nAction 1: Search[Taking Back Sunday]",
+            " Tom DeLonge is not mentioned in the observation, so he did not form Taking Back Sunday.\nAction 2: Finish[REFUTES]"
+        ],
+        "observation": [
+            "Taking Back Sunday is an American rock band from Amityville, New York. The band was formed by guitarist Eddie Reyes and bassist Jesse Lacey in 1999. The band's members currently are Adam Lazzara (lead vocals), John Nolan (lead guitar, keyboards, vocals), Shaun Cooper (bass guitar) and Mark O'Connell (drums), accompanied by Nathan Cogan (guitar) for their live performances. The band's former members include Lacey, Reyes, bassist Matthew Rubano, and guitarist-vocalists Fred Mascherino and Matthew Fazzi.. Lacey quit Taking Back Sunday in 1999 and in 2000 formed the rock band Brand New, with whom Taking Back Sunday would become embroiled in a highly publicized feud.[1][2] Lazzara replaced original vocalist Antonio Longo prior to the release of the band's 2002 debut album Tell All Your Friends.",
+            "Episode finished, reward = 0\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Tom DeLonge formed Taking Back Sunday.",
+        "completion_time": 5.462780714035034,
+        "uasge": [
+            {
+                "prompt_tokens": 1007,
+                "completion_tokens": 32,
+                "total_tokens": 1039
+            },
+            {
+                "prompt_tokens": 1279,
+                "completion_tokens": 35,
+                "total_tokens": 1314
+            }
+        ],
+        "act_time": [
+            3.909895896911621
+        ]
+    },
+    {
+        "thought": [
+            " I should search for Amyotrophic lateral sclerosis to find if it is a disease.\nAction 1: Search[Amyotrophic lateral sclerosis]",
+            " This observation provides a lot of information about Amyotrophic lateral sclerosis, including its definition, symptoms, diagnosis, treatment, and prognosis.\nAction 2: Finish[HAS ENOUGH INFO]"
+        ],
+        "observation": [
+            "Amyotrophic lateral sclerosis (ALS), also known as motor neurone disease (MND) or Lou Gehrig's disease in the United States, is a rare, terminal neurodegenerative disorder that results in the progressive loss of both upper and lower motor neurons that normally control voluntary muscle contraction.[3] ALS is the most common form of the motor neuron diseases.[8] ALS often presents in its early stages with gradual muscle stiffness, twitches, weakness, and wasting.[3] Motor neuron loss typically continues until the abilities to eat, speak, move, and, lastly, breathe are all lost.[3] While only 15% of people with ALS also fully develop frontotemporal dementia, an estimated 50% face at least some minor difficulties with thinking and behavior.[9] Depending on which of the aforementioned symptoms develops first, ALS is classified as limb-onset (begins with weakness in the arms or legs) or bulbar-onset (begins with difficulty in speaking or swallowing).[10]. Most cases of ALS (about 90\u201395%) have no known cause, and are known as sporadic ALS.[3][11] However, both genetic and environmental factors are believed to be involved.[12] The remaining 5\u201310% of cases have a genetic cause, often linked to a history of the disease in the family, and these are known as familial ALS (hereditary).[6][13] About half of these genetic cases are due to disease-causing variants in one of four specific genes.[14] The diagnosis is based on a person's signs and symptoms, with testing conducted to rule out other potential causes.[3]. There is no known cure for ALS.[3] The goal of treatment is to slow the disease progression, and improve symptoms.[9] Treatments that slow ALS include riluzole (extends life by two to three months) and sodium phenylbutyrate/ursodoxicoltaurine (extends life by around seven months).[15][16] Non-invasive ventilation may result in both improved quality, and length of life.[5] Mechanical ventilation can prolong survival but does not stop disease progression.[17] A feeding tube may help maintain weight and nutrition.[18] Death is usually caused by respiratory failure.[19] The disease can affect people of any age, but usually starts around the age of 60.[19] The average survival from onset to death is two to four years, though this can vary, and about 10% of those affected survive longer than ten years.[20]. Descriptions of the disease date back to at least 1824 by Charles Bell.[21] In 1869, the connection between the symptoms and the underlying neurological problems was first described by French neurologist Jean-Martin Charcot, who in 1874 began using the term amyotrophic lateral sclerosis.[21]. ALS is a motor neuron disease, which is a group of neurological disorders that selectively affect motor neurons, the cells that control voluntary muscles of the body.[3] Other motor neuron diseases include primary lateral sclerosis (PLS), progressive muscular atrophy (PMA), progressive bulbar palsy, pseudobulbar palsy, and monomelic amyotrophy (MMA).[22].",
+            "Episode finished, reward = 0\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Amyotrophic lateral sclerosis is a disease.",
+        "completion_time": 4.027459383010864,
+        "uasge": [
+            {
+                "prompt_tokens": 1013,
+                "completion_tokens": 45,
+                "total_tokens": 1058
+            },
+            {
+                "prompt_tokens": 1880,
+                "completion_tokens": 47,
+                "total_tokens": 1927
+            }
+        ],
+        "act_time": [
+            1.9297034740447998
+        ]
+    },
+    {
+        "thought": [
+            " I should search for Trollhunters and see if Adam Sandler was involved in the production.\nAction 1: Search[Trollhunters]",
+            " From suggestions, I should search \"Trollhunters: Tales of Arcadia\" to find the show.\nAction 2: Search[Trollhunters: Tales of Arcadia]",
+            " Adam Sandler is not mentioned in the observation, so he did not produce Trollhunters.\nAction 3: Finish[NOT ENOUGH INFO]"
+        ],
+        "observation": [
+            "Could not find [Trollhunters]. Similar: ['Trollhunters: Tales of Arcadia', 'Trollhunter', 'Tales of Arcadia (redirect from DreamWorks Trollhunters)', 'Trollhunters: Rise of the Titans', 'Trollhunters'].",
+            "Trollhunters: Tales of Arcadia (or simply Trollhunters) is an American animated fantasy television series created by Guillermo del Toro and produced by DreamWorks Animation Television and Double Dare You Productions for Netflix, based on the 2015 novel Trollhunters by del Toro and Daniel Kraus.[2] It follows the story of James \"Jim\" Lake Jr., a teenage boy who finds a mysterious amulet and stumbles across a secret realm inhabited by trolls and other magical creatures. Soon afterward, he and his friends are charged with protecting the world from the dangerous monsters that lurk in the shadows of their small suburban town.. The first two episodes of the series premiered on October 8, 2016, at the New York Comic Con.[1][3] The first season was released worldwide on Netflix on December 23, 2016.[4] The second season premiered on December 15, 2017,[5][6] and the third and final season premiered on May 25, 2018.[7][8]. Since its release, Trollhunters has been widely praised as an ambitious and boundary-pushing animated series.[9]  The series was nominated for nine Daytime Emmy Awards in 2017, winning more than any other animated or live-action television program that year.[10] In its first three seasons, it has also received or been nominated for a BAFTA Award, several Annie Awards, Kidscreen Awards, Golden Reel Awards, and a Saturn Award. The show has also spawned several original children's books and has been adapted into a series of graphic novels by Marc Guggenheim and Richard Hamilton, released by Dark Horse Comics.[11].",
+            "Episode finished, reward = 0\n"
+        ],
+        "n_calls": 3,
+        "n_badcalls": 0,
+        "question": "Claim: Trollhunters was produced by Adam Sandler.",
+        "completion_time": 7.314489126205444,
+        "uasge": [
+            {
+                "prompt_tokens": 1004,
+                "completion_tokens": 36,
+                "total_tokens": 1040
+            },
+            {
+                "prompt_tokens": 1124,
+                "completion_tokens": 52,
+                "total_tokens": 1176
+            },
+            {
+                "prompt_tokens": 1601,
+                "completion_tokens": 37,
+                "total_tokens": 1638
+            }
+        ],
+        "act_time": [
+            2.813427209854126,
+            1.6808817386627197
+        ]
+    },
+    {
+        "thought": [
+            " I should search Winter's Tale to find if it is a romance.\nAction 1: Search[Winter's Tale]",
+            " The observation does not mention romance, so it does not support the claim.\nAction 2: Finish[NOT ENOUGH INFO]"
+        ],
+        "observation": [
+            "The Winter's Tale is a play by William Shakespeare originally published in the First Folio of 1623. Although it was grouped among the comedies,[1] many modern editors have relabelled the play as one of Shakespeare's late romances. Some critics consider it to be one of Shakespeare's \"problem plays\" because the first three acts are filled with intense psychological drama, while the last two acts are comic and supply a happy ending.[2]. The play has been intermittently popular, having been revived in productions and adaptations by some of the leading theatre practitioners in Shakespearean performance history. In the mid-18th century, after a long interval without major performances, David Garrick premiered his adaptation Florizel and Perdita (first performed in 1753 and published in 1756).",
+            "Episode finished, reward = 1\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Winter's Tale is a romance.",
+        "completion_time": 3.283863067626953,
+        "uasge": [
+            {
+                "prompt_tokens": 1001,
+                "completion_tokens": 35,
+                "total_tokens": 1036
+            },
+            {
+                "prompt_tokens": 1232,
+                "completion_tokens": 32,
+                "total_tokens": 1264
+            }
+        ],
+        "act_time": [
+            1.7382245063781738
+        ]
+    },
+    {
+        "thought": [
+            " I should search for A Milli to find if it is a song by a hip hop recording artist.\nAction 1: Search[A Milli]",
+            " The observation says that the song was released in 2008, so it is likely that it is a hip hop song.\nAction 2: Finish[SUPPORTS]"
+        ],
+        "observation": [
+            "\"A Milli\", abbreviated occasionally as \"Milli\", is a song by American rapper Lil Wayne. The song was released April 23, 2008, as the second official single from his sixth album Tha Carter III.. The original version of this song leaked early on several mixtapes. Then, a second version, with the first verse from the album version, a verse from Cory Gunz and the final two verses from the original version, was leaked prior to the album version. \"A Milli\" was played several times when sampling the record before its release,[1][2] and was originally slated to appear on Tha Carter III in multiple versions as \"skit-like\" tracks, featuring artists such as Tyga, Cory Gunz, Hurricane Chris, and Lil Mama[3] though the tracks never made the final cut.",
+            "Episode finished, reward = 1\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: A Milli is a song by a hip hop recording artist.",
+        "completion_time": 4.619107961654663,
+        "uasge": [
+            {
+                "prompt_tokens": 1010,
+                "completion_tokens": 39,
+                "total_tokens": 1049
+            },
+            {
+                "prompt_tokens": 1243,
+                "completion_tokens": 41,
+                "total_tokens": 1284
+            }
+        ],
+        "act_time": [
+            2.7990033626556396
+        ]
+    },
+    {
+        "thought": [
+            " I should search Jim Cummings and find if he starred in The Road to El Dorado.\nAction 1: Search[Jim Cummings]",
+            " He has worked with Disney and Warner Bros, but I cannot find any information about him starring in The Road to El Dorado.\nAction 2: Finish[NOT ENOUGH INFO]"
+        ],
+        "observation": [
+            "James Jonah Cummings (born November 3, 1952)[2][3] is an American voice actor and podcast host. Beginning his career in 1984, he has appeared in almost 400 roles. Cummings has frequently worked with The Walt Disney Company and Warner Bros., including as the official voice of Winnie the Pooh since 1988, Tigger since 1989, the Tasmanian Devil since 1991, and Pete since 1992. Other notable roles include Fat Cat and Monterey Jack in Chip 'n Dale: Rescue Rangers (1989\u20131990), the title character of Darkwing Duck (1991\u20131992), Kaa in Jungle Cubs (1996\u20131998) and The Jungle Book 2 (2003), Cat in CatDog (1998\u20132005), and Police Chief Gluteus in Ozzy & Drix (2002\u20132004) and Ray in The Princess and the Frog (2009).. Born in Youngstown, Ohio, Cummings attended Immaculate Conception and St.",
+            "Episode finished, reward = 0\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: The Road to El Dorado stars Jim Cummings.",
+        "completion_time": 3.2009682655334473,
+        "uasge": [
+            {
+                "prompt_tokens": 1008,
+                "completion_tokens": 38,
+                "total_tokens": 1046
+            },
+            {
+                "prompt_tokens": 1337,
+                "completion_tokens": 44,
+                "total_tokens": 1381
+            }
+        ],
+        "act_time": [
+            1.3954229354858398
+        ]
+    },
+    {
+        "thought": [
+            " I should search for Reign Over Me and find if it was written and directed by Mike Binder.\nAction 1: Search[Reign Over Me]",
+            " The observation says that the film was written and directed by Mike Binder, so it supports the claim.\nAction 2: Finish[SUPPORTS]"
+        ],
+        "observation": [
+            "Reign Over Me is a 2007 American buddy drama film written and directed by Mike Binder, and produced by his brother Jack Binder. The film stars Adam Sandler and Don Cheadle with Jada Pinkett Smith, Liv Tyler, Donald Sutherland, Saffron Burrows, Mike Binder and Melinda Dillon (in her final film acting role before retiring from acting and her death in 2023) in supporting roles.. Distributed by Columbia Pictures, the film was theatrically released on March 23, 2007, and on DVD and Blu-ray on October 9, 2007.. After the Twin Towers went down in 2001, Charlie Fineman lost everything important in his life. Five years have passed since Charlie's wife and daughters died, and now the once-successful and sociable man has become a withdrawn shadow of his former self.",
+            "Episode finished, reward = 0\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Reign Over Me was not written and directed by Mike Binder.",
+        "completion_time": 3.0646889209747314,
+        "uasge": [
+            {
+                "prompt_tokens": 1002,
+                "completion_tokens": 33,
+                "total_tokens": 1035
+            },
+            {
+                "prompt_tokens": 1254,
+                "completion_tokens": 35,
+                "total_tokens": 1289
+            }
+        ],
+        "act_time": [
+            1.4959728717803955
+        ]
+    },
+    {
+        "thought": [
+            " I should search for the Republic of Macedonia and Galactic Empire to see if they are related.\nAction 1: Search[Republic of Macedonia Galactic Empire]",
+            " From suggestions, I should search \"Vasil Levski\" to find if it is related to the Galactic Empire.\nAction 2: Search[Vasil Levski]",
+            " It seems that Vasil Levski is not related to the Galactic Empire.\nAction 3: Finish[NOT ENOUGH INFO]"
+        ],
+        "observation": [
+            "Could not find Republic of Macedonia Galactic Empire. Similar: ['Vasil Levski (redirect from Commemoration of Vassil Levski)', 'Kingmaker', 'Gregorian calendar (redirect from Gregorian reform of the calendar)', 'List of monarchs of fictional countries', 'Roman calendar (redirect from Calendar of Romulus)'].",
+            "Vasil Levski[1] (Bulgarian: \u0412\u0430\u0441\u0438\u043b \u041b\u0435\u0432\u0441\u043a\u0438, spelled in old Bulgarian orthography as \u0412\u0430\u0441\u0438\u043b\u044a \u041b\u044c\u0432\u0441\u043a\u0456\u0439,[2] pronounced [v\u0250\u02c8si\u026b \u02c8l\u025bfski]), born Vasil Ivanov Kunchev[3] (\u0412\u0430\u0441\u0438\u043b \u0418\u0432\u0430\u043d\u043e\u0432 \u041a\u0443\u043d\u0447\u0435\u0432; 18 July 1837 \u2013 18 February 1873), was a\u00a0Bulgarian revolutionary who is, today, a national hero of Bulgaria. Dubbed the Apostle of Freedom, Levski ideologised and strategised a revolutionary movement to liberate Bulgaria from Ottoman rule. Levski founded the Internal Revolutionary Organisation, and sought to foment a nationwide uprising through a network of secret regional committees.. Born in the Sub-Balkan town of Karlovo to middle-class parents, Levski became an Orthodox monk before emigrating to join the two Bulgarian Legions in Serbia and other Bulgarian revolutionary groups. Abroad, he acquired the nickname Levski (\"Lionlike\").",
+            "Episode finished, reward = 1\n"
+        ],
+        "n_calls": 3,
+        "n_badcalls": 0,
+        "question": "Claim: The Republic of Macedonia is in The Galactic Empire.",
+        "completion_time": 6.401643514633179,
+        "uasge": [
+            {
+                "prompt_tokens": 1008,
+                "completion_tokens": 39,
+                "total_tokens": 1047
+            },
+            {
+                "prompt_tokens": 1139,
+                "completion_tokens": 34,
+                "total_tokens": 1173
+            },
+            {
+                "prompt_tokens": 1432,
+                "completion_tokens": 32,
+                "total_tokens": 1464
+            }
+        ],
+        "act_time": [
+            1.4992830753326416,
+            2.487553119659424
+        ]
+    },
+    {
+        "thought": [
+            " I should search the human brain and find if it contains a hypothalamus.\nAction 1: Search[human brain]",
+            " The observation does not mention a hypothalamus.\nAction 2: Finish[NOT ENOUGH INFO]"
+        ],
+        "observation": [
+            "The brain is the central organ of the human nervous system, and with the spinal cord makes up the central nervous system. The brain consists of the cerebrum, the brainstem and the cerebellum. It controls most of the activities of the body, processing, integrating, and coordinating the information it receives from the sense organs, and making decisions as to the instructions sent to the rest of the body. The brain is contained in, and protected by, the skull bones of the head.. The cerebrum, the largest part of the human brain, consists of two cerebral hemispheres.",
+            "Episode finished, reward = 0\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: The human brain contains a hypothalamus.",
+        "completion_time": 4.016031742095947,
+        "uasge": [
+            {
+                "prompt_tokens": 1007,
+                "completion_tokens": 31,
+                "total_tokens": 1038
+            },
+            {
+                "prompt_tokens": 1184,
+                "completion_tokens": 27,
+                "total_tokens": 1211
+            }
+        ],
+        "act_time": [
+            2.6562576293945312
+        ]
+    },
+    {
+        "thought": [
+            " I should search for Penibaetic System to find if it is also called a system of mountain ranges.\nAction 1: Search[Penibaetic System]",
+            " It does not mention \"system of mountain ranges\", so it does not support the claim.\nAction 2: Finish[REFUTES]"
+        ],
+        "observation": [
+            "The Penibaetic System (Spanish: Sistema Penib\u00e9tico or Cordillera Penib\u00e9tica[1]) is the southernmost of the three systems of mountain ranges of the Baetic System in the southern Iberian Peninsula. It includes the highest point in the peninsula, 3,478 m high Mulhac\u00e9n in the Sierra Nevada.[2]. The Penibaetic System runs along the south coast of Andalusia, from the province of C\u00e1diz, across the province of Granada, into the Region of Murcia until reaching the Campo de Cartagena. Along its northern side, across the intermontane basins known as the Hoya de Baza and the Hoya de Guadix, runs the Subbaetic System.. The Intrabaetic Basin (Spanish: Surco Intrab\u00e9tico), a discontinuous series of valleys, separates the Cordillera Penib\u00e9tica from the Cordillera Subb\u00e9tica in the north.[3].",
+            "Episode finished, reward = 0\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: The Penibaetic System is also called a system of mountain ranges.",
+        "completion_time": 2.7806153297424316,
+        "uasge": [
+            {
+                "prompt_tokens": 1005,
+                "completion_tokens": 38,
+                "total_tokens": 1043
+            },
+            {
+                "prompt_tokens": 1266,
+                "completion_tokens": 31,
+                "total_tokens": 1297
+            }
+        ],
+        "act_time": [
+            1.212801456451416
+        ]
+    },
+    {
+        "thought": [
+            " I should search for Daggering and find if it was perfected in Jamaica.\nAction 1: Search[Daggering]",
+            " The observation says that Daggering originated in Jamaica, so it was perfected there.\nAction 2: Finish[SUPPORTS]"
+        ],
+        "observation": [
+            "Daggering is a form of dance originating from Jamaica.[citation needed] The dance incorporates the male dancer ramming his crotch area into the female dancer's buttocks, and other forms of frantic movement. Daggering is not a traditional dance; it is of recent origin, associated with the 2006 wave of dancehall music.[citation needed]. The activity of \"daggering\" has been present in Jamaica's dancehalls for many years, but only recently has the term \"daggering\" been used as a description. Some argue that it is roughly the equivalent of the Caribbean\u2019s \"cabin stabbing\", another style of music and dance.[1] Mojo magazine journalist and reggae historian David Katz attributes the recent popularity of daggering to a series of dancehall music videos and artists that promoted the style. YouTube videos of people performing daggering have spread the trend worldwide.[citation needed].",
+            "Episode finished, reward = 0\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Daggering was perfected in Jamaica.",
+        "completion_time": 2.7656466960906982,
+        "uasge": [
+            {
+                "prompt_tokens": 1004,
+                "completion_tokens": 35,
+                "total_tokens": 1039
+            },
+            {
+                "prompt_tokens": 1260,
+                "completion_tokens": 35,
+                "total_tokens": 1295
+            }
+        ],
+        "act_time": [
+            1.1512513160705566
+        ]
+    },
+    {
+        "thought": [
+            " I should search for Tinker Tailor Soldier Spy and see if Jonah Hill is in it.\nAction 1: Search[Tinker Tailor Soldier Spy]",
+            " Jonah Hill is not in Tinker Tailor Soldier Spy.\nAction 2: Finish[NOT ENOUGH INFO]"
+        ],
+        "observation": [
+            "Tinker Tailor Soldier Spy is a 1974 spy novel by British-Irish author John le Carr\u00e9. It follows the endeavours of taciturn, aging spymaster George Smiley to uncover a Soviet mole in the British Secret Intelligence Service. The novel has received critical acclaim for its complex social commentary\u2014and, at the time, relevance, following the defection of Kim Philby. It was followed by The Honourable Schoolboy in 1977 and Smiley's People in 1979. The three novels together make up the \"Karla Trilogy\", named after Smiley's long-time nemesis Karla, the head of Soviet foreign intelligence and the trilogy's overarching antagonist..",
+            "Episode finished, reward = 1\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Tinker Tailor Soldier Spy stars Jonah Hill.",
+        "completion_time": 3.116365432739258,
+        "uasge": [
+            {
+                "prompt_tokens": 1013,
+                "completion_tokens": 42,
+                "total_tokens": 1055
+            },
+            {
+                "prompt_tokens": 1243,
+                "completion_tokens": 33,
+                "total_tokens": 1276
+            }
+        ],
+        "act_time": [
+            1.4157984256744385
+        ]
+    },
+    {
+        "thought": [
+            " I should search for Lemmy and find if he is known for his distinct gravelly voice.\nAction 1: Search[Lemmy]",
+            " The observation says he is known for his gravelly voice, so it supports the claim.\nAction 2: Finish[SUPPORTS]"
+        ],
+        "observation": [
+            "Ian Fraser Kilmister (24 December 1945 \u2013 28 December 2015), better known as Lemmy Kilmister or simply Lemmy, was a British musician. He was the founder, lead singer, bassist and primary songwriter of the rock band Mot\u00f6rhead, of which he was the only continuous member, and a member of Hawkwind from 1971 to 1975.. A foundational force in the genre following the advent of the new wave of British heavy metal, Lemmy was known for his appearance, which included his signature friendly mutton chops, his military-influenced fashion sense and his gravelly rasp of a voice. It was once declared \"one of the most recognisable voices in rock\".[1] He was also noted for his unique posture when singing, which was once described as \"looking up towards a towering microphone tilted down into his weather-beaten face\".[2] He was also known for his bass playing style, using his Rickenbacker bass to create an \"overpowered, distorted rhythmic rumble\".[2] A notable aspect of his bass sound was his guitar-like riffing, often playing power chords using heavily overdriven tube stacks by Marshall.. Lemmy was born in Stoke-on-Trent and grew up between there, the nearby towns of Newcastle-under-Lyme and Madeley, and later the Welsh village of Benllech, Anglesey.",
+            "Episode finished, reward = 1\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Lemmy was known for his distinct gravelly voice.",
+        "completion_time": 4.41072416305542,
+        "uasge": [
+            {
+                "prompt_tokens": 1004,
+                "completion_tokens": 38,
+                "total_tokens": 1042
+            },
+            {
+                "prompt_tokens": 1378,
+                "completion_tokens": 33,
+                "total_tokens": 1411
+            }
+        ],
+        "act_time": [
+            2.7364273071289062
+        ]
+    },
+    {
+        "thought": [
+            " I should search for information about English people and their ancestry.\nAction 1: Search[English people ancestry]",
+            " From suggestions, I should search \"Race and ethnicity in the United States\" to find information about English people's ancestry.\nAction 2: Search[Race and ethnicity in the United States]",
+            " From the observation, it seems that English people are not a distinct racial or ethnic group, but rather a part of the broader category of \"White Americans\".\nAction 3: Finish[NOT ENOUGH INFO]"
+        ],
+        "observation": [
+            "Could not find English people ancestry. Similar: ['English people', 'English Australians', 'American ancestry', 'English Americans', 'Race and ethnicity in the United States (redirect from Ancestry of the people of the United States)'].",
+            "The United States has a racially and ethnically diverse population.[1] At the federal level, race and ethnicity have been categorized separately. The most recent United States census recognized five racial categories (White, Black, Native American/Alaska Native, Asian, and Native Hawaiian/Other Pacific Islander), as well as people who belong to two or more of the racial categories.[2][3][4] The United States also recognizes the broader notion of ethnicity. The 2000 census and 2010 American Community Survey inquired about the \"ancestry\" of residents, while the 2020 census allowed people to enter their \"origins\".[5] The Census Bureau also classified respondents as either Hispanic or Latino, identifying as an ethnicity, which comprises the minority group in the nation.[2][3][4]. White Americans are the majority in every census-defined region (Northeast, Midwest, South, and West) and 44 out of 50 states, except Hawaii,[6] California,[7] Texas,[8] New Mexico,[9] Nevada,[10] and Maryland.[11] Those identifying as white alone or in combination (including multiracial white Americans) are the majority in every state except for Hawaii.[12] The region with the highest proportion of White Americans is the Midwest, at 74.6% per the American Community Survey (ACS), followed by the Northeast, at 64%.[13][14] Non-Hispanic whites make up 73% of the Midwest's population, the highest proportion of any region, and they make up 62% of the population in the Northeast.[15][16] At the same time, the regions with the smallest share of White Americans are the West, where they comprise 51.9%, and the South, where they comprise 57.7%.[17][18] Non-Hispanic whites are a minority in the West, where they make up 47.1% of the population.[19] In the South, non-Hispanic whites make up 54% of the population.[20]. Currently, 55% of the African American population lives in the South.[4] A plurality or majority of the other official groups reside in the West.",
+            "Episode finished, reward = 0\n"
+        ],
+        "n_calls": 3,
+        "n_badcalls": 0,
+        "question": "Claim: English people are descended from other peoples.",
+        "completion_time": 7.0600481033325195,
+        "uasge": [
+            {
+                "prompt_tokens": 1006,
+                "completion_tokens": 32,
+                "total_tokens": 1038
+            },
+            {
+                "prompt_tokens": 1099,
+                "completion_tokens": 54,
+                "total_tokens": 1153
+            },
+            {
+                "prompt_tokens": 1687,
+                "completion_tokens": 50,
+                "total_tokens": 1737
+            }
+        ],
+        "act_time": [
+            2.128002405166626,
+            1.9022190570831299
+        ]
+    },
+    {
+        "thought": [
+            " I should search for monsters and reality to find if there is any information that supports or refutes this claim.\nAction 1: Search[monsters reality]",
+            " From suggestions, I should search \"Monster Hunter Now\" to find if it is only found in reality.\nAction 2: Search[Monster Hunter Now]",
+            " From the observation, it seems that monsters are found in reality through the game \"Monster Hunter Now\".\nAction 3: Finish[SUPPORTS]"
+        ],
+        "observation": [
+            "Could not find monsters reality. Similar: ['Monster Hunter Now', 'Mountain Monsters', 'Reality Z', 'Monster Truck Madness', 'BabyMonster'].",
+            "Monster Hunter Now is a 2023 augmented reality mobile game in the Monster Hunter series, developed by Niantic and Capcom and published by the former. It was released worldwide on September 14, 2023, and had accumulated 2 million installs.. Monster Hunter Now uses the player's real-life location to place an avatar on the gameplay map, which is divided in-game into different types of terrain. Players can interact with small and large monsters on the map by tapping on them, triggering combat.[3] Combat with large monsters is limited to 75 seconds (unlike in mainline Monster Hunter games, where fights may last up to 50 minutes), while smaller monsters generally require just several seconds to defeat.[3][4] Resource nodes are also present in the map, allowing players to collect in-game resources to craft armor or weapons. Purchasable items allow player to temporarily increase their interaction range with the virtual environment.[4] The game contains passive features, providing the player with some resources and marked large monsters for later combat when the game is not active.[4].",
+            "Episode finished, reward = 0\n"
+        ],
+        "n_calls": 3,
+        "n_badcalls": 0,
+        "question": "Claim: A monster is only found in reality.",
+        "completion_time": 5.351938724517822,
+        "uasge": [
+            {
+                "prompt_tokens": 1004,
+                "completion_tokens": 37,
+                "total_tokens": 1041
+            },
+            {
+                "prompt_tokens": 1091,
+                "completion_tokens": 41,
+                "total_tokens": 1132
+            },
+            {
+                "prompt_tokens": 1389,
+                "completion_tokens": 36,
+                "total_tokens": 1425
+            }
+        ],
+        "act_time": [
+            1.4811902046203613,
+            1.2290372848510742
+        ]
+    },
+    {
+        "thought": [
+            " I should search Harris Jayaraj and find if he is a television composer.\nAction 1: Search[Harris Jayaraj]",
+            " The observation says he composes soundtracks for Tamil films, but does not mention television.\nAction 2: Finish[NOT ENOUGH INFO]"
+        ],
+        "observation": [
+            "Harris Jayaraj (born 8 January 1975) is an Indian composer from Chennai, Tamil Nadu. He composes soundtracks predominantly for Tamil films, while also having composed for a few films in Telugu and two films in Hindi.. He has been honoured with Kalaimamani Award from the Government of Tamil Nadu[1] and the Life Time Achievement Award from Konijeti Rosaiah, the Governor of Tamil Nadu.[2] Since 2001, he has won 6 Filmfare Awards South and has received 20 Filmfare Awards South nominations. He has also won 6 Mirchi Music Awards, 5 Vijay Awards, 4 Tamil Nadu State Film Awards, 3 International Tamil Film Awards and Big FM Awards. In 2019, he was bestowed with the Dr.",
+            "Episode finished, reward = 0\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Harris Jayaraj is a television composer.",
+        "completion_time": 3.2219648361206055,
+        "uasge": [
+            {
+                "prompt_tokens": 1007,
+                "completion_tokens": 37,
+                "total_tokens": 1044
+            },
+            {
+                "prompt_tokens": 1244,
+                "completion_tokens": 36,
+                "total_tokens": 1280
+            }
+        ],
+        "act_time": [
+            1.5491173267364502
+        ]
+    },
+    {
+        "thought": [
+            " I should search Alice Cooper and find his real name.\nAction 1: Search[Alice Cooper]",
+            " The observation says his name is Vincent Damon Furnier, which supports the claim.\nAction 2: Finish[SUPPORTS]"
+        ],
+        "observation": [
+            "Alice Cooper (born Vincent Damon Furnier; February 4, 1948)[1] is an American rock singer and songwriter whose career spans sixty years. With a raspy voice and a stage show that features numerous props and stage illusions,[2] Cooper is considered by many music journalists and peers to be \"The Godfather of Shock Rock\".[3] He has drawn equally from horror films, vaudeville, and garage rock to pioneer a macabre and theatrical brand of rock designed to shock audiences.[4]. Originating in Phoenix, Arizona, in 1964, Alice Cooper was originally a band consisting of Furnier, guitarists Glen Buxton and Michael Bruce, bassist Dennis Dunaway, and drummer Neal Smith. The band released seven albums from 1969 to 1973, and broke up in 1975. Having legally changed his name to Alice Cooper, Furnier began a solo career that year with the concept album Welcome to My Nightmare.",
+            "Episode finished, reward = 1\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Alice Cooper's real name is Vincent Damon Furnier.",
+        "completion_time": 3.3112010955810547,
+        "uasge": [
+            {
+                "prompt_tokens": 1003,
+                "completion_tokens": 29,
+                "total_tokens": 1032
+            },
+            {
+                "prompt_tokens": 1270,
+                "completion_tokens": 32,
+                "total_tokens": 1302
+            }
+        ],
+        "act_time": [
+            1.8477742671966553
+        ]
+    },
+    {
+        "thought": [
+            " I should search for Cretaceous and Paleogene to find if there is an extinction event in 2001.\nAction 1: Search[Cretaceous]",
+            " It does not mention an extinction event in 2001.\nAction 2: Finish[NOT ENOUGH INFO]"
+        ],
+        "observation": [
+            "The Cretaceous (IPA: /kr\u026a\u02c8te\u026a\u0283\u0259s/ krih-TAY-sh\u0259ss)[2] is a geological period that lasted from about 145 to 66 million years ago (Mya). It is the third and final period of the Mesozoic Era, as well as the longest. At around 79 million years, it is the longest geological period of the entire Phanerozoic. The name is derived from the Latin creta, \"chalk\", which is abundant in the latter half of the period. It is usually abbreviated K, for its German translation Kreide..",
+            "Episode finished, reward = 0\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: The Cretaceous is a Paleogene extinction event in 2001.",
+        "completion_time": 5.508153438568115,
+        "uasge": [
+            {
+                "prompt_tokens": 1008,
+                "completion_tokens": 40,
+                "total_tokens": 1048
+            },
+            {
+                "prompt_tokens": 1203,
+                "completion_tokens": 31,
+                "total_tokens": 1234
+            }
+        ],
+        "act_time": [
+            3.8809642791748047
+        ]
+    },
+    {
+        "thought": [
+            " I should search for Dilwale Dulhania Le Jayenge and find if it began filming in China.\nAction 1: Search[Dilwale Dulhania Le Jayenge]",
+            " It does not mention China, so I should not find any information about filming in China.\nAction 2: Finish[NOT ENOUGH INFO]"
+        ],
+        "observation": [
+            "Dilwale Dulhania Le Jayenge (transl.\u2009 The Brave-Hearted Will Take the Bride), also known by the initialism DDLJ, is a 1995 Indian Hindi-language musical romance film written and directed by Aditya Chopra in his directorial debut and produced by his father Yash Chopra. Released on 20 October 1995, the film stars Shah Rukh Khan and Kajol as Raj and Simran, two young non-resident Indians, who fall in love during a vacation through Europe with their friends. Raj tries to win over Simran's family so the couple can marry, but Simran's father has long since promised her hand to his friend's son. The film was shot in India, London, and Switzerland, from September 1994 to August 1995.. With an estimated total gross of \u20b9200 crore[3][4] ($60 million) worldwide,[5] Dilwale Dulhania Le Jayenge was the highest-grossing Indian film of 1995 and one of the most successful Indian films in history.",
+            "Episode finished, reward = 0\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Dilwale Dulhania Le Jayenge began filming in China.",
+        "completion_time": 3.734700918197632,
+        "uasge": [
+            {
+                "prompt_tokens": 1003,
+                "completion_tokens": 34,
+                "total_tokens": 1037
+            },
+            {
+                "prompt_tokens": 1325,
+                "completion_tokens": 35,
+                "total_tokens": 1360
+            }
+        ],
+        "act_time": [
+            2.118273973464966
+        ]
+    },
+    {
+        "thought": [
+            " I should search for Riddick and see if it is in a documentary.\nAction 1: Search[Riddick]",
+            " From suggestions, I should search \"Riddick (film)\" to find the movie.\nAction 2: Search[Riddick (film)]",
+            " It does not mention a documentary, so I am sure that this claim is false.\nAction 3: Finish[REFUTES]"
+        ],
+        "observation": [
+            "Could not find [Riddick]. Similar: ['Riddick (film)', 'The Chronicles of Riddick (franchise)', 'The Chronicles of Riddick', 'Riddick', 'Riddick Bowe'].",
+            "Riddick is a 2013 science fiction action film written and directed by David Twohy, based on the character Richard B. Riddick by Jim and Ken Wheat. It is the third installment in The Chronicles of Riddick film series and a sequel to both Pitch Black (2000) and The Chronicles of Riddick (2004). Vin Diesel reprises his role as the eponymous character alongside Jordi Moll\u00e0, Matt Nable, Katee Sackhoff, Dave Bautista, Bokeem Woodbine, Raoul Trujillo, and Karl Urban. In the film, notorious murderer Riddick is betrayed and left for dead on a desolate planet and uses his instincts to survive.",
+            "Episode finished, reward = 1\n"
+        ],
+        "n_calls": 3,
+        "n_badcalls": 0,
+        "question": "Claim: Riddick is in a documentary.",
+        "completion_time": 6.9751482009887695,
+        "uasge": [
+            {
+                "prompt_tokens": 1010,
+                "completion_tokens": 35,
+                "total_tokens": 1045
+            },
+            {
+                "prompt_tokens": 1104,
+                "completion_tokens": 38,
+                "total_tokens": 1142
+            },
+            {
+                "prompt_tokens": 1316,
+                "completion_tokens": 31,
+                "total_tokens": 1347
+            }
+        ],
+        "act_time": [
+            3.0359582901000977,
+            1.5112133026123047
+        ]
+    },
+    {
+        "thought": [
+            " I should search for The Sugarland Express and find if it was Steven Spielberg's directorial debut.\nAction 1: Search[The Sugarland Express]",
+            " The observation says that Steven Spielberg directed The Sugarland Express in his \"theatrical film directing debut\", so it supports the claim.\nAction 2: Finish[SUPPORTS]"
+        ],
+        "observation": [
+            "The Sugarland Express is a 1974 American crime drama film directed by Steven Spielberg in his theatrical film directing debut, following the television film Duel (1971).[3] The film follows a woman (Goldie Hawn) and her husband (William Atherton) as they take a police officer (Michael Sacks) hostage and flee across Texas while they try to get to their child before he is placed in foster care. The event partially took place and the film was partially shot in Sugar Land, Texas.[4] Other scenes were filmed in San Antonio, Live Oak, Floresville, Pleasanton, Converse and Del Rio, Texas.[5]. The Sugarland Express marks the first collaboration between Spielberg and composer John Williams, who has scored all but five of Spielberg's films since; although Williams re-recorded the main theme with Toots Thielemans and the Boston Pops Orchestra for 1991's The Spielberg/Williams Collaboration,[6] The film finally received an original soundtrack CD release from La-La Land Records on June 15, 2024, coinciding with the film's 50th anniversary.[7]. The film premiered at the New Directors/New Films Festival on March 29, 1974 and was released theatrically in New York City on March 31, 1974, followed by a year-long worldwide theatrical rollout. It received positive reviews from critics, who praised Hawn's performance, Spielberg's direction and the cinematography.[8].",
+            "Episode finished, reward = 0\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: The 1974 musical comedy The Sugarland Express was Steven Spielberg's directorial debut.",
+        "completion_time": 3.296299695968628,
+        "uasge": [
+            {
+                "prompt_tokens": 1014,
+                "completion_tokens": 38,
+                "total_tokens": 1052
+            },
+            {
+                "prompt_tokens": 1421,
+                "completion_tokens": 44,
+                "total_tokens": 1465
+            }
+        ],
+        "act_time": [
+            1.4385428428649902
+        ]
+    },
+    {
+        "thought": [
+            " I should search for Mary-Kate Olsen and Ashley Olsen to see if they are known as the Olsen twins.\nAction 1: Search[Mary-Kate Olsen]",
+            " From the observation, it seems that Mary-Kate Olsen and Ashley Olsen are known as the Olsen twins.\nAction 2: Finish[SUPPORTS]"
+        ],
+        "observation": [
+            "Mary-Kate Olsen (born June 13, 1986[1]) is an American businesswoman, fashion designer, equestrian, and former actress. Her acting career began at the age of nine months, with her sharing the role of Michelle Tanner with her twin sister Ashley Olsen in the television sitcom Full House (1987\u20131995). They also starred in numerous films together.. In 1993, the production company Dualstar Entertainment Group was founded, which produced a long string of television films and direct-to-video releases featuring the girls; they starred in Passport to Paris (1999), Our Lips Are Sealed (2000), Winning London (2001), Holiday in the Sun (2001) and in the television series, So Little Time (2001\u20132002), for which she was nominated for a Daytime Emmy Award for Outstanding Performer in Children's Programming. They starred in Getting There (2002), When in Rome (2002), The Challenge (2003) and made cameos in Charlie's Angels: Full Throttle (2003).",
+            "Episode finished, reward = 1\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Mary-Kate Olsen and Ashley Olsen are also known as the Olsen twins.",
+        "completion_time": 3.154717206954956,
+        "uasge": [
+            {
+                "prompt_tokens": 1002,
+                "completion_tokens": 32,
+                "total_tokens": 1034
+            },
+            {
+                "prompt_tokens": 1337,
+                "completion_tokens": 44,
+                "total_tokens": 1381
+            }
+        ],
+        "act_time": [
+            1.4356205463409424
+        ]
+    },
+    {
+        "thought": [
+            " I should search for How I Met Your Mother and find if Johnny Galecki plays a character with a Ph.D.\nAction 1: Search[How I Met Your Mother]",
+            " I do not see Johnny Galecki in the cast list.\nAction 2: Finish[NOT ENOUGH INFO]"
+        ],
+        "observation": [
+            "How I Met Your Mother (often abbreviated as HIMYM) is an American sitcom, created by Craig Thomas and Carter Bays for CBS. The series, which aired from September 19, 2005, to March 31, 2014, follows the main character, Ted Mosby, and his group of friends in New York City's Manhattan. As a frame story, Ted, in 2030, recounts to his son, Luke, and daughter, Penny, the events from September 2005 to May 2013 that led him to meet their mother. How I Met Your Mother was a joint production by Bays & Thomas Productions and 20th Century Fox Television.. The series was loosely inspired by Thomas and Bays' friendship when they both lived in New York.[1] The vast majority of the episodes (196 out of 208) were directed by Pamela Fryman.",
+            "Episode finished, reward = 1\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Johnny Galecki plays a character with a Ph.D. in How I Met Your Mother.",
+        "completion_time": 3.1832094192504883,
+        "uasge": [
+            {
+                "prompt_tokens": 1002,
+                "completion_tokens": 31,
+                "total_tokens": 1033
+            },
+            {
+                "prompt_tokens": 1268,
+                "completion_tokens": 29,
+                "total_tokens": 1297
+            }
+        ],
+        "act_time": [
+            1.7555911540985107
+        ]
+    },
+    {
+        "thought": [
+            " I should search for the novel and see if it was adapted.\nAction 1: Search[The Closer]",
+            " The observation does not mention if the novel was adapted or not.\nAction 2: Finish[NOT ENOUGH INFO]"
+        ],
+        "observation": [
+            "The Closer is an American police procedural television series starring Kyra Sedgwick as Brenda Leigh Johnson, a Los Angeles Police Department deputy chief. A CIA-trained interrogator originally from Atlanta, Georgia, Brenda has a reputation as a closer\u2014an interrogator who not only solves a case, but also obtains confessions that lead to convictions, thus \"closing\" the case. The series ran on TNT from June 13, 2005, to August 13, 2012.. The Closer was created by James Duff and the Shephard/Robin Company in association with Warner Bros. Television.",
+            "Episode finished, reward = 1\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: The Closer was an unadapted novel.",
+        "completion_time": 2.922128438949585,
+        "uasge": [
+            {
+                "prompt_tokens": 1022,
+                "completion_tokens": 31,
+                "total_tokens": 1053
+            },
+            {
+                "prompt_tokens": 1206,
+                "completion_tokens": 29,
+                "total_tokens": 1235
+            }
+        ],
+        "act_time": [
+            1.4844820499420166
+        ]
+    },
+    {
+        "thought": [
+            " I should search for Girls' Generation and see if they covered the song Rhythm Nation.\nAction 1: Search[Girls' Generation]",
+            " The observation does not mention Rhythm Nation, so it is not a covered song.\nAction 2: Finish[NOT ENOUGH INFO]"
+        ],
+        "observation": [
+            "Girls' Generation (Korean:\u00a0\uc18c\ub140\uc2dc\ub300; RR:\u00a0Sonyeo Sidae), also known as SNSD, is a South Korean girl group formed by SM Entertainment. The group is composed of eight members: Taeyeon, Sunny, Tiffany, Hyoyeon, Yuri, Sooyoung, Yoona, and Seohyun. Originally a nine-piece ensemble, member Jessica departed from the group in September 2014. Among the most known South Korean figures and successful K-pop groups worldwide, Girls' Generation has earned numerous accolades and the honorific nickname \"The Nation's Girl Group\" in their home country.. Girls' Generation debuted on August 5, 2007, with the single \"Into the New World\" from their eponymous Korean album.",
+            "Episode finished, reward = 0\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Girls' Generation covered the song Rhythm Nation.",
+        "completion_time": 4.034599542617798,
+        "uasge": [
+            {
+                "prompt_tokens": 1007,
+                "completion_tokens": 37,
+                "total_tokens": 1044
+            },
+            {
+                "prompt_tokens": 1242,
+                "completion_tokens": 33,
+                "total_tokens": 1275
+            }
+        ],
+        "act_time": [
+            2.4186744689941406
+        ]
+    },
+    {
+        "thought": [
+            " I should search for James Earl Jones and The Lion King to see if he was a voice actor in the movie.\nAction 1: Search[James Earl Jones The Lion King]",
+            " From suggestions, I should search \"James Earl Jones on screen and stage\" to find if he was a voice actor in The Lion King.\nAction 2: Search[James Earl Jones on screen and stage]",
+            " It does not mention The Lion King, so I am not sure if James Earl Jones was a voice actor in the movie.\nAction 3: Finish[NOT ENOUGH INFO]"
+        ],
+        "observation": [
+            "Could not find James Earl Jones The Lion King. Similar: ['The Lion King (2019 film)', 'James Earl Jones', 'The Lion King (franchise)', 'James Earl Jones on screen and stage', 'List of The Lion King (franchise) characters'].",
+            "American actor James Earl Jones has had an extensive career in various film, television, and theater. He started out in film by appearing in the 1964 political satire film Dr. Strangelove as Lt. Lothar Zogg. He then went on to star in the 1970 film The Great White Hope as Jack Jefferson, a role he first played in the Broadway production of the same name.",
+            "Episode finished, reward = 0\n"
+        ],
+        "n_calls": 3,
+        "n_badcalls": 0,
+        "question": "Claim: James Earl Jones was not a voice actor in The Lion King.",
+        "completion_time": 6.865786075592041,
+        "uasge": [
+            {
+                "prompt_tokens": 1009,
+                "completion_tokens": 38,
+                "total_tokens": 1047
+            },
+            {
+                "prompt_tokens": 1120,
+                "completion_tokens": 49,
+                "total_tokens": 1169
+            },
+            {
+                "prompt_tokens": 1266,
+                "completion_tokens": 41,
+                "total_tokens": 1307
+            }
+        ],
+        "act_time": [
+            2.3618242740631104,
+            1.7069182395935059
+        ]
+    },
+    {
+        "thought": [
+            " I should search Eva Green and find if she had a career in theatre for eight years.\nAction 1: Search[Eva Green]",
+            " She started her career in theatre, so it is likely that she had a career in theatre for eight years.\nAction 2: Finish[SUPPORTS]"
+        ],
+        "observation": [
+            "Eva Ga\u00eblle Green (French: [eva \u0261a.\u025bl \u0261\u0281\u025bn], Swedish: [\u02c8\u00ea\u02d0va \u02c8\u0261re\u02d0n]; born (1980-07-06)6 July 1980) is a French actress. The daughter of actress Marl\u00e8ne Jobert, she began her career in theatre before making her film debut in Bernardo Bertolucci's The Dreamers (2003). She portrayed Sibylla, Queen of Jerusalem in Ridley Scott's historical epic Kingdom of Heaven (2005). The following year, she played Bond girl Vesper Lynd in the James Bond film Casino Royale (2006), for which she received the BAFTA Rising Star Award.. Green has since starred in numerous independent films, including Cracks (2009), Womb (2010), and Perfect Sense (2011).",
+            "Episode finished, reward = 0\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Eva Green had a career in theatre for eight years.",
+        "completion_time": 4.359936714172363,
+        "uasge": [
+            {
+                "prompt_tokens": 1011,
+                "completion_tokens": 36,
+                "total_tokens": 1047
+            },
+            {
+                "prompt_tokens": 1262,
+                "completion_tokens": 36,
+                "total_tokens": 1298
+            }
+        ],
+        "act_time": [
+            2.6859915256500244
+        ]
+    },
+    {
+        "thought": [
+            " I should search for Despacito and find if there is a version that features a musician.\nAction 1: Search[Despacito]",
+            " Because the song features Daddy Yankee, it should have a version that features a musician.\nAction 2: Finish[SUPPORTS]"
+        ],
+        "observation": [
+            "\"Despacito\" (Latin American Spanish: [despa\u02c8sito]; transl.\u2009\"Slowly\") is a song by Puerto Rican singer Luis Fonsi featuring Puerto Rican rapper and singer Daddy Yankee as the lead single from Fonsi's 2019 studio album Vida.[1][2] Released on January 13, 2017, the song was written by Fonsi, Erika Ender and Daddy Yankee, and produced by Mauricio Rengifo and Andr\u00e9s Torres.[1] A remix version featuring Canadian singer Justin Bieber was released on April 17, 2017, which helped to improve the chart performance of the song in numerous countries, including various number-one positions. \"Despacito\" has been widely credited by music journalists as being instrumental in the renewed popularity of Spanish-language pop music in the mainstream market.. It is a reggaeton and Latin pop song composed in common time with lyrics about desiring a sexual relationship, performed in a smooth and romantic way. \"Despacito\" received generally favorable reviews from music critics, who praised the fusion between Latin and urban rhythms, its catchiness, and its text painting. It has received Latin Grammy Awards for Record of the Year, Song of the Year, Best Urban Fusion/Performance, and Best Short Form Music Video at the 18th Latin Grammy Awards.",
+            "Episode finished, reward = 1\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Despacito has a version which features a musician.",
+        "completion_time": 3.93912410736084,
+        "uasge": [
+            {
+                "prompt_tokens": 1007,
+                "completion_tokens": 39,
+                "total_tokens": 1046
+            },
+            {
+                "prompt_tokens": 1374,
+                "completion_tokens": 34,
+                "total_tokens": 1408
+            }
+        ],
+        "act_time": [
+            2.2425482273101807
+        ]
+    },
+    {
+        "thought": [
+            " I should search for Norman Jewison and The Cincinnati Kid to find if he directed it.\nAction 1: Search[Norman Jewison]",
+            " The observation does not mention The Cincinnati Kid, so it does not support the claim.\nAction 2: Finish[NOT SUPPORTS]"
+        ],
+        "observation": [
+            "Norman Frederick Jewison CC OOnt (July 21, 1926 \u2013 January 20, 2024) was a Canadian filmmaker. He was known for directing films which addressed topical social and political issues, often making controversial or complicated subjects accessible to mainstream audiences. Among numerous other accolades, he was nominated for the Academy Award for Best Director three times in three separate decades, for In the Heat of the Night (1967), Fiddler on the Roof (1971), and Moonstruck (1987). He was nominated for an additional four Oscars, three Golden Globe Awards, and a Primetime Emmy Award, and won a BAFTA Award. He received the Academy of Motion Pictures Arts and Sciences's Irving G.",
+            "Episode finished, reward = 0\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Norman Jewison directed The Cincinnati Kid.",
+        "completion_time": 5.59613561630249,
+        "uasge": [
+            {
+                "prompt_tokens": 1001,
+                "completion_tokens": 31,
+                "total_tokens": 1032
+            },
+            {
+                "prompt_tokens": 1229,
+                "completion_tokens": 35,
+                "total_tokens": 1264
+            }
+        ],
+        "act_time": [
+            4.060605764389038
+        ]
+    },
+    {
+        "thought": [
+            " I should search for The Bassoon King and find if it is based in reality.\nAction 1: Search[The Bassoon King]",
+            " The observation says that the book is a nonfiction book, so it is based in reality.\nAction 2: Finish[SUPPORTS]"
+        ],
+        "observation": [
+            "The Bassoon King: My Life in Art, Faith, and Idiocy is a nonfiction book authored by American actor Rainn Wilson. It is a combination of a coming-of-age memoir discussing his career and celebrity status coupled with discussions on religion and more, with Wilson's involvement in the Bah\u00e1\u02bc\u00ed Faith since his early childhood playing a major role. Published by Dutton in November 2015, the book has received supportive coverage in a variety of publications such as the Los Angeles Times and Publishers Weekly.[1][2]. Wilson has remarked, \"I kind of wanted to do a reader's guide for young people about spirituality\". He's added that he wished to describe his interests in \"the essentials of life\", creating a work that \"would be for anyone who was going on a spiritual journey\".",
+            "Episode finished, reward = 1\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: The Bassoon King is based in reality.",
+        "completion_time": 2.7827131748199463,
+        "uasge": [
+            {
+                "prompt_tokens": 1014,
+                "completion_tokens": 36,
+                "total_tokens": 1050
+            },
+            {
+                "prompt_tokens": 1244,
+                "completion_tokens": 34,
+                "total_tokens": 1278
+            }
+        ],
+        "act_time": [
+            1.1620335578918457
+        ]
+    },
+    {
+        "thought": [
+            " I should search for Winter's Tale to find if it is a book.\nAction 1: Search[Winter's Tale]",
+            " The observation says that Winter's Tale is a play, not a book.\nAction 2: Finish[NOT ENOUGH INFO]"
+        ],
+        "observation": [
+            "The Winter's Tale is a play by William Shakespeare originally published in the First Folio of 1623. Although it was grouped among the comedies,[1] many modern editors have relabelled the play as one of Shakespeare's late romances. Some critics consider it to be one of Shakespeare's \"problem plays\" because the first three acts are filled with intense psychological drama, while the last two acts are comic and supply a happy ending.[2]. The play has been intermittently popular, having been revived in productions and adaptations by some of the leading theatre practitioners in Shakespearean performance history. In the mid-18th century, after a long interval without major performances, David Garrick premiered his adaptation Florizel and Perdita (first performed in 1753 and published in 1756).",
+            "Episode finished, reward = 0\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Winter's Tale is a book.",
+        "completion_time": 2.996204376220703,
+        "uasge": [
+            {
+                "prompt_tokens": 1006,
+                "completion_tokens": 36,
+                "total_tokens": 1042
+            },
+            {
+                "prompt_tokens": 1237,
+                "completion_tokens": 33,
+                "total_tokens": 1270
+            }
+        ],
+        "act_time": [
+            1.4017341136932373
+        ]
+    },
+    {
+        "thought": [
+            " I should search for the Concert for Bangladesh and find if it generated awareness and money.\nAction 1: Search[Concert for Bangladesh]",
+            " The observation says that the concert raised international awareness and fund relief for refugees, so it supports the claim.\nAction 2: Finish[SUPPORTS]"
+        ],
+        "observation": [
+            "The Concert for Bangladesh (or Bangla Desh, as the country's name was originally spelt)[1] was a pair of benefit concerts organised by former Beatles guitarist George Harrison and Indian sitar player Ravi Shankar. The shows were held at 2:30 and 8:00\u00a0pm on Sunday, 1 August 1971, at Madison Square Garden in New York City, to raise international awareness of, and fund relief for refugees from East Pakistan, following the Bangladesh Liberation War-related genocide and the 1970 Bhola cyclone. The concerts were followed by a bestselling live album, a boxed three-record set, and Apple Films' concert documentary, which opened in cinemas in the spring of 1972.. The event was the first-ever benefit of such a magnitude,[2] and featured a supergroup of performers that included Harrison, fellow ex-Beatle Ringo Starr, Bob Dylan, Eric Clapton, Billy Preston, Leon Russell and the band Badfinger. In addition, Shankar and Ali Akbar Khan \u2013 both of whom had ancestral roots in Bangladesh \u2013 performed an opening set of Indian classical music.",
+            "Episode finished, reward = 1\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: The Concert for Bangladesh generated awareness and considerable money.",
+        "completion_time": 3.5796258449554443,
+        "uasge": [
+            {
+                "prompt_tokens": 1003,
+                "completion_tokens": 34,
+                "total_tokens": 1037
+            },
+            {
+                "prompt_tokens": 1327,
+                "completion_tokens": 38,
+                "total_tokens": 1365
+            }
+        ],
+        "act_time": [
+            1.9134140014648438
+        ]
+    },
+    {
+        "thought": [
+            " I should search for Artpop and find if it sold about 757,000 cats.\nAction 1: Search[Artpop]",
+            " The observation does not mention anything about cats, so it does not support the claim.\nAction 2: Finish[NOT ENOUGH INFO]"
+        ],
+        "observation": [
+            "Artpop (stylized in all caps) is the third studio album by American singer Lady Gaga. It was released on November 6, 2013, by Streamline and Interscope Records. Gaga began planning the project in 2011, shortly after the launch of her second effort, Born This Way. Work continued until 2013 while Gaga was traveling for her Born This Way Ball tour and recovering from surgery for an injury she had sustained while touring. Gaga described Artpop as \"a celebration and a poetic musical journey\".",
+            "Episode finished, reward = 1\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Artpop sold about 757,000 cats.",
+        "completion_time": 5.001584768295288,
+        "uasge": [
+            {
+                "prompt_tokens": 1009,
+                "completion_tokens": 40,
+                "total_tokens": 1049
+            },
+            {
+                "prompt_tokens": 1181,
+                "completion_tokens": 34,
+                "total_tokens": 1215
+            }
+        ],
+        "act_time": [
+            3.3498923778533936
+        ]
+    },
+    {
+        "thought": [
+            " I should search for Tinker Tailor Soldier Spy and see if Seth Rogen is in it.\nAction 1: Search[Tinker Tailor Soldier Spy]",
+            " The observation does not mention Seth Rogen, so he does not star in the movie.\nAction 2: Finish[NOT ENOUGH INFO]"
+        ],
+        "observation": [
+            "Tinker Tailor Soldier Spy is a 1974 spy novel by British-Irish author John le Carr\u00e9. It follows the endeavours of taciturn, aging spymaster George Smiley to uncover a Soviet mole in the British Secret Intelligence Service. The novel has received critical acclaim for its complex social commentary\u2014and, at the time, relevance, following the defection of Kim Philby. It was followed by The Honourable Schoolboy in 1977 and Smiley's People in 1979. The three novels together make up the \"Karla Trilogy\", named after Smiley's long-time nemesis Karla, the head of Soviet foreign intelligence and the trilogy's overarching antagonist..",
+            "Episode finished, reward = 0\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Tinker Tailor Soldier Spy only stars Seth Rogen.",
+        "completion_time": 4.630566596984863,
+        "uasge": [
+            {
+                "prompt_tokens": 1006,
+                "completion_tokens": 36,
+                "total_tokens": 1042
+            },
+            {
+                "prompt_tokens": 1237,
+                "completion_tokens": 35,
+                "total_tokens": 1272
+            }
+        ],
+        "act_time": [
+            3.0071918964385986
+        ]
+    },
+    {
+        "thought": [
+            " I should search for Billboard Dad to see if it is a podcast.\nAction 1: Search[Billboard Dad]",
+            " The observation says that Billboard Dad is a film, not a podcast.\nAction 2: Finish[NOT ENOUGH INFO]"
+        ],
+        "observation": [
+            "Billboard Dad is a 1998 American romantic comedy film directed by Alan Metter starring Mary-Kate and Ashley Olsen. It was produced by Warner Bros. in collaboration with Dualstar Productions and Tapestry Films (now Screendoor).. Set in Los Angeles, California, the film revolves around 12-year-old twin sisters, Emily (a surfer girl) and Tess (a member of the high-diving team), as they try various strategies to get their widower father, Max (a talented artist and sculptor), a girlfriend.. After their first attempts end in failure, Tess and Emily team up with their friend, Cody, to paint an advertisement on a giant billboard situated high above Sunset Boulevard.",
+            "Episode finished, reward = 0\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Billboard Dad is a podcast.",
+        "completion_time": 3.19435977935791,
+        "uasge": [
+            {
+                "prompt_tokens": 1011,
+                "completion_tokens": 36,
+                "total_tokens": 1047
+            },
+            {
+                "prompt_tokens": 1229,
+                "completion_tokens": 32,
+                "total_tokens": 1261
+            }
+        ],
+        "act_time": [
+            1.6167881488800049
+        ]
+    },
+    {
+        "thought": [
+            " I should search Bea Arthur and find her birthdate.\nAction 1: Search[Bea Arthur]",
+            " The observation says she was born on May 13th, not May 10th.\nAction 2: Finish[REFUTES]"
+        ],
+        "observation": [
+            "Beatrice Arthur (born Bernice Frankel; May 13, 1922\u00a0\u2013 April 25, 2009) was an American actress, comedienne and singer. She began her career on stage in 1947, attracting critical acclaim before achieving worldwide recognition for her work on television beginning in the 1970s as Maude Findlay in the popular sitcoms All in the Family (1971\u20131972) and Maude (1972\u20131978) and later in the 1980s and 1990s as Dorothy Zbornak on The Golden Girls (1985\u20131992).. Arthur won several accolades throughout her career, beginning with the 1966 Tony Award for Best Featured Actress in a Musical for playing Vera Charles in Mame. She won Emmy Awards for Outstanding Lead Actress in a Comedy Series in 1977 for Maude and 1988 for The Golden Girls. Arthur has received the third most nominations for the Primetime Emmy Award for Outstanding Lead Actress in a Comedy Series with nine; after Julia Louis-Dreyfus (11) and Mary Tyler Moore (10).",
+            "Episode finished, reward = 1\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Bea Arthur was born on May 10th, 1920.",
+        "completion_time": 3.847062110900879,
+        "uasge": [
+            {
+                "prompt_tokens": 1008,
+                "completion_tokens": 30,
+                "total_tokens": 1038
+            },
+            {
+                "prompt_tokens": 1331,
+                "completion_tokens": 33,
+                "total_tokens": 1364
+            }
+        ],
+        "act_time": [
+            2.3169820308685303
+        ]
+    },
+    {
+        "thought": [
+            " I should search A&E to find if it was previously a root beer brand.\nAction 1: Search[A&E]",
+            " This observation does not mention anything about A&E being a root beer brand, so I cannot find any information to support or refute the claim.\nAction 2: Finish[NOT ENOUGH INFO]"
+        ],
+        "observation": [
+            "A, or a, is the first letter and the first vowel letter of the Latin alphabet,[1][2] used in the modern English alphabet, and others worldwide. Its name in English is a (pronounced /\u02c8e\u026a/ AY), plural aes.[nb 1][2]. It is similar in shape to the Ancient Greek letter alpha, from which it derives.[3] The uppercase version consists of the two slanting sides of a triangle, crossed in the middle by a horizontal bar. The lowercase version is often written in one of two forms: the double-storey |a| and single-storey |\u0251|. The latter is commonly used in handwriting and fonts based on it, especially fonts intended to be read by children, and is also found in italic type..",
+            "Episode finished, reward = 1\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: A&E was previously a root beer brand.",
+        "completion_time": 3.6997568607330322,
+        "uasge": [
+            {
+                "prompt_tokens": 1006,
+                "completion_tokens": 36,
+                "total_tokens": 1042
+            },
+            {
+                "prompt_tokens": 1221,
+                "completion_tokens": 41,
+                "total_tokens": 1262
+            }
+        ],
+        "act_time": [
+            1.991795301437378
+        ]
+    },
+    {
+        "thought": [
+            " I should search Janet Leigh and Twilight to see if she starred in it.\nAction 1: Search[Janet Leigh]",
+            " Since she did not appear in Twilight, the claim is REFUTED.\nAction 2: Finish[REFUTES]"
+        ],
+        "observation": [
+            "Jeanette Helen Morrison (July 6, 1927 \u2013 October 3, 2004), known professionally as Janet Leigh, was an American actress. Her career spanned over five decades. Raised in Stockton, California, by working-class parents, Leigh was discovered at 18 by actress Norma Shearer, who helped her secure a contract with Metro-Goldwyn-Mayer.. Leigh appeared in radio programs before her first formal foray into acting, making her film debut in the drama The Romance of Rosy Ridge (1947). With MGM, she appeared in many films which spanned a wide variety of genres, which include the crime-drama Act of Violence (1948), the drama Little Women (1949), the comedy Angels in the Outfield (1951), the romance Scaramouche (1952) and the western drama The Naked Spur (1953).",
+            "Episode finished, reward = 0\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Janet Leigh starred in Twilight.",
+        "completion_time": 4.435823202133179,
+        "uasge": [
+            {
+                "prompt_tokens": 1004,
+                "completion_tokens": 35,
+                "total_tokens": 1039
+            },
+            {
+                "prompt_tokens": 1273,
+                "completion_tokens": 31,
+                "total_tokens": 1304
+            }
+        ],
+        "act_time": [
+            2.8873085975646973
+        ]
+    },
+    {
+        "thought": [
+            " I should search Tilda Swinton and find if she is only a lawyer.\nAction 1: Search[Tilda Swinton]",
+            " The observation does not mention anything about her being only a lawyer.\nAction 2: Finish[NOT ENOUGH INFO]"
+        ],
+        "observation": [
+            "Katherine Matilda Swinton (born 5 November 1960) is a British actress. Known for her roles in independent films and blockbusters, she has received various accolades, including an Academy Award and a British Academy Film Award, in addition to nominations for three Golden Globe Awards. In 2020, The New York Times ranked her as one of the greatest actors of the 21st century.[1]. Swinton began her career by appearing in Derek Jarman's experimental films Caravaggio (1986), The Last of England (1988), War Requiem (1989), and The Garden (1990). Swinton won the Volpi Cup for Best Actress at the Venice Film Festival for her portrayal of Isabella of France in Edward II (1991).",
+            "Episode finished, reward = 0\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Tilda Swinton is only a lawyer.",
+        "completion_time": 6.250542640686035,
+        "uasge": [
+            {
+                "prompt_tokens": 1008,
+                "completion_tokens": 35,
+                "total_tokens": 1043
+            },
+            {
+                "prompt_tokens": 1235,
+                "completion_tokens": 29,
+                "total_tokens": 1264
+            }
+        ],
+        "act_time": [
+            4.766202211380005
+        ]
+    },
+    {
+        "thought": [
+            " I should search for Palo Alto, California and see if it is located in the San Francisco Bay Area.\nAction 1: Search[Palo Alto, California]",
+            " The observation says that Palo Alto is located in the San Francisco Bay Area, so it supports the claim.\nAction 2: Finish[SUPPORTS]"
+        ],
+        "observation": [
+            "Palo Alto (/\u02ccp\u00e6lo\u028a \u02c8\u00e6lto\u028a/ PAL-oh AL-toh; Spanish for 'tall stick') is a charter city in the northwestern corner of Santa Clara County, California, United States, in the San Francisco Bay Area, named after a coastal redwood tree known as El Palo Alto.. The city of Palo Alto was established in 1894 by the American industrialist Leland Stanford when he founded Stanford University in memory of his son, Leland Stanford\u00a0Jr. Palo Alto later expanded and now borders East Palo Alto, Mountain View, Los Altos, Los Altos Hills, Stanford, Portola Valley, and Menlo Park. As of the 2020 census, the population was 68,572.[5] Palo Alto has one of the highest costs of living in the United States,[6][7] and its residents are among the most educated in the country. However, it has a youth suicide rate four times higher than the national average, often attributed to academic pressure.[8].",
+            "Episode finished, reward = 1\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Palo Alto, California's location is the San Francisco Bay Area.",
+        "completion_time": 5.056849479675293,
+        "uasge": [
+            {
+                "prompt_tokens": 1020,
+                "completion_tokens": 39,
+                "total_tokens": 1059
+            },
+            {
+                "prompt_tokens": 1310,
+                "completion_tokens": 37,
+                "total_tokens": 1347
+            }
+        ],
+        "act_time": [
+            3.3328208923339844
+        ]
+    },
+    {
+        "thought": [
+            " I should search for Bryan Howd and find if he was a Golden Globe nominee.\nAction 1: Search[Bryan Howd]",
+            " From suggestions, I should search \"Al Gore\" to find if he was a Golden Globe nominee.\nAction 2: Search[Al Gore]",
+            " It seems that the search result is not related to the claim, so I should look for other sources to confirm if Bryan Howd was a Golden Globe nominee.\nAction 3: Lookup[Golden Globe]",
+            " Based on the search results, there is not enough information to determine if Bryan Howd was a Golden Globe nominee.\nAction 4: Finish[NOT ENOUGH INFO]"
+        ],
+        "observation": [
+            "Could not find Bryan Howd. Similar: ['List of American films of 2003', 'Al Gore', 'Project Chanology', '1991 Special Honours'].",
+            "Albert Arnold Gore Jr. (born March 31, 1948) is an American politician, businessman, and environmentalist who served as the 45th vice president of the United States from 1993 to 2001 under President Bill Clinton. He previously served as a United States Senator from Tennessee from 1985 to 1993 and as a member of the U.S. House of Representatives from 1977 to 1985. Gore was the Democratic nominee for president of the United States in the 2000 presidential election, which he lost to George W.",
+            "No more results.\n",
+            "Episode finished, reward = 0\n"
+        ],
+        "n_calls": 4,
+        "n_badcalls": 0,
+        "question": "Claim: Bryan Howd was a Golden Globe nominee.",
+        "completion_time": 7.842188596725464,
+        "uasge": [
+            {
+                "prompt_tokens": 1013,
+                "completion_tokens": 32,
+                "total_tokens": 1045
+            },
+            {
+                "prompt_tokens": 1101,
+                "completion_tokens": 42,
+                "total_tokens": 1143
+            },
+            {
+                "prompt_tokens": 1291,
+                "completion_tokens": 57,
+                "total_tokens": 1348
+            },
+            {
+                "prompt_tokens": 1359,
+                "completion_tokens": 43,
+                "total_tokens": 1402
+            }
+        ],
+        "act_time": [
+            1.3124899864196777,
+            2.6544575691223145,
+            0.007199525833129883
+        ]
+    },
+    {
+        "thought": [
+            " I should search Giada at Home and find if it aired on a channel owned by Turner Broadcasting.\nAction 1: Search[Giada at Home]",
+            " Since it aired on the Food Network, which is owned by Turner Broadcasting, it supports the claim.\nAction 2: Finish[SUPPORTS]"
+        ],
+        "observation": [
+            "Giada at Home is a television show hosted by Giada De Laurentiis. It first aired on October 18, 2008[citation needed] on the Food Network.. The show was nominated for two Daytime Emmys in 2009: for Outstanding Culinary Program and Outstanding Directing in a Lifestyle/Culinary Program,[1] and won for the latter award.[2]. The show was nominated for four Daytime Emmys in 2010 for; Outstanding Multi-Camera Editing, Outstanding Directing in a Lifestyle/Culinary Program, Outstanding Lifestyle/Culinary Host (Giada De Laurentiis) and Outstanding Culinary Program. It won in the categories of Outstanding Directing in a Lifestyle/Culinary Program (2nd year in a row) and Outstanding Culinary Program..",
+            "Episode finished, reward = 0\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Giada at Home aired on a channel owned by Turner Broadcasting.",
+        "completion_time": 2.956070899963379,
+        "uasge": [
+            {
+                "prompt_tokens": 1007,
+                "completion_tokens": 41,
+                "total_tokens": 1048
+            },
+            {
+                "prompt_tokens": 1250,
+                "completion_tokens": 36,
+                "total_tokens": 1286
+            }
+        ],
+        "act_time": [
+            1.2165091037750244
+        ]
+    },
+    {
+        "thought": [
+            " I should search Kenneth Lonergan and find if he is the director of Pacific Rim.\nAction 1: Search[Kenneth Lonergan]",
+            " He is a writer and director, but it does not mention him being the director of Pacific Rim.\nAction 2: Finish[NOT ENOUGH INFO]"
+        ],
+        "observation": [
+            "Kenneth Lonergan (born October 16, 1962) is an American film director, playwright, and screenwriter. He is the co-writer of the film Gangs of New York (2002), and wrote and directed You Can Count on Me (2000), Margaret (2011), and Manchester by the Sea (2016). Lonergan is also known for his work as a playwright. His most noted plays include This Is Our Youth, Lobby Hero and The Waverly Gallery. Each also had a successful revival engagement on Broadway, which resulted in each play receiving a nomination for the Tony Award for Best Revival of a Play..",
+            "Episode finished, reward = 0\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Kenneth Lonergan is the director of Pacific Rim.",
+        "completion_time": 3.3632454872131348,
+        "uasge": [
+            {
+                "prompt_tokens": 1006,
+                "completion_tokens": 42,
+                "total_tokens": 1048
+            },
+            {
+                "prompt_tokens": 1208,
+                "completion_tokens": 37,
+                "total_tokens": 1245
+            }
+        ],
+        "act_time": [
+            1.5800721645355225
+        ]
+    },
+    {
+        "thought": [
+            " I should search for Rage Against the Machine to find if it is a band.\nAction 1: Search[Rage Against the Machine]",
+            " The observation says that Rage Against the Machine is a band, so it supports the claim.\nAction 2: Finish[SUPPORTS]"
+        ],
+        "observation": [
+            "Rage Against the Machine (often abbreviated as RATM or shortened to Rage) was an American rock band formed in 1991 in Los Angeles, California. The band consisted of vocalist Zack de\u00a0la\u00a0Rocha, bassist and backing vocalist Tim Commerford, guitarist Tom Morello, and drummer Brad Wilk. They melded  heavy metal and rap music, punk rock and funk with anti-authoritarian and revolutionary lyrics. As of 2010, they had sold over 16 million records worldwide.[1] They were inducted into the Rock and Roll Hall of Fame in 2023.[2][3]. Rage Against the Machine released their self-titled debut album in 1992 to acclaim; in 2003, Rolling Stone ranked it number 368 on its list of the 500 greatest albums of all time.",
+            "Episode finished, reward = 1\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Rage Against the Machine is a band.",
+        "completion_time": 4.383001089096069,
+        "uasge": [
+            {
+                "prompt_tokens": 1010,
+                "completion_tokens": 39,
+                "total_tokens": 1049
+            },
+            {
+                "prompt_tokens": 1265,
+                "completion_tokens": 34,
+                "total_tokens": 1299
+            }
+        ],
+        "act_time": [
+            2.682610273361206
+        ]
+    },
+    {
+        "thought": [
+            " I should search for Amyotrophic lateral sclerosis to find if it usually starts around the age of 60.\nAction 1: Search[Amyotrophic lateral sclerosis]",
+            " The observation does not mention the age of 60, so I am not sure if the claim is true or not.\nAction 2: Finish[NOT ENOUGH INFO]"
+        ],
+        "observation": [
+            "Amyotrophic lateral sclerosis (ALS), also known as motor neurone disease (MND) or Lou Gehrig's disease in the United States, is a rare, terminal neurodegenerative disorder that results in the progressive loss of both upper and lower motor neurons that normally control voluntary muscle contraction.[3] ALS is the most common form of the motor neuron diseases.[8] ALS often presents in its early stages with gradual muscle stiffness, twitches, weakness, and wasting.[3] Motor neuron loss typically continues until the abilities to eat, speak, move, and, lastly, breathe are all lost.[3] While only 15% of people with ALS also fully develop frontotemporal dementia, an estimated 50% face at least some minor difficulties with thinking and behavior.[9] Depending on which of the aforementioned symptoms develops first, ALS is classified as limb-onset (begins with weakness in the arms or legs) or bulbar-onset (begins with difficulty in speaking or swallowing).[10]. Most cases of ALS (about 90\u201395%) have no known cause, and are known as sporadic ALS.[3][11] However, both genetic and environmental factors are believed to be involved.[12] The remaining 5\u201310% of cases have a genetic cause, often linked to a history of the disease in the family, and these are known as familial ALS (hereditary).[6][13] About half of these genetic cases are due to disease-causing variants in one of four specific genes.[14] The diagnosis is based on a person's signs and symptoms, with testing conducted to rule out other potential causes.[3]. There is no known cure for ALS.[3] The goal of treatment is to slow the disease progression, and improve symptoms.[9] Treatments that slow ALS include riluzole (extends life by two to three months) and sodium phenylbutyrate/ursodoxicoltaurine (extends life by around seven months).[15][16] Non-invasive ventilation may result in both improved quality, and length of life.[5] Mechanical ventilation can prolong survival but does not stop disease progression.[17] A feeding tube may help maintain weight and nutrition.[18] Death is usually caused by respiratory failure.[19] The disease can affect people of any age, but usually starts around the age of 60.[19] The average survival from onset to death is two to four years, though this can vary, and about 10% of those affected survive longer than ten years.[20]. Descriptions of the disease date back to at least 1824 by Charles Bell.[21] In 1869, the connection between the symptoms and the underlying neurological problems was first described by French neurologist Jean-Martin Charcot, who in 1874 began using the term amyotrophic lateral sclerosis.[21]. ALS is a motor neuron disease, which is a group of neurological disorders that selectively affect motor neurons, the cells that control voluntary muscles of the body.[3] Other motor neuron diseases include primary lateral sclerosis (PLS), progressive muscular atrophy (PMA), progressive bulbar palsy, pseudobulbar palsy, and monomelic amyotrophy (MMA).[22].",
+            "Episode finished, reward = 0\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Amyotrophic lateral sclerosis is a disease that usually starts around the age of 60.",
+        "completion_time": 3.6612374782562256,
+        "uasge": [
+            {
+                "prompt_tokens": 1003,
+                "completion_tokens": 36,
+                "total_tokens": 1039
+            },
+            {
+                "prompt_tokens": 1876,
+                "completion_tokens": 41,
+                "total_tokens": 1917
+            }
+        ],
+        "act_time": [
+            1.7926990985870361
+        ]
+    },
+    {
+        "thought": [
+            " I should search Brazzers to find if it is a pornographic festival.\nAction 1: Search[Brazzers]",
+            " From the observation, it seems that Brazzers is a pornographic video production company, but it is not a festival.\nAction 2: Finish[SUPPORTS]"
+        ],
+        "observation": [
+            "Brazzers (/\u02c8br\u00e6z\u0259rz/, company name: MG Premium Ltd.) is a Canadian pornographic video production company with headquarters in Montreal, Quebec, Canada, and legal domicile in Nicosia, Cyprus. With an online network consisting of thirty-one hardcore pornography websites, the company's slogan is \"World's Best HD Porn Site!\" As of December 2020, the company features 2,340 different models and publishes across 31 different sites.[2]. Founded in 2005 by a group of Montreal investors, Brazzers became part of a larger group of pornographic sites under the corporate name of Mansef. In 2010, Mansef was sold to Fabian Thylmann and rebranded as Manwin Inc.[3][4] In December 2012, Thylmann was extradited from Belgium to Germany on suspicion of tax evasion.[5]. In October 2013, Thylmann sold Manwin's assets, including Brazzers, to an internal management group, MindGeek.[6].",
+            "Episode finished, reward = 0\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Brazzers is a pornographic festival.",
+        "completion_time": 3.026263475418091,
+        "uasge": [
+            {
+                "prompt_tokens": 1008,
+                "completion_tokens": 35,
+                "total_tokens": 1043
+            },
+            {
+                "prompt_tokens": 1300,
+                "completion_tokens": 40,
+                "total_tokens": 1340
+            }
+        ],
+        "act_time": [
+            1.3049142360687256
+        ]
+    },
+    {
+        "thought": [
+            " I should search Dakota Fanning and find if she was in American film roles.\nAction 1: Search[Dakota Fanning]",
+            " From the observation, Dakota Fanning has been in American film roles.\nAction 2: Finish[SUPPORTS]"
+        ],
+        "observation": [
+            "Hannah Dakota Fanning (born February 23, 1994) is an American actress.[1] She rose to prominence as a child actress at the age of seven for playing the daughter of an intellectually challenged man in the drama film I Am Sam (2001), for which she received a Screen Actors Guild Award nomination, making her the youngest nominee in SAG history.[2] Fanning had further roles as a child actress in Uptown Girls (2003), The Cat in the Hat (2003), Man on Fire (2004), War of the Worlds (2005), Charlotte's Web (2006) and The Secret Life of Bees (2008), in addition to the lead voice role in Coraline (2009).. As an adult, Fanning went on to star in independent films, such as The Runaways (2010), Now Is Good (2012) and Effie Gray (2014), and played Jane Volturi in The Twilight Saga (2009\u20132012). In 2018, she appeared in the heist comedy Ocean's 8 and had a starring role in the period drama series The Alienist. She has since portrayed Squeaky Fromme in Quentin Tarantino's film Once Upon a Time in Hollywood (2019), Susan Ford in the drama series The First Lady (2022), and a CIA agent in The Equalizer 3 (2023). In 2024, she starred in the thriller series Ripley (2024), for which she received a Primetime Emmy Award nomination..",
+            "Episode finished, reward = 0\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Dakota Fanning was in American film roles.",
+        "completion_time": 3.476041078567505,
+        "uasge": [
+            {
+                "prompt_tokens": 1007,
+                "completion_tokens": 37,
+                "total_tokens": 1044
+            },
+            {
+                "prompt_tokens": 1442,
+                "completion_tokens": 29,
+                "total_tokens": 1471
+            }
+        ],
+        "act_time": [
+            1.8803551197052002
+        ]
+    },
+    {
+        "thought": [
+            " I should search Chile and find if it is in Asia.\nAction 1: Search[Chile]",
+            " Chile is not in Asia, it is in South America.\nAction 2: Finish[NOT ENOUGH INFO]"
+        ],
+        "observation": [
+            "Chile,[a] officially the Republic of Chile,[b] is a country in western South America. It is the southernmost country in the world and the closest to Antarctica, stretching along a narrow strip of land between the Andes Mountains and the Pacific Ocean. Chile had a population of 17.5 million as of the latest census in 2017 and has a territorial area of 756,102 square kilometers (291,933\u00a0sq\u00a0mi),[10][3] sharing borders with Peru to the north, Bolivia to the northeast, Argentina to the east, and the Drake Passage to the south. The country also controls several Pacific islands, including Juan Fern\u00e1ndez, Isla Salas y G\u00f3mez, Desventuradas, and Easter Island, and claims about 1,250,000 square kilometers (480,000\u00a0sq\u00a0mi) of Antarctica as the Chilean Antarctic Territory.[nb 2] The capital and largest city of Chile is Santiago, and the national language is Spanish.. Spain conquered and colonized the region in the mid-16th century, replacing Inca rule, but failed to conquer the independent Mapuche people who inhabited what is now south-central Chile.",
+            "Episode finished, reward = 0\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Chile is in Asia.",
+        "completion_time": 3.621502161026001,
+        "uasge": [
+            {
+                "prompt_tokens": 1014,
+                "completion_tokens": 29,
+                "total_tokens": 1043
+            },
+            {
+                "prompt_tokens": 1328,
+                "completion_tokens": 28,
+                "total_tokens": 1356
+            }
+        ],
+        "act_time": [
+            2.1931116580963135
+        ]
+    },
+    {
+        "thought": [
+            " I should search for Muscarinic acetylcholine receptors to find if they are actylcholine receptors and important for biochemistry.\nAction 1: Search[Muscarinic acetylcholine receptors]",
+            " From the observation, it seems that Muscarinic acetylcholine receptors are indeed actylcholine receptors and important for biochemistry.\nAction 2: Finish[SUPPORTS]"
+        ],
+        "observation": [
+            "Muscarinic acetylcholine receptors, or mAChRs, are acetylcholine receptors that form G protein-coupled receptor complexes in the cell membranes of certain neurons[1] and other cells. They play several roles, including acting as the main end-receptor stimulated by acetylcholine released from postganglionic fibers. They are mainly found in the parasympathetic nervous system, but also have a role in the sympathetic nervous system in the control of sweat glands.[2]. Muscarinic receptors are so named because they are more sensitive to muscarine than to nicotine.[3] Their counterparts are nicotinic acetylcholine receptors (nAChRs), receptor ion channels that are also important in the autonomic nervous system. Many drugs and other substances (for example pilocarpine and scopolamine) manipulate these two distinct receptors by acting as selective agonists or antagonists.[4].",
+            "Episode finished, reward = 0\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Muscarinic acetylcholine receptors are actylcholine receptors and they are important for biochemistry.",
+        "completion_time": 3.4655537605285645,
+        "uasge": [
+            {
+                "prompt_tokens": 1003,
+                "completion_tokens": 36,
+                "total_tokens": 1039
+            },
+            {
+                "prompt_tokens": 1306,
+                "completion_tokens": 49,
+                "total_tokens": 1355
+            }
+        ],
+        "act_time": [
+            1.531935691833496
+        ]
+    },
+    {
+        "thought": [
+            " I should search for monks and find if they practice abstinence from worldly pleasures.\nAction 1: Search[monks]",
+            " From the observation, monks do not necessarily practice abstinence from worldly pleasures.\nAction 2: Finish[NOT ENOUGH INFO]"
+        ],
+        "observation": [
+            "A monk (/m\u028c\u014bk/; from Greek: \u03bc\u03bf\u03bd\u03b1\u03c7\u03cc\u03c2, monachos, \"single, solitary\" via Latin monachus)[1][2] is a man who is a member of a religious order and lives in a monastery.[3] A monk usually lives his life in prayer and contemplation. The concept is ancient and can be seen in many religions and in philosophy.. The Greek word for \"monk\" may be applied to men or women. In English, however, \"monk\" is applied mainly to men, while nun is typically used for female monastics.. Although the term monachos is of Christian origin, in the English language monk tends to be used loosely also for both male and female ascetics from other religious or philosophical backgrounds.[citation needed] However, being generic, it is not interchangeable with terms that denote particular kinds of monk, such as cenobite, hermit, anchorite, hesychast, or solitary..",
+            "Episode finished, reward = 1\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: A monk practices a lifestyle characterized by abstinence from worldly pleasures.",
+        "completion_time": 3.0860564708709717,
+        "uasge": [
+            {
+                "prompt_tokens": 1005,
+                "completion_tokens": 38,
+                "total_tokens": 1043
+            },
+            {
+                "prompt_tokens": 1271,
+                "completion_tokens": 36,
+                "total_tokens": 1307
+            }
+        ],
+        "act_time": [
+            1.3914170265197754
+        ]
+    },
+    {
+        "thought": [
+            " I should search for Justine Bateman to see if she is a poet.\nAction 1: Search[Justine Bateman]",
+            " Since she is an actress and filmmaker, it is unlikely that she is a poet.\nAction 2: Finish[NOT ENOUGH INFO]"
+        ],
+        "observation": [
+            "Justine Bateman (born February 19, 1966)[1] is an American actress and filmmaker.[2] Her acting work includes Family Ties, Satisfaction, Men Behaving Badly, The TV Set, Desperate Housewives, and Californication. Her feature film directorial debut, Violet, starring Olivia Munn, Luke Bracey, and Justin Theroux, premiered at the 2021 SXSW Film Festival. Bateman also wrote, directed and produced the film short Five Minutes, which premiered at the 2017 Toronto International Film Festival.. Bateman was born to Victoria Elizabeth, a former flight attendant for Pan Am who was originally from Shrewsbury in the United Kingdom, and Kent Bateman.[3] She is the older sister of actor Jason Bateman.[4]. Growing up, Bateman idolized actresses such as Jeanne Moreau, Charlotte Rampling and Anna Magnani.[5] She attended Taft High School in Woodland Hills, California.",
+            "Episode finished, reward = 0\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Justine Bateman is a poet.",
+        "completion_time": 5.068389892578125,
+        "uasge": [
+            {
+                "prompt_tokens": 1008,
+                "completion_tokens": 35,
+                "total_tokens": 1043
+            },
+            {
+                "prompt_tokens": 1276,
+                "completion_tokens": 34,
+                "total_tokens": 1310
+            }
+        ],
+        "act_time": [
+            3.4564483165740967
+        ]
+    },
+    {
+        "thought": [
+            " I should search Rupert Murdoch to find if he is a business owner.\nAction 1: Search[Rupert Murdoch]",
+            " From the observation, it seems that Rupert Murdoch is a business owner.\nAction 2: Finish[SUPPORTS]"
+        ],
+        "observation": [
+            "Keith Rupert Murdoch AC KCSG (/\u02c8m\u025c\u02d0rd\u0252k/ MUR-dok; born 11 March 1931) is an Australian-born American business magnate, investor, and media proprietor.[2][3] Through his company News Corp, he is the owner of hundreds of local, national, and international publishing outlets around the world, including in the UK (The Sun and The Times), in Australia (The Daily Telegraph, Herald Sun, and The Australian), in the US (The Wall Street Journal and the New York Post), book publisher HarperCollins, and the television broadcasting channels Sky News Australia and Fox News (through the Fox Corporation). He was also the owner of Sky (until 2018), 21st Century Fox (until 2019), and the now-defunct News of the World. With a net worth of US$21.7\u00a0billion as of 2\u00a0March\u00a02022,[update] Murdoch is the 31st richest person in the United States and the 71st richest in the world according to Forbes magazine.[4]. After his father Keith Murdoch died in 1952, Murdoch took over the running of The News, a small Adelaide newspaper owned by his father. In the 1950s and 1960s, Murdoch acquired a number of newspapers in Australia and New Zealand before expanding into the United Kingdom in 1969, taking over the News of the World, followed closely by The Sun.",
+            "Episode finished, reward = 0\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Rupert Murdoch is a business owner.",
+        "completion_time": 3.6894726753234863,
+        "uasge": [
+            {
+                "prompt_tokens": 1009,
+                "completion_tokens": 38,
+                "total_tokens": 1047
+            },
+            {
+                "prompt_tokens": 1406,
+                "completion_tokens": 31,
+                "total_tokens": 1437
+            }
+        ],
+        "act_time": [
+            2.079570770263672
+        ]
+    },
+    {
+        "thought": [
+            " I should search Annette Badland and find if she was in a British prison.\nAction 1: Search[Annette Badland]",
+            " Since she was nominated for a Laurence Olivier Award for Best Actress in a Supporting Role, she should have been in a British prison.\nAction 2: Finish[SUPPORTS]"
+        ],
+        "observation": [
+            "Annette Badland (born 26 August 1950) is an English actress known for a wide range of roles on television, radio, stage, and film. She is best known for her roles as Charlotte in the BBC crime drama series Bergerac, Margaret Blaine in the BBC science fiction series Doctor Who, Mrs Glenna Fitzgibbons in the first season of Outlander, Babe Smith in the BBC soap opera EastEnders, and as Dr Fleur Perkins on the ITV mystery series Midsomer Murders. She was nominated for the Laurence Olivier Award for Best Actress in a Supporting Role in 1993 for her performance as Sadie in Jim Cartwright's play The Rise and Fall of Little Voice; a role she reprised in the 1998 film adaptation Little Voice.[1]. Badland was born on 26 August 1950 in Edgbaston, Birmingham. Her mother, originally from Loanhead, Scotland, relocated to Birmingham during World War II to work as a munitions and aircraft worker in the factories, where she met Badland's father.[2] Her family often returned to Scotland for holidays and to visit family, or sometimes they holidayed in Wales.[3][2] Badland trained in acting at East 15 Acting School in Loughton, Essex, working in \"rep\" at Southwold Summer Theatre during her time there.",
+            "Episode finished, reward = 0\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Annette Badland was in a British prison.",
+        "completion_time": 4.535760164260864,
+        "uasge": [
+            {
+                "prompt_tokens": 1014,
+                "completion_tokens": 38,
+                "total_tokens": 1052
+            },
+            {
+                "prompt_tokens": 1379,
+                "completion_tokens": 45,
+                "total_tokens": 1424
+            }
+        ],
+        "act_time": [
+            2.670306444168091
+        ]
+    },
+    {
+        "thought": [
+            " I should search for Middle-earth to find if it is fictional.\nAction 1: Search[Middle-earth]",
+            " The observation says that Middle-earth is the setting of J.R.R Tolkien's fantasy, which means it is fictional.\nAction 2: Finish[SUPPORTS]"
+        ],
+        "observation": [
+            "Middle-earth is the setting of much of the English writer J. R. R. Tolkien's fantasy. The term is equivalent to the Mi\u00f0gar\u00f0r of Norse mythology and Middangeard in Old English works, including Beowulf.",
+            "Episode finished, reward = 1\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Middle-earth is a setting that is fictional.",
+        "completion_time": 3.4036295413970947,
+        "uasge": [
+            {
+                "prompt_tokens": 1009,
+                "completion_tokens": 35,
+                "total_tokens": 1044
+            },
+            {
+                "prompt_tokens": 1108,
+                "completion_tokens": 46,
+                "total_tokens": 1154
+            }
+        ],
+        "act_time": [
+            1.630814552307129
+        ]
+    },
+    {
+        "thought": [
+            " I should search for Tremont Street Subway to find if it is a bridge.\nAction 1: Search[Tremont Street Subway]",
+            " It does not mention anything about it being a bridge.\nAction 2: Finish[NOT ENOUGH INFO]"
+        ],
+        "observation": [
+            "The Tremont Street subway in Boston's MBTA subway system is the oldest subway tunnel in North America and the third-oldest still in use worldwide to exclusively use electric traction (after the City and South London Railway in 1890, and the Budapest Metro's Line 1 in 1896), opening on September 1, 1897.[2][3]  It was originally built, under the supervision of Howard A. Carson as chief engineer, to get streetcar lines off the traffic-clogged streets, instead of as a true rapid transit line. It now forms the central part of the Green Line, connecting Boylston Street to Park Street and Government Center stations.. The tunnel originally served five closely spaced stations: Boylston, Park Street, Scollay Square, Adams Square, and Haymarket, with branches to the Public Garden portal and Pleasant Street incline south of Boylston. Park Street, Scollay Square, and Haymarket stations were altered over the next two decades as transfers were added to the Cambridge\u2013Dorchester subway, East Boston Tunnel, and Main Line Elevated (now part of the Red, Blue, and Orange Lines, respectively)..",
+            "Episode finished, reward = 0\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Tremont Street Subway is a bridge.",
+        "completion_time": 3.4656670093536377,
+        "uasge": [
+            {
+                "prompt_tokens": 1012,
+                "completion_tokens": 34,
+                "total_tokens": 1046
+            },
+            {
+                "prompt_tokens": 1326,
+                "completion_tokens": 27,
+                "total_tokens": 1353
+            }
+        ],
+        "act_time": [
+            1.9704391956329346
+        ]
+    },
+    {
+        "thought": [
+            " I should search for Middle-earth and see if it is part of a literary collection of legends.\nAction 1: Search[Middle-earth]",
+            " It does not mention a literary collection of legends, so I should look up what J.R.R Tolkien wrote.\nAction 2: Search[J.R.R Tolkien]",
+            " It seems that J.R.R Tolkien is the author of the works that are set in Middle-earth, so the claim is supported.\nAction 3: Finish[SUPPORTS]"
+        ],
+        "observation": [
+            "Middle-earth is the setting of much of the English writer J. R. R. Tolkien's fantasy. The term is equivalent to the Mi\u00f0gar\u00f0r of Norse mythology and Middangeard in Old English works, including Beowulf.",
+            "John Ronald Reuel Tolkien CBE FRSL (/\u02c8ru\u02d0l \u02c8t\u0252lki\u02d0n/, ROOL TOL-keen;[a] 3 January 1892 \u2013 2 September 1973) was an English writer and philologist. He was the author of the high fantasy works The Hobbit and The Lord of the Rings.. From 1925 to 1945, Tolkien was the Rawlinson and Bosworth Professor of Anglo-Saxon and a Fellow of Pembroke College, both at the University of Oxford. He then moved within the same university to become the Merton Professor of English Language and Literature and Fellow of Merton College, and held these positions from 1945 until his retirement in 1959. Tolkien was a close friend of C.",
+            "Episode finished, reward = 0\n"
+        ],
+        "n_calls": 3,
+        "n_badcalls": 0,
+        "question": "Claim: Middle-earth is part of a literary collection of legends.",
+        "completion_time": 6.716405153274536,
+        "uasge": [
+            {
+                "prompt_tokens": 1007,
+                "completion_tokens": 40,
+                "total_tokens": 1047
+            },
+            {
+                "prompt_tokens": 1112,
+                "completion_tokens": 50,
+                "total_tokens": 1162
+            },
+            {
+                "prompt_tokens": 1358,
+                "completion_tokens": 46,
+                "total_tokens": 1404
+            }
+        ],
+        "act_time": [
+            1.711317539215088,
+            2.0441465377807617
+        ]
+    },
+    {
+        "thought": [
+            " I should search for Brick (film) and see if Michael Bay was the only writer.\nAction 1: Search[Brick (film)]",
+            " The observation does not mention Michael Bay, so he did not write the film.\nAction 2: Finish[REFUTES]"
+        ],
+        "observation": [
+            "Brick is a 2005 American neo-noir mystery thriller film written and directed by Rian Johnson in his directorial debut, starring Joseph Gordon-Levitt. Brick was distributed by Focus Features, and opened in New York and Los Angeles on April 7, 2006. The film's narrative centers on a hardboiled detective story set in a California suburb. Most of the main characters are high school students. The film draws heavily in plot, characterization, and dialogue from hardboiled classics, especially those by Dashiell Hammett.",
+            "Episode finished, reward = 1\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Brick (film) was written by Michael Bay only.",
+        "completion_time": 2.89984130859375,
+        "uasge": [
+            {
+                "prompt_tokens": 1008,
+                "completion_tokens": 38,
+                "total_tokens": 1046
+            },
+            {
+                "prompt_tokens": 1185,
+                "completion_tokens": 29,
+                "total_tokens": 1214
+            }
+        ],
+        "act_time": [
+            1.3529109954833984
+        ]
+    },
+    {
+        "thought": [
+            " I should search for Trace Cyrus and Noah Cyrus to see if they are siblings.\nAction 1: Search[Trace Cyrus]",
+            " The observation mentions that Trace Cyrus is the brother of Miley Cyrus and Noah Cyrus, which means they are siblings.\nAction 2: Finish[SUPPORTS]"
+        ],
+        "observation": [
+            "Trace Dempsey Cyrus[1] (born Neil Timothy Helson;[2] February 24, 1989) is an American musician. The son of country music singer Billy Ray Cyrus and brother of recording artists Miley Cyrus and Noah Cyrus, he was the backing vocalist and guitarist of the band Metro Station. In 2010, he began providing vocals and guitar in the pop rock band Ashland HIGH. He also owns the clothing company From Backseats to Bedrooms.[3]. Cyrus was born in Ashland, Kentucky as Neil Timothy Helson on February 24, 1989.[4] His mother is Leticia \"Tish\" Cyrus.",
+            "Episode finished, reward = 1\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Trace Cyrus is a sibling of Noah Cyrus.",
+        "completion_time": 2.949286460876465,
+        "uasge": [
+            {
+                "prompt_tokens": 1009,
+                "completion_tokens": 38,
+                "total_tokens": 1047
+            },
+            {
+                "prompt_tokens": 1213,
+                "completion_tokens": 34,
+                "total_tokens": 1247
+            }
+        ],
+        "act_time": [
+            1.3169236183166504
+        ]
+    },
+    {
+        "thought": [
+            " I should search for Folklore and see if it includes tigers.\nAction 1: Search[Folklore]",
+            " It does not mention tigers, so it does not support the claim.\nAction 2: Finish[NOT ENOUGH INFO]"
+        ],
+        "observation": [
+            "Folklore is the body of expressive culture shared by a particular group of people, culture or subculture.[1] This includes oral traditions such as tales, myths, legends,[a] proverbs, poems, jokes, and other oral traditions.[3][4] This also includes material culture, such as traditional building styles common to the group. Folklore also encompasses customary lore, taking actions for folk beliefs, and the forms and rituals of celebrations such as Christmas, weddings, folk dances, and initiation rites.[3]. Each one of these, either singly or in combination, is considered a folklore artifact or traditional cultural expression. Just as essential as the form, folklore also encompasses the transmission of these artifacts from one region to another or from one generation to the next. Folklore is not something one can typically gain from a formal school curriculum or study in the fine arts.",
+            "Episode finished, reward = 1\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Folklore includes tigers.",
+        "completion_time": 3.256004571914673,
+        "uasge": [
+            {
+                "prompt_tokens": 1000,
+                "completion_tokens": 32,
+                "total_tokens": 1032
+            },
+            {
+                "prompt_tokens": 1253,
+                "completion_tokens": 32,
+                "total_tokens": 1285
+            }
+        ],
+        "act_time": [
+            1.7470450401306152
+        ]
+    },
+    {
+        "thought": [
+            " I should search for Chris Kyle to find his birthdate.\nAction 1: Search[Chris Kyle]",
+            " The observation says he was born on April 8, 1974, so it supports the claim.\nAction 2: Finish[SUPPORTS]"
+        ],
+        "observation": [
+            "Christopher Scott Kyle (April 8, 1974 \u2013 February 2, 2013) was a United States Navy SEAL sniper. He served four tours in the Iraq War and was awarded several commendations for acts of heroism and meritorious service in combat. He had 160 confirmed kills and was awarded a Silver Star, three  Bronze Star Medals with \"V\" devices for valor, 2x  Navy and Marine Corps Achievement Medal with \"V\" device, as well as numerous other unit and personal awards.[4][7]. Kyle was honorably discharged from the U.S. Navy in 2009, and published his bestselling autobiography, American Sniper, in 2012.",
+            "Episode finished, reward = 1\n"
+        ],
+        "n_calls": 2,
+        "n_badcalls": 0,
+        "question": "Claim: Chris Kyle was born on April 8, 1974.",
+        "completion_time": 3.3023037910461426,
+        "uasge": [
+            {
+                "prompt_tokens": 1003,
+                "completion_tokens": 31,
+                "total_tokens": 1034
+            },
+            {
+                "prompt_tokens": 1214,
+                "completion_tokens": 37,
+                "total_tokens": 1251
+            }
+        ],
+        "act_time": [
+            1.7142972946166992
+        ]
+    }
+]

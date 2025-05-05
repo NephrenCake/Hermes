@@ -1,0 +1,40 @@
+{
+    "average_jct": 6.670703411102295,
+    "test_completion_time": 6.68439507484436,
+    "task_completion_time": {
+        "factool_code--0": 6.670703411102295
+    },
+    "request_completion_time": {
+        "factool_code--0": {
+            "factool_code--0--0": 2.198580741882324,
+            "factool_code--0--2": 3.6709554195404053,
+            "factool_code--0--1": 3.6806845664978027,
+            "factool_code--0--3": 3.7763280868530273,
+            "executor": 0.6817946434020996
+        }
+    },
+    "token_nums": {
+        "factool_code--0": {
+            "factool_code--0--0": {
+                "prompt_tokens": 337,
+                "completion_tokens": 115,
+                "total_tokens": 452
+            },
+            "factool_code--0--2": {
+                "prompt_tokens": 296,
+                "completion_tokens": 173,
+                "total_tokens": 469
+            },
+            "factool_code--0--1": {
+                "prompt_tokens": 296,
+                "completion_tokens": 173,
+                "total_tokens": 469
+            },
+            "factool_code--0--3": {
+                "prompt_tokens": 296,
+                "completion_tokens": 179,
+                "total_tokens": 475
+            }
+        }
+    }
+}
