@@ -1,0 +1,193 @@
+[
+    {
+        "task_name": "factool_code",
+        "stage_list": [
+            "generate_queries",
+            "generate_solutions"
+        ],
+        "generate_queries": {
+            "duration": [
+                1.1463658489832065,
+                0.16341432881150672
+            ],
+            "prompt_tokens": [
+                368.9390243902439,
+                3079.6304283164786
+            ],
+            "completion_tokens": [
+                72.58536585365853,
+                700.6451516954195
+            ],
+            "total_tokens": [
+                441.5243902439024,
+                4399.200624628197
+            ],
+            "parallelism": [
+                1.0,
+                0.0
+            ],
+            "next_stages": {
+                "generate_solutions": {
+                    "probability": 1,
+                    "gap_time": [
+                        0.0,
+                        0.0
+                    ]
+                }
+            }
+        },
+        "generate_solutions": {
+            "duration": [
+                3.8489203104158727,
+                3.394764552506902
+            ],
+            "prompt_tokens": [
+                331.6890243902439,
+                3050.092318560381
+            ],
+            "completion_tokens": [
+                188.97764227642276,
+                6181.8470611078055
+            ],
+            "total_tokens": [
+                520.6666666666666,
+                12411.852303523034
+            ],
+            "parallelism": [
+                3.0,
+                0.0
+            ],
+            "next_stages": {}
+        }
+    },
+    {
+        "task_name": "factool_kbqa",
+        "stage_list": [
+            "extract_claims",
+            "generate_queries",
+            "verifies"
+        ],
+        "extract_claims": {
+            "duration": [
+                1.2795403897762299,
+                0.4883119803024007
+            ],
+            "prompt_tokens": [
+                720.68359375,
+                759.3334808349609
+            ],
+            "completion_tokens": [
+                64.4296875,
+                1580.8544311523438
+            ],
+            "total_tokens": [
+                785.11328125,
+                4330.748886108398
+            ],
+            "parallelism": [
+                1,
+                0
+            ],
+            "next_stages": {
+                "generate_queries": {
+                    "probability": 1,
+                    "gap_time": [
+                        0,
+                        0
+                    ]
+                }
+            }
+        },
+        "generate_queries": {
+            "duration": [
+                0.766877198830629,
+                0.05034287140906952
+            ],
+            "prompt_tokens": [
+                367.1727982162765,
+                14.89433252673037
+            ],
+            "completion_tokens": [
+                21.678929765886288,
+                22.991674216917783
+            ],
+            "total_tokens": [
+                388.85172798216274,
+                59.29016702522591
+            ],
+            "parallelism": [
+                3.50390625,
+                4.1562347412109375
+            ],
+            "next_stages": {
+                "verifies": {
+                    "probability": 1,
+                    "gap_time": [
+                        1.2903243154287338,
+                        0.339918770972203
+                    ]
+                }
+            }
+        },
+        "verifies": {
+            "duration": [
+                4.109423442827818,
+                1.2975918729156721
+            ],
+            "prompt_tokens": [
+                586.1895206243032,
+                11186.4233907401
+            ],
+            "completion_tokens": [
+                173.47603121516164,
+                2126.6663708708206
+            ],
+            "total_tokens": [
+                759.6655518394649,
+                16209.79895825177
+            ],
+            "parallelism": [
+                3.50390625,
+                4.1562347412109375
+            ],
+            "next_stages": {}
+        }
+    },
+    {
+        "task_name": "react_fever",
+        "stage_list": [
+            "thought"
+        ],
+        "thought": {
+            "duration": [
+                0.7720928889695213,
+                0.026715279711841323
+            ],
+            "prompt_tokens": [
+                1158.8347826086956,
+                29601.433572778828
+            ],
+            "completion_tokens": [
+                39.143478260869564,
+                111.27071833648394
+            ],
+            "total_tokens": [
+                1197.9782608695652,
+                29776.160396975425
+            ],
+            "parallelism": [
+                1.0,
+                0.0
+            ],
+            "next_stages": {
+                "thought": {
+                    "probability": 0.5414847161572053,
+                    "gap_time": [
+                        2.4462995606084026,
+                        2.6060511743437944
+                    ]
+                }
+            }
+        }
+    }
+]

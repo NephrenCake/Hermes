@@ -1,0 +1,401 @@
+{
+    "average_jct": 35.23936750577844,
+    "test_completion_time": 810.5207228660583,
+    "task_completion_time": {
+        "hugginggpt--0": 57.80376696586609,
+        "hugginggpt--1": 27.044765949249268,
+        "hugginggpt--2": 26.87196707725525,
+        "hugginggpt--3": 25.908507108688354,
+        "hugginggpt--4": 41.954455614089966,
+        "hugginggpt--5": 25.6382999420166,
+        "hugginggpt--6": 27.179004192352295,
+        "hugginggpt--7": 28.77562928199768,
+        "hugginggpt--8": 45.41862440109253,
+        "hugginggpt--9": 25.9260835647583,
+        "hugginggpt--10": 27.958550930023193,
+        "hugginggpt--11": 65.8886513710022,
+        "hugginggpt--12": 26.110156536102295,
+        "hugginggpt--13": 58.46783232688904,
+        "hugginggpt--14": 30.33629536628723,
+        "hugginggpt--15": 30.191628217697144,
+        "hugginggpt--16": 28.714324474334717,
+        "hugginggpt--17": 35.024505853652954,
+        "hugginggpt--18": 18.721515893936157,
+        "hugginggpt--19": 12.08471155166626,
+        "hugginggpt--20": 73.08473491668701,
+        "hugginggpt--21": 44.822731018066406,
+        "hugginggpt--22": 26.578710079193115
+    },
+    "request_completion_time": {
+        "hugginggpt--0": {
+            "hugginggpt--0--0": 3.6385152339935303,
+            "hugginggpt--0--1": 12.919803380966187
+        },
+        "hugginggpt--1": {
+            "hugginggpt--1--0": 2.110398292541504,
+            "hugginggpt--1--1": 6.866780519485474
+        },
+        "hugginggpt--2": {
+            "hugginggpt--2--0": 1.5439631938934326,
+            "hugginggpt--2--1": 6.374546766281128
+        },
+        "hugginggpt--3": {
+            "hugginggpt--3--0": 1.6651465892791748,
+            "hugginggpt--3--1": 7.628919363021851
+        },
+        "hugginggpt--4": {
+            "hugginggpt--4--0": 2.222493886947632,
+            "hugginggpt--4--1": 7.381656169891357
+        },
+        "hugginggpt--5": {
+            "hugginggpt--5--0": 1.5756728649139404,
+            "hugginggpt--5--1": 5.217559337615967
+        },
+        "hugginggpt--6": {
+            "hugginggpt--6--0": 1.5869736671447754,
+            "hugginggpt--6--1": 5.732931613922119
+        },
+        "hugginggpt--7": {
+            "hugginggpt--7--0": 1.6370668411254883,
+            "hugginggpt--7--1": 7.89894437789917
+        },
+        "hugginggpt--8": {
+            "hugginggpt--8--0": 1.5834994316101074,
+            "hugginggpt--8--1": 5.679345607757568
+        },
+        "hugginggpt--9": {
+            "hugginggpt--9--0": 1.8858373165130615,
+            "hugginggpt--9--1": 6.517991065979004
+        },
+        "hugginggpt--10": {
+            "hugginggpt--10--0": 2.4587182998657227,
+            "hugginggpt--10--1": 8.196539163589478
+        },
+        "hugginggpt--11": {
+            "hugginggpt--11--0": 2.0329947471618652,
+            "hugginggpt--11--1": 8.218543529510498
+        },
+        "hugginggpt--12": {
+            "hugginggpt--12--0": 1.576385498046875,
+            "hugginggpt--12--1": 6.249103546142578
+        },
+        "hugginggpt--13": {
+            "hugginggpt--13--0": 3.7547123432159424,
+            "hugginggpt--13--1": 15.752636671066284
+        },
+        "hugginggpt--14": {
+            "hugginggpt--14--0": 2.4568443298339844,
+            "hugginggpt--14--1": 8.828184604644775
+        },
+        "hugginggpt--15": {
+            "hugginggpt--15--0": 2.705474376678467,
+            "hugginggpt--15--1": 11.326272964477539
+        },
+        "hugginggpt--16": {
+            "hugginggpt--16--0": 1.5969009399414062,
+            "hugginggpt--16--1": 6.038813829421997
+        },
+        "hugginggpt--17": {
+            "hugginggpt--17--0": 2.505586624145508,
+            "hugginggpt--17--1": 8.034528255462646
+        },
+        "hugginggpt--18": {
+            "hugginggpt--18--0": 1.8786954879760742,
+            "hugginggpt--18--1": 7.7892913818359375
+        },
+        "hugginggpt--19": {
+            "hugginggpt--19--0": 1.8083610534667969,
+            "hugginggpt--19--1": 7.350865364074707
+        },
+        "hugginggpt--20": {
+            "hugginggpt--20--0": 2.785428524017334,
+            "hugginggpt--20--1": 11.496832847595215
+        },
+        "hugginggpt--21": {
+            "hugginggpt--21--0": 1.5900685787200928,
+            "hugginggpt--21--1": 5.171972036361694
+        },
+        "hugginggpt--22": {
+            "hugginggpt--22--0": 1.5653119087219238,
+            "hugginggpt--22--1": 5.737974643707275
+        }
+    },
+    "token_nums": {
+        "hugginggpt--0": {
+            "hugginggpt--0--0": {
+                "prompt_tokens": 1877,
+                "completion_tokens": 194,
+                "total_tokens": 2071
+            },
+            "hugginggpt--0--1": {
+                "prompt_tokens": 901,
+                "completion_tokens": 747,
+                "total_tokens": 1648
+            }
+        },
+        "hugginggpt--1": {
+            "hugginggpt--1--0": {
+                "prompt_tokens": 1858,
+                "completion_tokens": 102,
+                "total_tokens": 1960
+            },
+            "hugginggpt--1--1": {
+                "prompt_tokens": 588,
+                "completion_tokens": 399,
+                "total_tokens": 987
+            }
+        },
+        "hugginggpt--2": {
+            "hugginggpt--2--0": {
+                "prompt_tokens": 1852,
+                "completion_tokens": 71,
+                "total_tokens": 1923
+            },
+            "hugginggpt--2--1": {
+                "prompt_tokens": 419,
+                "completion_tokens": 371,
+                "total_tokens": 790
+            }
+        },
+        "hugginggpt--3": {
+            "hugginggpt--3--0": {
+                "prompt_tokens": 1867,
+                "completion_tokens": 77,
+                "total_tokens": 1944
+            },
+            "hugginggpt--3--1": {
+                "prompt_tokens": 435,
+                "completion_tokens": 448,
+                "total_tokens": 883
+            }
+        },
+        "hugginggpt--4": {
+            "hugginggpt--4--0": {
+                "prompt_tokens": 1880,
+                "completion_tokens": 109,
+                "total_tokens": 1989
+            },
+            "hugginggpt--4--1": {
+                "prompt_tokens": 537,
+                "completion_tokens": 424,
+                "total_tokens": 961
+            }
+        },
+        "hugginggpt--5": {
+            "hugginggpt--5--0": {
+                "prompt_tokens": 1855,
+                "completion_tokens": 72,
+                "total_tokens": 1927
+            },
+            "hugginggpt--5--1": {
+                "prompt_tokens": 432,
+                "completion_tokens": 301,
+                "total_tokens": 733
+            }
+        },
+        "hugginggpt--6": {
+            "hugginggpt--6--0": {
+                "prompt_tokens": 1864,
+                "completion_tokens": 72,
+                "total_tokens": 1936
+            },
+            "hugginggpt--6--1": {
+                "prompt_tokens": 440,
+                "completion_tokens": 332,
+                "total_tokens": 772
+            }
+        },
+        "hugginggpt--7": {
+            "hugginggpt--7--0": {
+                "prompt_tokens": 1862,
+                "completion_tokens": 75,
+                "total_tokens": 1937
+            },
+            "hugginggpt--7--1": {
+                "prompt_tokens": 432,
+                "completion_tokens": 458,
+                "total_tokens": 890
+            }
+        },
+        "hugginggpt--8": {
+            "hugginggpt--8--0": {
+                "prompt_tokens": 1868,
+                "completion_tokens": 72,
+                "total_tokens": 1940
+            },
+            "hugginggpt--8--1": {
+                "prompt_tokens": 446,
+                "completion_tokens": 326,
+                "total_tokens": 772
+            }
+        },
+        "hugginggpt--9": {
+            "hugginggpt--9--0": {
+                "prompt_tokens": 1858,
+                "completion_tokens": 89,
+                "total_tokens": 1947
+            },
+            "hugginggpt--9--1": {
+                "prompt_tokens": 584,
+                "completion_tokens": 374,
+                "total_tokens": 958
+            }
+        },
+        "hugginggpt--10": {
+            "hugginggpt--10--0": {
+                "prompt_tokens": 1866,
+                "completion_tokens": 121,
+                "total_tokens": 1987
+            },
+            "hugginggpt--10--1": {
+                "prompt_tokens": 687,
+                "completion_tokens": 468,
+                "total_tokens": 1155
+            }
+        },
+        "hugginggpt--11": {
+            "hugginggpt--11--0": {
+                "prompt_tokens": 1876,
+                "completion_tokens": 108,
+                "total_tokens": 1984
+            },
+            "hugginggpt--11--1": {
+                "prompt_tokens": 544,
+                "completion_tokens": 473,
+                "total_tokens": 1017
+            }
+        },
+        "hugginggpt--12": {
+            "hugginggpt--12--0": {
+                "prompt_tokens": 1861,
+                "completion_tokens": 71,
+                "total_tokens": 1932
+            },
+            "hugginggpt--12--1": {
+                "prompt_tokens": 420,
+                "completion_tokens": 361,
+                "total_tokens": 781
+            }
+        },
+        "hugginggpt--13": {
+            "hugginggpt--13--0": {
+                "prompt_tokens": 1899,
+                "completion_tokens": 202,
+                "total_tokens": 2101
+            },
+            "hugginggpt--13--1": {
+                "prompt_tokens": 922,
+                "completion_tokens": 914,
+                "total_tokens": 1836
+            }
+        },
+        "hugginggpt--14": {
+            "hugginggpt--14--0": {
+                "prompt_tokens": 1882,
+                "completion_tokens": 122,
+                "total_tokens": 2004
+            },
+            "hugginggpt--14--1": {
+                "prompt_tokens": 695,
+                "completion_tokens": 509,
+                "total_tokens": 1204
+            }
+        },
+        "hugginggpt--15": {
+            "hugginggpt--15--0": {
+                "prompt_tokens": 1874,
+                "completion_tokens": 137,
+                "total_tokens": 2011
+            },
+            "hugginggpt--15--1": {
+                "prompt_tokens": 859,
+                "completion_tokens": 654,
+                "total_tokens": 1513
+            }
+        },
+        "hugginggpt--16": {
+            "hugginggpt--16--0": {
+                "prompt_tokens": 1869,
+                "completion_tokens": 72,
+                "total_tokens": 1941
+            },
+            "hugginggpt--16--1": {
+                "prompt_tokens": 437,
+                "completion_tokens": 343,
+                "total_tokens": 780
+            }
+        },
+        "hugginggpt--17": {
+            "hugginggpt--17--0": {
+                "prompt_tokens": 1880,
+                "completion_tokens": 133,
+                "total_tokens": 2013
+            },
+            "hugginggpt--17--1": {
+                "prompt_tokens": 716,
+                "completion_tokens": 457,
+                "total_tokens": 1173
+            }
+        },
+        "hugginggpt--18": {
+            "hugginggpt--18--0": {
+                "prompt_tokens": 1864,
+                "completion_tokens": 86,
+                "total_tokens": 1950
+            },
+            "hugginggpt--18--1": {
+                "prompt_tokens": 591,
+                "completion_tokens": 449,
+                "total_tokens": 1040
+            }
+        },
+        "hugginggpt--19": {
+            "hugginggpt--19--0": {
+                "prompt_tokens": 1853,
+                "completion_tokens": 83,
+                "total_tokens": 1936
+            },
+            "hugginggpt--19--1": {
+                "prompt_tokens": 563,
+                "completion_tokens": 427,
+                "total_tokens": 990
+            }
+        },
+        "hugginggpt--20": {
+            "hugginggpt--20--0": {
+                "prompt_tokens": 1876,
+                "completion_tokens": 143,
+                "total_tokens": 2019
+            },
+            "hugginggpt--20--1": {
+                "prompt_tokens": 642,
+                "completion_tokens": 666,
+                "total_tokens": 1308
+            }
+        },
+        "hugginggpt--21": {
+            "hugginggpt--21--0": {
+                "prompt_tokens": 1852,
+                "completion_tokens": 72,
+                "total_tokens": 1924
+            },
+            "hugginggpt--21--1": {
+                "prompt_tokens": 429,
+                "completion_tokens": 297,
+                "total_tokens": 726
+            }
+        },
+        "hugginggpt--22": {
+            "hugginggpt--22--0": {
+                "prompt_tokens": 1862,
+                "completion_tokens": 74,
+                "total_tokens": 1936
+            },
+            "hugginggpt--22--1": {
+                "prompt_tokens": 434,
+                "completion_tokens": 332,
+                "total_tokens": 766
+            }
+        }
+    }
+}

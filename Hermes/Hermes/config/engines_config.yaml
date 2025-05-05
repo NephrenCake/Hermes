@@ -1,0 +1,58 @@
+engines:
+#  v100-01.1:
+#    ssh_cfg:
+#      host: "v100-01"
+#      username: "yfliu"
+#      port: 22
+#    vllm_cfg:
+#      model_path: "/dataset/llm_models/llama2/llama-7b-hf"
+#      vllm_port: 8001
+#      vllm_gpus: "0,1"
+
+  a100-01.1:
+    ssh_cfg:
+      host: "a100-01"
+      port: 36363
+    vllm_cfg:
+      model_path: "/state/partition/yfliu/llama-7b-hf"
+      gpu_memory_utilization: 0.9
+      vllm_port: 8001
+      vllm_gpus: "0"
+      attn_backend: "FLASH_ATTN"
+      chat_template: /root/Hermes/examples/template_alpaca.jinja
+      enable_prefix_caching: true
+
+#  a40-02.1:
+#    ssh_cfg:
+#      host: "a40-02"
+#      port: 36363
+#    vllm_cfg:
+#      model_path: "/state/partition/yfliu/llama-7b-hf"
+#      vllm_port: 8001
+#      vllm_gpus: "0"
+
+#  a40-01.1:
+#    ssh_cfg:
+#      host: "a40-01"
+#      port: 36363
+#    vllm_cfg:
+##      model_path: "/state/partition/yfliu/llama-7b-hf"
+#      model_path: "/state/partition/yfliu/Llama-3.1-8B"
+##      model_path: "/state/partition/yfliu/llama-2-13b-hf"
+##      gpu_memory_utilization: 0.9
+#      gpu_memory_utilization: 0.41
+#      vllm_port: 8001
+#      vllm_gpus: "0"
+#      attn_backend: "FLASH_ATTN"
+#      chat_template: /root/Hermes/examples/template_alpaca.jinja
+##      non_preempt: true
+#      enable_prefix_caching: false
+
+#  a40-01.2:
+#    ssh_cfg:
+#      host: "a40-01"
+#      port: 36363
+#    vllm_cfg:
+#      model_path: "/state/partition/yfliu/llama-7b-hf"
+#      vllm_port: 8002
+#      vllm_gpus: "1"

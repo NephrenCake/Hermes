@@ -1,0 +1,1388 @@
+{
+    "factool_code": {
+        "start": {
+            "type": "start",
+            "next": [
+                "generate_queries",
+                "generate_queries",
+                "generate_queries",
+                "generate_queries",
+                "generate_queries",
+                "generate_queries",
+                "generate_queries",
+                "generate_queries",
+                "generate_queries",
+                "generate_queries"
+            ]
+        },
+        "end": {
+            "type": "end"
+        },
+        "generate_queries": {
+            "type": "llm",
+            "next": [
+                "generate_solutions",
+                "generate_solutions",
+                "generate_solutions",
+                "generate_solutions",
+                "generate_solutions",
+                "generate_solutions",
+                "generate_solutions",
+                "generate_solutions",
+                "generate_solutions",
+                "generate_solutions"
+            ],
+            "input_len": [
+                306,
+                318,
+                353,
+                349,
+                329,
+                447,
+                500,
+                327,
+                323,
+                309
+            ],
+            "output_len": [
+                60,
+                62,
+                68,
+                70,
+                70,
+                81,
+                70,
+                54,
+                59,
+                64
+            ],
+            "parallelism": [
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+            ]
+        },
+        "generate_solutions": {
+            "type": "llm",
+            "next": [
+                "code_execution",
+                "code_execution",
+                "code_execution",
+                "code_execution",
+                "code_execution",
+                "code_execution",
+                "code_execution",
+                "code_execution",
+                "code_execution",
+                "code_execution"
+            ],
+            "input_len": [
+                471,
+                298,
+                298,
+                298,
+                279,
+                279,
+                279,
+                271,
+                271,
+                271
+            ],
+            "output_len": [
+                305,
+                160,
+                160,
+                168,
+                142,
+                144,
+                140,
+                201,
+                201,
+                201
+            ],
+            "parallelism": [
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3
+            ]
+        },
+        "code_execution": {
+            "type": "docker",
+            "next": [
+                "end",
+                "end",
+                "end",
+                "end",
+                "end",
+                "end",
+                "end",
+                "end",
+                "end",
+                "end"
+            ],
+            "exec_time": [
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+            ]
+        }
+    },
+    "factool_kbqa": {
+        "start": {
+            "type": "start",
+            "next": [
+                "extract_claims",
+                "extract_claims",
+                "extract_claims",
+                "extract_claims",
+                "extract_claims",
+                "extract_claims",
+                "extract_claims",
+                "extract_claims",
+                "extract_claims",
+                "extract_claims"
+            ]
+        },
+        "end": {
+            "type": "end"
+        },
+        "extract_claims": {
+            "type": "llm",
+            "next": [
+                "generate_queries",
+                "generate_queries",
+                "generate_queries",
+                "generate_queries",
+                "generate_queries",
+                "generate_queries",
+                "generate_queries",
+                "generate_queries",
+                "generate_queries",
+                "generate_queries"
+            ],
+            "input_len": [
+                702,
+                686,
+                702,
+                695,
+                698,
+                713,
+                691,
+                711,
+                698,
+                691
+            ],
+            "output_len": [
+                76,
+                45,
+                59,
+                74,
+                68,
+                83,
+                66,
+                84,
+                50,
+                62
+            ],
+            "parallelism": [
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+            ]
+        },
+        "generate_queries": {
+            "type": "llm",
+            "next": [
+                "search",
+                "search",
+                "search",
+                "search",
+                "search",
+                "search",
+                "search",
+                "search",
+                "search",
+                "search"
+            ],
+            "input_len": [
+                349,
+                348,
+                347,
+                342,
+                348,
+                350,
+                347,
+                344,
+                346,
+                346
+            ],
+            "output_len": [
+                22,
+                19,
+                18,
+                14,
+                14,
+                15,
+                15,
+                13,
+                18,
+                14
+            ],
+            "parallelism": [
+                5,
+                2,
+                4,
+                3,
+                3,
+                5,
+                3,
+                5,
+                3,
+                4
+            ]
+        },
+        "search": {
+            "type": "search",
+            "next": [
+                "verifies",
+                "verifies",
+                "verifies",
+                "verifies",
+                "verifies",
+                "verifies",
+                "verifies",
+                "verifies",
+                "verifies",
+                "verifies"
+            ],
+            "exec_time": [
+                1.311953067779541,
+                1.5540056228637695,
+                0.9774520397186279,
+                0.9010815620422363,
+                0.9345853328704834,
+                1.3847322463989258,
+                2.579719305038452,
+                1.4965300559997559,
+                0.893944501876831,
+                1.1565461158752441
+            ]
+        },
+        "verifies": {
+            "type": "llm",
+            "next": [
+                "end",
+                "end",
+                "end",
+                "end",
+                "end",
+                "end",
+                "end",
+                "end",
+                "end",
+                "end"
+            ],
+            "input_len": [
+                732,
+                664,
+                669,
+                739,
+                733,
+                464,
+                464,
+                462,
+                491,
+                599
+            ],
+            "output_len": [
+                145,
+                151,
+                207,
+                184,
+                73,
+                136,
+                119,
+                157,
+                112,
+                142
+            ],
+            "parallelism": [
+                5,
+                2,
+                4,
+                3,
+                3,
+                5,
+                3,
+                5,
+                3,
+                4
+            ]
+        }
+    },
+    "factool_math": {
+        "start": {
+            "type": "start",
+            "next": [
+                "extract_claims",
+                "extract_claims",
+                "extract_claims",
+                "extract_claims",
+                "extract_claims",
+                "extract_claims",
+                "extract_claims",
+                "extract_claims",
+                "extract_claims",
+                "extract_claims"
+            ]
+        },
+        "end": {
+            "type": "end"
+        },
+        "extract_claims": {
+            "type": "llm",
+            "next": [
+                "generate_queries",
+                "generate_queries",
+                "generate_queries",
+                "generate_queries",
+                "generate_queries",
+                "generate_queries",
+                "generate_queries",
+                "generate_queries",
+                "generate_queries",
+                "generate_queries"
+            ],
+            "input_len": [
+                813,
+                779,
+                738,
+                784,
+                866,
+                802,
+                806,
+                816,
+                743,
+                720
+            ],
+            "output_len": [
+                89,
+                73,
+                87,
+                92,
+                64,
+                77,
+                120,
+                77,
+                81,
+                52
+            ],
+            "parallelism": [
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+            ]
+        },
+        "generate_queries": {
+            "type": "llm",
+            "next": [
+                "end",
+                "end",
+                "end",
+                "end",
+                "end",
+                "end",
+                "end",
+                "end",
+                "end",
+                "end"
+            ],
+            "input_len": [
+                235,
+                236,
+                254,
+                254,
+                248,
+                248,
+                235,
+                237,
+                237,
+                240
+            ],
+            "output_len": [
+                21,
+                21,
+                21,
+                39,
+                39,
+                22,
+                22,
+                22,
+                22,
+                22
+            ],
+            "parallelism": [
+                3,
+                2,
+                3,
+                3,
+                2,
+                2,
+                4,
+                2,
+                3,
+                2
+            ]
+        }
+    },
+    "react_fever": {
+        "start": {
+            "type": "start",
+            "next": [
+                "thought",
+                "thought",
+                "thought",
+                "thought",
+                "thought",
+                "thought",
+                "thought",
+                "thought",
+                "thought",
+                "thought"
+            ]
+        },
+        "end": {
+            "type": "end"
+        },
+        "thought": {
+            "type": "llm",
+            "next": [
+                "end",
+                "search",
+                "end",
+                "search",
+                "end",
+                "search",
+                "search",
+                "end",
+                "search",
+                "end"
+            ],
+            "input_len": [
+                1188,
+                1013,
+                1216,
+                1008,
+                1260,
+                1014,
+                1118,
+                1363,
+                1016,
+                1226
+            ],
+            "output_len": [
+                29,
+                38,
+                34,
+                32,
+                32,
+                40,
+                50,
+                46,
+                31,
+                37
+            ],
+            "parallelism": [
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+            ]
+        },
+        "search": {
+            "type": "search",
+            "next": [
+                "thought",
+                "thought",
+                "thought",
+                "thought",
+                "thought",
+                "thought",
+                "thought",
+                "thought",
+                "thought",
+                "thought"
+            ],
+            "exec_time": [
+                2.670306444168091,
+                1.630814552307129,
+                2.079570770263672,
+                1.9704391956329346,
+                1.3529109954833984,
+                1.3169236183166504,
+                1.7470450401306152,
+                1.711317539215088,
+                2.0441465377807617,
+                1.7142972946166992
+            ]
+        }
+    },
+    "react_alfw": {
+        "start": {
+            "type": "start",
+            "next": [
+                "thought",
+                "thought",
+                "thought",
+                "thought",
+                "thought",
+                "thought",
+                "thought",
+                "thought",
+                "thought",
+                "thought"
+            ]
+        },
+        "end": {
+            "type": "end"
+        },
+        "thought": {
+            "type": "llm",
+            "next": [
+                "thought",
+                "thought",
+                "thought",
+                "thought",
+                "thought",
+                "thought",
+                "thought",
+                "thought",
+                "thought",
+                "end"
+            ],
+            "input_len": [
+                2129,
+                2217,
+                2228,
+                2253,
+                2269,
+                2303,
+                2328,
+                2345,
+                2377,
+                2411
+            ],
+            "output_len": [
+                5,
+                5,
+                19,
+                9,
+                28,
+                7,
+                11,
+                25,
+                5,
+                4
+            ],
+            "parallelism": [
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+            ]
+        }
+    },
+    "got_docmerge": {
+        "start": {
+            "type": "start",
+            "next": [
+                "generate1",
+                "generate1",
+                "generate1",
+                "generate1",
+                "generate1",
+                "generate1",
+                "generate1",
+                "generate1",
+                "generate1",
+                "generate1"
+            ]
+        },
+        "end": {
+            "type": "end"
+        },
+        "generate1": {
+            "type": "llm",
+            "next": [
+                "score1",
+                "score1",
+                "score1",
+                "score1",
+                "score1",
+                "score1",
+                "score1",
+                "score1",
+                "score1",
+                "score1"
+            ],
+            "input_len": [
+                1516,
+                1516,
+                1088,
+                1088,
+                1304,
+                1304,
+                1362,
+                1362,
+                940,
+                940
+            ],
+            "output_len": [
+                686,
+                692,
+                660,
+                713,
+                808,
+                808,
+                904,
+                902,
+                832,
+                832
+            ],
+            "parallelism": [
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2
+            ]
+        },
+        "score1": {
+            "type": "llm",
+            "next": [
+                "score1",
+                "aggregate",
+                "score1",
+                "aggregate",
+                "score1",
+                "aggregate",
+                "score1",
+                "aggregate",
+                "score1",
+                "aggregate"
+            ],
+            "input_len": [
+                1915,
+                1915,
+                1915,
+                1915,
+                1915,
+                1915,
+                1915,
+                1915,
+                1915,
+                1915
+            ],
+            "output_len": [
+                332,
+                313,
+                238,
+                319,
+                328,
+                335,
+                295,
+                260,
+                190,
+                241
+            ],
+            "parallelism": [
+                20,
+                20,
+                20,
+                20,
+                20,
+                20,
+                20,
+                20,
+                20,
+                20
+            ]
+        },
+        "aggregate": {
+            "type": "llm",
+            "next": [
+                "score2",
+                "score2",
+                "score2",
+                "score2",
+                "score2",
+                "score2",
+                "score2",
+                "score2",
+                "score2",
+                "score2"
+            ],
+            "input_len": [
+                2987,
+                2987,
+                2611,
+                2611,
+                2995,
+                2995,
+                3229,
+                3229,
+                2694,
+                2694
+            ],
+            "output_len": [
+                692,
+                692,
+                712,
+                712,
+                808,
+                808,
+                904,
+                904,
+                832,
+                832
+            ],
+            "parallelism": [
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2
+            ]
+        },
+        "score2": {
+            "type": "llm",
+            "next": [
+                "score2",
+                "generate2",
+                "score2",
+                "generate2",
+                "score2",
+                "generate2",
+                "score2",
+                "generate2",
+                "score2",
+                "generate2"
+            ],
+            "input_len": [
+                1915,
+                1915,
+                1915,
+                1915,
+                1915,
+                1915,
+                1915,
+                1915,
+                1915,
+                1915
+            ],
+            "output_len": [
+                335,
+                320,
+                320,
+                283,
+                332,
+                319,
+                294,
+                212,
+                366,
+                190
+            ],
+            "parallelism": [
+                20,
+                20,
+                20,
+                20,
+                20,
+                20,
+                20,
+                20,
+                20,
+                20
+            ]
+        },
+        "generate2": {
+            "type": "llm",
+            "next": [
+                "score3",
+                "score3",
+                "score3",
+                "score3",
+                "score3",
+                "score3",
+                "score3",
+                "score3",
+                "score3",
+                "score3"
+            ],
+            "input_len": [
+                2473,
+                1805,
+                2239,
+                2144,
+                2492,
+                2232,
+                1883,
+                2125,
+                2279,
+                1807
+            ],
+            "output_len": [
+                925,
+                844,
+                769,
+                656,
+                1098,
+                692,
+                712,
+                807,
+                902,
+                850
+            ],
+            "parallelism": [
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+            ]
+        },
+        "score3": {
+            "type": "llm",
+            "next": [
+                "end",
+                "end",
+                "end",
+                "end",
+                "end",
+                "end",
+                "end",
+                "end",
+                "end",
+                "end"
+            ],
+            "input_len": [
+                1923,
+                1923,
+                1923,
+                1923,
+                1923,
+                1923,
+                1923,
+                1923,
+                1923,
+                1923
+            ],
+            "output_len": [
+                288,
+                369,
+                260,
+                298,
+                344,
+                300,
+                264,
+                311,
+                260,
+                377
+            ],
+            "parallelism": [
+                20,
+                20,
+                20,
+                20,
+                20,
+                20,
+                20,
+                20,
+                20,
+                20
+            ]
+        }
+    },
+    "langchain_mapreduce": {
+        "start": {
+            "type": "start",
+            "next": [
+                "generate_summary",
+                "generate_summary",
+                "generate_summary",
+                "generate_summary",
+                "generate_summary",
+                "generate_summary",
+                "generate_summary",
+                "generate_summary",
+                "generate_summary",
+                "generate_summary"
+            ]
+        },
+        "end": {
+            "type": "end"
+        },
+        "generate_summary": {
+            "type": "llm",
+            "next": [
+                "collapse_summaries",
+                "generate_final_summary",
+                "collapse_summaries",
+                "collapse_summaries",
+                "generate_final_summary",
+                "collapse_summaries",
+                "collapse_summaries",
+                "collapse_summaries",
+                "collapse_summaries",
+                "collapse_summaries"
+            ],
+            "input_len": [
+                542,
+                491,
+                473,
+                247,
+                442,
+                580,
+                426,
+                562,
+                415,
+                353
+            ],
+            "output_len": [
+                250,
+                109,
+                144,
+                57,
+                102,
+                205,
+                168,
+                147,
+                122,
+                180
+            ],
+            "parallelism": [
+                25,
+                15,
+                21,
+                11,
+                10,
+                33,
+                22,
+                22,
+                20,
+                24
+            ]
+        },
+        "collapse_summaries": {
+            "type": "llm",
+            "next": [
+                "generate_final_summary",
+                "generate_final_summary",
+                "generate_final_summary",
+                "generate_final_summary",
+                "collapse_summaries",
+                "generate_final_summary",
+                "generate_final_summary",
+                "generate_final_summary",
+                "generate_final_summary",
+                "generate_final_summary"
+            ],
+            "input_len": [
+                2005,
+                1682,
+                652,
+                1210,
+                1916,
+                1304,
+                1925,
+                1772,
+                1894,
+                313
+            ],
+            "output_len": [
+                631,
+                629,
+                530,
+                683,
+                800,
+                605,
+                712,
+                566,
+                660,
+                222
+            ],
+            "parallelism": [
+                3,
+                3,
+                3,
+                2,
+                4,
+                2,
+                3,
+                2,
+                2,
+                3
+            ]
+        },
+        "generate_final_summary": {
+            "type": "llm",
+            "next": [
+                "end",
+                "end",
+                "end",
+                "end",
+                "end",
+                "end",
+                "end",
+                "end",
+                "end",
+                "end"
+            ],
+            "input_len": [
+                1326,
+                3312,
+                1531,
+                636,
+                2512,
+                1495,
+                1997,
+                1639,
+                1422,
+                1658
+            ],
+            "output_len": [
+                763,
+                489,
+                641,
+                426,
+                686,
+                957,
+                940,
+                440,
+                670,
+                677
+            ],
+            "parallelism": [
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+            ]
+        }
+    },
+    "code_feedback": {
+        "start": {
+            "type": "start",
+            "next": [
+                "code_generation",
+                "code_generation",
+                "code_generation",
+                "code_generation",
+                "code_generation",
+                "code_generation",
+                "code_generation",
+                "code_generation",
+                "code_generation",
+                "code_generation"
+            ]
+        },
+        "end": {
+            "type": "end"
+        },
+        "code_generation": {
+            "type": "llm",
+            "next": [
+                "end",
+                "code_execution",
+                "end",
+                "code_execution",
+                "end",
+                "code_execution",
+                "code_execution",
+                "code_execution",
+                "code_execution",
+                "end"
+            ],
+            "input_len": [
+                4068,
+                101,
+                763,
+                264,
+                927,
+                139,
+                746,
+                1531,
+                2243,
+                2955
+            ],
+            "output_len": [
+                320,
+                159,
+                335,
+                159,
+                478,
+                123,
+                256,
+                209,
+                209,
+                209
+            ],
+            "parallelism": [
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+            ]
+        },
+        "code_execution": {
+            "type": "docker",
+            "next": [
+                "code_generation",
+                "code_generation",
+                "code_generation",
+                "code_generation",
+                "code_generation",
+                "code_generation",
+                "code_generation",
+                "code_generation",
+                "code_generation",
+                "code_generation"
+            ],
+            "exec_time": [
+                12.286628723144531,
+                12.440071821212769,
+                12.315355062484741,
+                12.227785348892212,
+                12.343174934387207,
+                12.271195650100708,
+                12.269524097442627,
+                12.437970161437988,
+                12.268330335617065,
+                12.244484424591064
+            ]
+        }
+    },
+    "hugginggpt": {
+        "start": {
+            "type": "start",
+            "next": [
+                "task_planning",
+                "task_planning",
+                "task_planning",
+                "task_planning",
+                "task_planning",
+                "task_planning",
+                "task_planning",
+                "task_planning",
+                "task_planning",
+                "task_planning"
+            ]
+        },
+        "end": {
+            "type": "end"
+        },
+        "task_planning": {
+            "type": "llm",
+            "next": [
+                "dnn_execution",
+                "dnn_execution",
+                "dnn_execution",
+                "dnn_execution",
+                "dnn_execution",
+                "dnn_execution",
+                "dnn_execution",
+                "dnn_execution",
+                "dnn_execution",
+                "dnn_execution"
+            ],
+            "input_len": [
+                1795,
+                1778,
+                1770,
+                1765,
+                1776,
+                1760,
+                1749,
+                1772,
+                1748,
+                1758
+            ],
+            "output_len": [
+                202,
+                122,
+                137,
+                72,
+                133,
+                86,
+                83,
+                143,
+                72,
+                74
+            ],
+            "parallelism": [
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+            ]
+        },
+        "dnn_execution": {
+            "type": "dnn",
+            "next": [
+                "response_results",
+                "response_results",
+                "response_results",
+                "response_results",
+                "response_results",
+                "response_results",
+                "response_results",
+                "response_results",
+                "response_results",
+                "response_results"
+            ],
+            "exec_time": [
+                38.92852735519409,
+                19.030267000198364,
+                16.143617153167725,
+                21.055336952209473,
+                24.45819926261902,
+                9.043386459350586,
+                2.9219274520874023,
+                58.742735624313354,
+                38.023202419281006,
+                19.26110816001892
+            ]
+        },
+        "response_results": {
+            "type": "llm",
+            "next": [
+                "end",
+                "end",
+                "end",
+                "end",
+                "end",
+                "end",
+                "end",
+                "end",
+                "end",
+                "end"
+            ],
+            "input_len": [
+                895,
+                668,
+                832,
+                410,
+                689,
+                564,
+                536,
+                615,
+                402,
+                407
+            ],
+            "output_len": [
+                914,
+                509,
+                654,
+                343,
+                457,
+                449,
+                427,
+                666,
+                297,
+                332
+            ],
+            "parallelism": [
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+            ]
+        }
+    }
+}
