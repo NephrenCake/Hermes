@@ -116,9 +116,3 @@ async def main():
 if __name__ == '__main__':
     # export SAMPLE_ALL=0 && export LOG_LEVEL=info && python3 -m Hermes.run --policy Hermes && python3 -m Hermes.run --policy vLLM
     asyncio.run(main())
-
-    # todo
-    #   1. Hermes is worse than VTC
-    #   3. kv/lora prefetch, GPU: 366 / 55009 = 0.01, CPU: 3020 / 55009 = 0.05, Disk: 42329 / 55009 = 0.77
-    #   4. bayesain, oracle
-    #   5. plot

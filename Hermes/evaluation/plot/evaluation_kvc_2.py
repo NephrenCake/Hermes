@@ -16,7 +16,7 @@ plt.rcParams['axes.labelcolor'] = 'black'
 plt.rcParams['xtick.color'] = 'black'
 plt.rcParams['ytick.color'] = 'black'
 
-font_size = 34
+font_size = 32
 
 # ----- config
 font = {
@@ -303,7 +303,7 @@ def plot_kvc_lora_hr():
 
     ax.set_xticks(xticks)
     ax.set_xticklabels(xticklabels, **ticklabelfont)
-    ax.set_xlabel(xlabel, **labelfont, fontdict={'family' : 'Times New Roman'})
+    ax.set_xlabel(xlabel, fontsize=font_size + 5, fontdict={'family' : 'Times New Roman'})
     ax.set_ylim(ylim)
     ax.set_yticks(yticks)
     ax.set_yticklabels(yticklabels, **ticklabelfont)
@@ -372,7 +372,7 @@ def plot_kvc_lora_hr():
     ax2.set_yticks([0.0, 0.25, 0.5, 0.75, 1.0])
     ax2.set_yticklabels([0.0, 0.25, 0.5, 0.75, 1.0])
     ax2.tick_params(axis='y', labelsize=font_size, colors='black')
-    ax2.set_xlabel('\n(b) LoRA', fontsize=font_size, color='black', fontdict={'family' : 'Times New Roman'})
+    ax2.set_xlabel('\n(b) LoRA', fontsize=font_size + 5, color='black', fontdict={'family' : 'Times New Roman'})
 
     # ax: Axes = axs[1]
     #
@@ -415,7 +415,7 @@ def plot_kvc_lora_hr():
     # ax.set_ylabel(ylabel, fontsize=32)
     # ax.set_xlim([-0.5, 1.5])
 
-    bbox_to_anchor1 = (0.5, 1.07)
+    bbox_to_anchor1 = (0.5, 1.05)
     patches = [
         # mpatches.Patch(facecolor='white', edgecolor='black', hatch=hatch_list[0], label=hit_types[0]),
         # mpatches.Patch(facecolor='white', edgecolor='black', hatch=hatch_list[1], label=hit_types[1]),
@@ -425,14 +425,14 @@ def plot_kvc_lora_hr():
         # mpatches.Patch(color=color_list[3], label=algos[3])
     ]
     fig.legend(handles=patches, ncol=6, loc='upper center', bbox_to_anchor=bbox_to_anchor1,
-               fontsize=font_size - 4, frameon=False)
+               fontsize=font_size, frameon=False)
     # fig.subplots_adjust(wspace=0.3)
-    fig.set_size_inches(14, 5)
+    fig.set_size_inches(18,6)
 
-    plt.tight_layout(rect=(-0.02, -0.07, 1.02, 1.01))
+    plt.tight_layout(rect=(0, -0.05, 1, 0.95))
     fig_path = os.path.join(cur_dir_path, f"figures/kvc_lora_chr.pdf")
     print(fig_path)
-    plt.savefig(fig_path, bbox_inches='tight', pad_inches=0.1)
+    plt.savefig(fig_path, bbox_inches='tight')
     plt.show()
     plt.clf()
 
