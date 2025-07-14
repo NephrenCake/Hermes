@@ -70,11 +70,11 @@ def init_trace(args):
         lora_num=args.num_lora,
     )
     # return generator.generate_trace_test()
-    # return generator.generate_trace_all()
-    if SAMPLE_ALL:
-        return generator.generate_trace_all()
-    else:
-        return generator.generate_trace_exp()
+    return generator.generate_trace_all()
+    # if SAMPLE_ALL:
+    #     return generator.generate_trace_all()
+    # else:
+    #     return generator.generate_trace_exp()
 
 
 async def replay_trace(

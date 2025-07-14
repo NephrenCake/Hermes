@@ -122,7 +122,7 @@ def plot_sched_metrics2():
     linewidth = 2
     markersize = 10
     rect = (0, 0, 1, 0.85)
-    figsize = (8, 5)
+    figsize = (8, 6)
     plt.style.use('ggplot')
 
     algos = {

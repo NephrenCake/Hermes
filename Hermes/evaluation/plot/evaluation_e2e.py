@@ -13,13 +13,13 @@ os.chdir(os.path.dirname(__file__))
 
 def plot_e2e_combined(paths, device):
     fontsize = 28
-    legend_fontsize = 22
+    legend_fontsize = 28
     inside_fontsize = 22
     linewidth = 2
     markersize = 10
-    rect = (0, 0, 1, 0.85)
+    rect = (0, 0, 1, 0.9)
     width = 0.15
-    figsize = (6.5, 5)
+    figsize = (13, 5)
     bbox_to_anchor = (0.5, 1.04)
     plt.style.use('ggplot')
 
@@ -104,7 +104,7 @@ def plot_e2e_combined(paths, device):
 
     # Customize the legend for the combined plot
     handles, labels = axs[0].get_legend_handles_labels()
-    fig.legend(handles, labels, ncol=2, loc='upper center', bbox_to_anchor=bbox_to_anchor,
+    fig.legend(handles, labels, ncol=4, loc='upper center', bbox_to_anchor=bbox_to_anchor,
                fontsize=legend_fontsize, frameon=False)
 
     # Adjust layout and save the combined figure
@@ -265,7 +265,7 @@ def plot_ddl2(exp_dir):
     markersize = 10
     rect = (0, 0, 1, 0.85)
     width = 0.15
-    figsize = (8, 5)
+    figsize = (8, 6)
     bbox_to_anchor = (0.5, 1.04)
     plt.style.use('ggplot')
 
@@ -351,13 +351,13 @@ def plot_ddl2(exp_dir):
 
 def e2e_cdf(path, device):
     fontsize = 28
-    legend_fontsize = 22
+    legend_fontsize = 28
     inside_fontsize = 22
     linewidth = 2
     markersize = 10
-    rect = (0, 0, 1, 0.85)
+    rect = (0, 0, 1, 0.9)
     width = 0.15
-    figsize = (6.5, 5)
+    figsize = (13, 5)
     bbox_to_anchor = (0.5, 1.04)
     plt.style.use('ggplot')
 
@@ -399,7 +399,7 @@ def e2e_cdf(path, device):
 
     # Customize the legend (不需要图例在子图上显示)
     handles, labels = axs.get_legend_handles_labels()
-    fig.legend(handles, labels, ncol=2, loc='upper center', bbox_to_anchor=bbox_to_anchor,
+    fig.legend(handles, labels, ncol=4, loc='upper center', bbox_to_anchor=bbox_to_anchor,
                fontsize=legend_fontsize, frameon=False)
     # 调整布局并保存图像
     plt.tight_layout(rect=rect)
@@ -410,7 +410,7 @@ def e2e_cdf(path, device):
 
 if __name__ == '__main__':
     results_path = "/home/yfliu/llm_inference/Hermes/evaluation/results/"
-    results_path = "/Users/nephren/code/llm_inference/Hermes/evaluation/results/"
+    results_path = "/Users/nephren/code/llm_inference/Hermes_over_vLLM/Hermes/evaluation/results/"
 
     plot_e2e_combined([
         # "sched_sjf_window30_task500_try0_intensity1",
@@ -432,14 +432,14 @@ if __name__ == '__main__':
 
     e2e_cdf("../results/archive/e2e_act/sched_sjf_window10_task200_intensity3_Llama2-7B/",
             "a100")
-    #
+
     # plot_ddl2(os.path.join(results_path, "archive/e2e_ddl/sched_ddl_window15_task200_intensity2_Llama2-7B"))
 
-    # plot_e2e_combined([
-    #     "e2e_act_h100/sched_sjf_window30_task1500_intensity1_Llama3-70B",
-    #     "e2e_act_h100/sched_sjf_window15_task1500_intensity2_Llama3-70B",
-    #     "e2e_act_h100/sched_sjf_window10_task1500_intensity3_Llama3-70B",
-    # ], "h800")
-    #
-    # e2e_cdf("../results/archive/e2e_act_h100/sched_sjf_window10_task1500_intensity3_Llama3-70B/",
-    #         "h800")
+    plot_e2e_combined([
+        "e2e_act_h100/sched_sjf_window30_task1500_intensity1_Llama3-70B",
+        "e2e_act_h100/sched_sjf_window15_task1500_intensity2_Llama3-70B",
+        "e2e_act_h100/sched_sjf_window10_task1500_intensity3_Llama3-70B",
+    ], "h800")
+
+    e2e_cdf("../results/archive/e2e_act_h100/sched_sjf_window10_task1500_intensity3_Llama3-70B/",
+            "h800")

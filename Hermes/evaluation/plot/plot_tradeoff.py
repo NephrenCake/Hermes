@@ -24,9 +24,10 @@ fontsize = 32
 legend_fontsize = fontsize
 linewidth = 5
 markersize = 12
-rect = (0, 0, 1, 1)
+bbox_to_anchor = (0.5, 1.02)
+rect = (0, 0, 1, 0.9)
 width = 0.15
-figsize = (18,6)
+figsize = (36,9)
 plt.style.use('ggplot')
 
 with open(f"{cur_dir_path}/trade_off.json",'r') as f:
@@ -102,21 +103,15 @@ def plot_share_legend():
 
     handles += handles1
     labels += labels1
-    bbox_to_anchor = (0.5, 1.15)
     fig.legend(handles, labels, ncol=2, loc='upper center', bbox_to_anchor=bbox_to_anchor,
                fontsize=legend_fontsize, frameon=False, columnspacing=4)
 
 
-    plt.tight_layout()
+    plt.tight_layout(rect=rect)
     fig_path = os.path.join(cur_dir_path, f"figures/tradeoff_share_legend.pdf")
     # fig_path = os.path.join(cur_dir_path, f"figures/tradeoff_share_legend.png")
-    plt.savefig(fig_path, bbox_inches='tight', pad_inches=0.1)
+    plt.savefig(fig_path, bbox_inches='tight')
     plt.show()
-
-    # pic = cv2.imread(fig_path)
-    # pic_gray = cv2.cvtColor(pic, cv2.COLOR_BGR2GRAY)
-    # cv2.imshow("", pic_gray)
-    # cv2.waitKey(0)
 
 if __name__ == "__main__":
     plot_share_legend()

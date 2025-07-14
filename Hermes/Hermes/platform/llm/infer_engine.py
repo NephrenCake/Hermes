@@ -1,7 +1,6 @@
 import asyncio
 import subprocess
 import time
-import async_timeout
 
 from typing import Optional
 from openai import AsyncOpenAI

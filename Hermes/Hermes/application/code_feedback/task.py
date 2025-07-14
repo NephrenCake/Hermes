@@ -108,12 +108,12 @@ class CodeFeedbackTask(BaseTask):
             hermes_args={
                 "request_id": request_id,  # app-task-cnt  # pass to vllm
                 "stage_name": stage_name,
-                "hint": self.hint,
-                "priority": 0,  # pass to vllm
-                "arrive_time": time.time(),
-                "prefer": "latency",
-                "slo": self.slo,
-                "tpt": self.tpt,
+                # "hint": self.hint,
+                # "priority": 0,  # pass to vllm
+                # "arrive_time": time.time(),
+                # "prefer": "latency",
+                # "slo": self.slo,
+                # "tpt": self.tpt,
             },
             model=self.config['model_name'],
             messages=messages,

@@ -113,7 +113,7 @@ async def main():
     try:
         for _ in range(100):
             request_info = {
-                "request_id": {
+                "xxxx": {
                     "input_len": 10,
                     "output_len": 20,
                     "states": "waiting"

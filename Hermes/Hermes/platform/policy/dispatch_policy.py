@@ -42,19 +42,10 @@ class RoundRobinPolicy(DispatchPolicy):
         """
         pending_requests = self.get_pending_requests()
         for pending_request in pending_requests:
-            if isinstance(pending_request, LLMRequestHandler):
-                # logger.info(f"schedule: {req.extra_body}")
-                self.rr_num = (self.rr_num + 1) % len(self.vllm_engines)
-                engine = list(self.vllm_engines.values())[self.rr_num]
-                pending_request.launch_request(engine)
-            elif isinstance(pending_request, DockerRequestHandler):
-                pending_request.launch_request(self.docker_engine)
-            elif isinstance(pending_request, DNNRequestHandler):
-                pending_request.launch_request(self.dnn_engine)
-            elif isinstance(pending_request, SearchRequestHandler):
-                pending_request.launch_request(self.search_engine)
-            else:
-                raise
+            # logger.info(f"schedule: {req.extra_body}")
+            self.rr_num = (self.rr_num + 1) % len(self.vllm_engines)
+            engine = list(self.vllm_engines.values())[self.rr_num]
+            pending_request.launch_request(engine)
         return pending_requests
 
 
