@@ -1,0 +1,46 @@
+%!TEX root = main.tex
+\section{\emph{Coinference}: The Demand Abstraction for LLM Applications}
+\label{sec:abstraction}
+
+
+To facilitate efficient serving and demand modeling of an LLM application, we propose the abstraction of \emph{coinference}, which refers to the entire set of LLM inferences within an LLM application.
+To better elaborate the concept of coinference, we resort to Fig.~\ref{fig:app_structure}, which shows the execution workflow of a series of representative LLM applications.
+As shown in Fig.~\ref{fig:app_structure}, each application involves both LLM (in orange) and non-LLM tasks (in white).
+Note that, although an LLM application has hybrid resource demands, our coinference abstraction here sets only the LLM inference requests as first-class citizens: LLM inferences usually take the largest service cost, and meanwhile they are the common parts in all the LLM applications with clear execution patterns (we will show how to integrate the non-LLM resource demands later in \S\ref{subsec:demand_modeling}).
+
+\phm{Feasiblity.} 
+We note that the correlations among LLM requests are easy to obtain in practice. 
+For example, when a user executes an LLM application by calling the OpenAI assistants API~\cite{assistants_api} (essentially a customized cloud-hosted agent), the OpenAI backend associates all the messages (LLM requests) for that application with a common \emph{thread ID}.
+Moreover, the metadata in LLM requests is often flexible to customize---for example, the \texttt{extra\_body} parameter is provided by OpenAI~\cite{OpenAI_extra_body} and vllm~\cite{vLLM_extra_body} to accept additional JSON properties, thus the application affiliation information can be easily integrated into each LLM request.  
+
+
+
+\phm{Opportunities.}
+As aforementioned, formally adopting the coinference abstraction brings two opportunities on serving enhancement for LLM applications.
+First, as showcased in Fig.~\ref{fig:toy_example}, by scheduling the LLM requests at the coinference level (in proper order), we can remarkably improve the overall scheduling performance against diverse application-level objectives. 
+Second, coinference-level performance modeling can help more precisely monitor the demand status of each LLM request, which we here verify empirically. 
+
+To elaborate, we run five LLM applications from Fig.~\ref{fig:app_structure} each for 100 times (with different inputs from the original dataset).
+Fig.~\ref{fig:token_usage} records the execution statistics in input (prompt) and output (completion) token lengths for an 
+arbitrarily selected request of each application.
+%In particular, we divide the length range for each request position into 10 buckets, and calculate the probability of each bucket (accompanied by the fitted curves assuming skewed Guassian distribution, for reference). 
+As shown in Fig.~\ref{fig:token_usage}, although the resource demands are non-deterministic, they do exhibit salient stability across different trial runs.
+%\chen{For example, the input token length of the Document Merging application is always larger than 1000, yet for KBQAV application it is always between 360 and 380. }
+For example, the output token length of the \texttt{merge} request in Document Merging application is around 1000, yet for the \texttt{generate-query} request in KBQAV application it is between 10 and 50.
+That phenomenon is indeed reasonable because demand volume is to some extent an inner property based on the usage scenario of an LLM application:
+the output of the \texttt{merge} request is a document, yet for the \texttt{generate-query} request it is a short query---thus its length distribution has a much smaller mean value and also a much smaller deviation. 
+This way, the historical statistics can help to narrow down the estimation range of request demands and facilitate accurate prediction. 
+Moreover, as we show later (\S\ref{subsubsec:correlation_analysis}), for requests with dependencies, the upstream requests just-finished can also work as an informative indicator of the demand quantity of downstream requests.
+This can further strengthen the effectiveness of coinference-based demand prediction. 
+
+%\phm{Insight and Challenges.}
+To summarize, the coinference abstraction---as a scheduling unit as well as a demand predicting approach---makes it quite promising to realize our previous objectives (multi-application scheduling enhancement and single-application processing acceleration).
+%However, the coinference abstraction is only a starting point and many challenges still need to be solved to unleash its power in practice.
+Note that in the network community, there exists a similar notion, \emph{coflow}~\cite{chowdhury2012coflow,chowdhury2014efficient}, which seeks to group together all the flows of a data analytics job in scheduling, to make better end-to-end performance.
+Yet coinference serving is more difficult than coflow serving: for a coflow, the inner structure is simple (in parallel without dependency); the demand quantity (flow size) is often available a priori; the service objective is mostly to minimize coflow completion time; the resource consumption only involves the network backend.
+In that sense, we are addressing a brand-new problem where the coinference abstraction is only a starting point.
+%only recording the inference correlation is not enough.
+Next, we show how to use the coinference abstraction to improve the service quality of LLM applications with their challenging characteristics handled.
+% with the objective of making multi-application scheduling enhancement as well as single-application service acceleration.
+
+% We find that the resource demands across coinferences of a given application are similar and typically follow a certain distribution, such as skewnorm. As shown in fig We measured the resource demands of various applications and fitted them to appropriate distributions, allowing us to gain a statistically insight of each application's factors such as stage parallelism, output token length, kv-cache size, time gap, and other factors. This serves as prior knowledge for predicting and scheduling.

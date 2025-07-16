@@ -1,9 +1,11 @@
 import asyncio
 import time
 
+from Hermes.platform.extern.resource_manager import ExternalExecutionEngine
+from Hermes.platform.llm.infer_engine import InferEngine
 from Hermes.platform.llm.pdgraph import APPLICATION
 from Hermes.utils.logger import init_logger
-from CTaskHermesBench.platform.env import SAMPLE_ALL
+from Hermes.platform.env import SAMPLE_ALL
 
 logger = init_logger(__name__)
 
@@ -33,6 +35,8 @@ class RequestHandler:
     def launch_request(self, engine):
         # a priority must be given before the request is launched
         assert not self.launched and self.priority is not None
+        assert isinstance(self, LLMRequestHandler) and isinstance(engine, InferEngine) \
+               or isinstance(self, ExternalRequestHandler) and isinstance(engine, ExternalExecutionEngine)
         self.launched = True
         self.task = asyncio.create_task(self.request_func(engine))
 

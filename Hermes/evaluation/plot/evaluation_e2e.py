@@ -12,15 +12,15 @@ os.chdir(os.path.dirname(__file__))
 
 
 def plot_e2e_combined(paths, device):
-    fontsize = 28
-    legend_fontsize = 28
+    fontsize = 34
+    legend_fontsize = 32
     inside_fontsize = 22
     linewidth = 2
     markersize = 10
     rect = (0, 0, 1, 0.9)
     width = 0.15
-    figsize = (13, 5)
-    bbox_to_anchor = (0.5, 1.04)
+    figsize = (13, 8.034)
+    bbox_to_anchor = (0.5, 1.0)
     plt.style.use('ggplot')
 
     algos = {
@@ -258,14 +258,14 @@ def plot_ddl():
 
 
 def plot_ddl2(exp_dir):
-    fontsize = 28
+    fontsize = 22
     legend_fontsize = 22
-    inside_fontsize = 22
+    inside_fontsize = 18
     linewidth = 2
     markersize = 10
     rect = (0, 0, 1, 0.85)
     width = 0.15
-    figsize = (8, 6)
+    figsize = (8, 4.944)
     bbox_to_anchor = (0.5, 1.04)
     plt.style.use('ggplot')
 
@@ -350,15 +350,15 @@ def plot_ddl2(exp_dir):
 
 
 def e2e_cdf(path, device):
-    fontsize = 28
-    legend_fontsize = 28
+    fontsize = 34
+    legend_fontsize = 32
     inside_fontsize = 22
     linewidth = 2
     markersize = 10
     rect = (0, 0, 1, 0.9)
     width = 0.15
-    figsize = (13, 5)
-    bbox_to_anchor = (0.5, 1.04)
+    figsize = (13, 8.034)
+    bbox_to_anchor = (0.5, 1.0)
     plt.style.use('ggplot')
 
     exp_dir = path
@@ -412,34 +412,34 @@ if __name__ == '__main__':
     results_path = "/home/yfliu/llm_inference/Hermes/evaluation/results/"
     results_path = "/Users/nephren/code/llm_inference/Hermes_over_vLLM/Hermes/evaluation/results/"
 
-    plot_e2e_combined([
-        # "sched_sjf_window30_task500_try0_intensity1",
-        # "sched_sjf_window20_task500_try0_intensity1.5",
-        # "sched_sjf_window15_task500_try0_intensity2",
-        # "sched_sjf_window12_task500_try0_intensity2.5",
-        # "sched_sjf_window10_task500_try0_intensity3",
+    # plot_e2e_combined([
+    #     # "sched_sjf_window30_task500_try0_intensity1",
+    #     # "sched_sjf_window20_task500_try0_intensity1.5",
+    #     # "sched_sjf_window15_task500_try0_intensity2",
+    #     # "sched_sjf_window12_task500_try0_intensity2.5",
+    #     # "sched_sjf_window10_task500_try0_intensity3",
+    #
+    #     # "sched_sjf_window30_task200_intensity1_Yi-9B",
+    #     # "sched_sjf_window15_task200_intensity2_Yi-9B",
+    #     # "sched_sjf_window10_task200_intensity3_Yi-9B",
+    #
+    #     "sched_sjf_window30_task200_intensity1_Llama2-7B",
+    #     # "sched_sjf_window20_task200_intensity1.5_Llama2-7B",
+    #     "sched_sjf_window15_task200_intensity2_Llama2-7B",
+    #     # "sched_sjf_window12_task200_intensity2.5_Llama2-7B",
+    #     "sched_sjf_window10_task200_intensity3_Llama2-7B",
+    # ], "a100")
+    #
+    # e2e_cdf("../results/archive/e2e_act/sched_sjf_window10_task200_intensity3_Llama2-7B/",
+    #         "a100")
 
-        # "sched_sjf_window30_task200_intensity1_Yi-9B",
-        # "sched_sjf_window15_task200_intensity2_Yi-9B",
-        # "sched_sjf_window10_task200_intensity3_Yi-9B",
+    plot_ddl2(os.path.join(results_path, "archive/e2e_ddl/sched_ddl_window15_task200_intensity2_Llama2-7B"))
 
-        "sched_sjf_window30_task200_intensity1_Llama2-7B",
-        # "sched_sjf_window20_task200_intensity1.5_Llama2-7B",
-        "sched_sjf_window15_task200_intensity2_Llama2-7B",
-        # "sched_sjf_window12_task200_intensity2.5_Llama2-7B",
-        "sched_sjf_window10_task200_intensity3_Llama2-7B",
-    ], "a100")
-
-    e2e_cdf("../results/archive/e2e_act/sched_sjf_window10_task200_intensity3_Llama2-7B/",
-            "a100")
-
-    # plot_ddl2(os.path.join(results_path, "archive/e2e_ddl/sched_ddl_window15_task200_intensity2_Llama2-7B"))
-
-    plot_e2e_combined([
-        "e2e_act_h100/sched_sjf_window30_task1500_intensity1_Llama3-70B",
-        "e2e_act_h100/sched_sjf_window15_task1500_intensity2_Llama3-70B",
-        "e2e_act_h100/sched_sjf_window10_task1500_intensity3_Llama3-70B",
-    ], "h800")
-
-    e2e_cdf("../results/archive/e2e_act_h100/sched_sjf_window10_task1500_intensity3_Llama3-70B/",
-            "h800")
+    # plot_e2e_combined([
+    #     "e2e_act_h100/sched_sjf_window30_task1500_intensity1_Llama3-70B",
+    #     "e2e_act_h100/sched_sjf_window15_task1500_intensity2_Llama3-70B",
+    #     "e2e_act_h100/sched_sjf_window10_task1500_intensity3_Llama3-70B",
+    # ], "h800")
+    #
+    # e2e_cdf("../results/archive/e2e_act_h100/sched_sjf_window10_task1500_intensity3_Llama3-70B/",
+    #         "h800")

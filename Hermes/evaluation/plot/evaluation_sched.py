@@ -116,13 +116,13 @@ def plot_sched_metrics():
 
 
 def plot_sched_metrics2():
-    fontsize = 28
+    fontsize = 22
     legend_fontsize = 22
-    inside_fontsize = 22
+    inside_fontsize = 18
     linewidth = 2
     markersize = 10
     rect = (0, 0, 1, 0.85)
-    figsize = (8, 6)
+    figsize = (8, 4.944)
     plt.style.use('ggplot')
 
     algos = {

@@ -44,11 +44,11 @@ def overhead():
     asymmetric_error = [lower_errors, upper_errors]
 
     # 绘制带误差条的折线图
-    labelsize = 22
-    fontsize = 22
+    labelsize = 15
+    fontsize = 15
 
     plt.style.use('ggplot')
-    plt.figure(figsize=(5, 4))
+    plt.figure(figsize=(5, 3))
     plt.errorbar(arrive_rate, medians, markersize=8, linewidth=2.5, yerr=asymmetric_error, fmt='-o', capsize=8, capthick=2.5, elinewidth=2.5)
     plt.xlabel('Arrive Rate (App/min)', fontsize=labelsize, color='black')
     plt.ylabel('Policy runtime (ms)', fontsize=labelsize, color='black')
@@ -112,11 +112,11 @@ def overhead2():
     asymmetric_error = [lower_errors, upper_errors]
 
     # 绘制带误差条的折线图
-    labelsize = 22
-    fontsize = 22
+    labelsize = 15
+    fontsize = 15
 
     plt.style.use('ggplot')
-    fig, ax1 = plt.subplots(figsize=(5, 4))
+    fig, ax1 = plt.subplots(figsize=(5, 3))
 
     # 第一个 y 轴：Update time
     # ax1.errorbar(bin_num, medians, yerr=asymmetric_error, fmt='-o', capsize=5, capthick=2, elinewidth=2, color='blue',

@@ -4,17 +4,17 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 
-from Hermes.platform.llm.pdgraph import APPLICATION, PDGraph
+from Hermes.platform.llm.pdgraph import APPLICATION, PDGraph, Distribution
 
 os.chdir(os.path.dirname(__file__))
 
-fontsize = 30
-legend_fontsize = 24
-inside_fontsize = 24
+fontsize = 20
+legend_fontsize = 20
+inside_fontsize = 20
 linewidth = 2
 markersize = 10
 rect = (0, 0, 1, 1)
-figsize = (20, 4)
+figsize = (15, 4.635)
 bbox_to_anchor = (0.5, 1.05)
 plt.style.use('ggplot')
 
@@ -75,10 +75,12 @@ def calculate_hist(data, bins):
 # 计算左图和右图的数据
 left_counts, left_density = calculate_hist(samples1, bins1)
 right_counts, right_density = calculate_hist(samples2, bins2)
-rank1 = PDGraph.compute_gittins_rank(0, samples1)
-mean1 = PDGraph.compute_mean(0, samples1)
-rank2 = PDGraph.compute_gittins_rank(0, samples2)
-mean2 = PDGraph.compute_mean(0, samples2)
+dist1 = Distribution(samples1)
+dist2 = Distribution(samples2)
+rank1 = dist1.get_gittins_rank(0, num_bins)
+mean1 = dist1.get_mean(0)
+rank2 = dist2.get_gittins_rank(0, num_bins)
+mean2 = dist2.get_mean(0)
 print(rank1, mean1)
 print(rank2, mean2)
 
@@ -88,7 +90,7 @@ for j in range(60):
     print(len([i for i in samples2 if i <= j]) / len(samples2))
 
 # 创建子图
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 4), sharey=True)
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=figsize, sharey=True)
 
 # 绘制左侧直方图（用bar）
 bar_width1 = bins1[1] - bins1[0]  # 计算每个bar的宽度
@@ -117,5 +119,6 @@ ax2.text(0.6, 0.9, f'Gittins={rank2:.2f}\nMean={mean2:.2f}', transform=ax2.trans
 
 # 调整布局
 plt.tight_layout(rect=rect)
+print(f"figures/solution_gittins_histogram.pdf")
 plt.savefig(f"figures/solution_gittins_histogram.pdf")
 plt.show()

@@ -1,0 +1,175 @@
+%% For double-blind review submission, w/o CCS and ACM Reference (max submission space)
+% \documentclass[sigplan,twocolumn,review,anonymous]{acmart}
+%\settopmatter{printfolios=true,printccs=false,printacmref=false}
+\documentclass[letterpaper,twocolumn,10pt]{article}
+\usepackage{usenix2019_v3}
+% below add by chen
+\usepackage[OT1]{fontenc}
+% \usepackage{algorithm}
+% \usepackage{algorithmicx}
+% \usepackage[noend]{algpseudocode}
+\usepackage{textcomp}
+\usepackage{booktabs} % For formal tables\documentclass[conference]{IEEEtran}
+
+% below add by chen
+\usepackage[OT1]{fontenc}
+% \usepackage{algorithm}
+% \usepackage{algorithmicx}
+% \usepackage[noend]{algpseudocode}
+\usepackage{textcomp}
+\usepackage{booktabs} % For formal tables
+\usepackage{comment}
+\usepackage{wrapfig}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{subfig}
+\usepackage{array}
+\usepackage{multicol}
+\usepackage{afterpage}
+\usepackage{float}
+\usepackage{listings}
+\usepackage{multirow}
+\usepackage{arydshln}
+\usepackage{xspace}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{amsmath}
+\usepackage{url}
+\usepackage[htt]{hyphenat}
+\usepackage{subfloat}
+
+\usepackage{amsfonts}
+\usepackage{subcaption}
+%\usepackage{subfigure}
+
+
+\usepackage{cleveref}
+\crefformat{chapter}{\S#2#1#3}
+\crefformat{section}{\S#2#1#3} 
+\crefformat{subsection}{\S#2#1#3}
+\crefformat{subsubsection}{\S#2#1#3}
+
+\graphicspath{{figures/}}
+
+\usepackage{pifont}
+\usepackage{xcolor}
+\newcommand{\chen}[1]{\textcolor{red}{[#1]}}
+\newcommand{\gz}[1]{\textcolor{blue}{[#1]}}
+\newcommand{\yfliu}[1]{\textcolor{violet}{[#1]}}
+\newcommand{\zhgan}[1]{\textcolor{teal}{[#1]}}
+\newcommand{\ys}[1]{\textcolor{blue}{ys: [#1]}}
+\newcommand{\phm}[1]{\vspace{.4em} \noindent\textbf{#1}\hspace{.5em}}
+
+\usepackage{array}  
+\renewcommand\arraystretch{1.3}
+\usepackage{booktabs}
+\usepackage{minted}
+
+\usepackage{xcolor}
+\usepackage[linesnumbered,ruled,vlined]{algorithm2e}
+% \usepackage{amsmath}
+% \usepackage{algorithmic}
+% \usepackage{algorithmicx}
+% \usepackage{algpseudocode}
+
+%\acmConference[PL'18]{ACM SIGPLAN Conference on Programming Languages}{January 01--03, 2018}{New York, NY, USA}
+%\acmYear{2018}
+%\acmISBN{} % \acmISBN{978-x-xxxx-xxxx-x/YY/MM}
+%\acmDOI{} % \acmDOI{10.1145/nnnnnnn.nnnnnnn}
+%\startPage{1}
+
+
+%% Copyright information
+%% Supplied to authors (based on authors' rights management selection;
+%% see authors.acm.org) by publisher for camera-ready submission;
+%% use 'none' for review submission.
+%\setcopyright{none}
+%\setcopyright{acmcopyright}
+%\setcopyright{acmlicensed}
+%\setcopyright{rightsretained}
+%\copyrightyear{2018}           %% If different from \acmYear
+
+%% Bibliography style
+%\bibliographystyle{ACM-Reference-Format}
+
+
+\begin{document}
+
+%% Title information
+\title{Hermes: Towards Coinference-Centric Serving for LLM Applications} %Correlation-aware LLM Inference Serving}         %% [Short Title] is optional;
+%\title{Hermes: Correlation-aware LLM Inference Serving}         %% [Short Title] is optional;
+% \title{Hermes: CoInference-Centric Resource Scheduling for Modern LLM Workloads}
+%\title{Hermes: Correlation-aware Request Scheduling for LLM Inference Workloads}         %% [Short Title] is optional;
+                                        %% when present, will be used in
+                                        %% header instead of Full Title.
+
+
+%% Author information
+%% Contents and number of authors suppressed with 'anonymous'.
+%% Each author should be introduced by \author, followed by
+%% \authornote (optional), \orcid (optional), \affiliation, and
+%% \email.
+%% An author may have multiple affiliations and/or emails; repeat the
+%% appropriate command.
+%% Many elements are not rendered, but should be provided for metadata
+%% extraction tools.
+
+%% Author with single affiliation.
+
+\maketitle
+
+
+\begin{abstract}
+% Modern applications based on large language models (LLMs) are increasingly popular in recent years. 
+% To accomplish a user task, such LLM-based applications usually issue a series of correlated LLM inference requests---with complex cross-request dependencies, dynamic per-request demand, and diverse inter-request tool calls.
+% Existing LLM serving systems are oblivious to such correlations and suffer suboptimal performance when serving LLM applications. 
+
+% In this paper, to leverage request correlations, we propose the \emph{coinference} abstraction to organize the correlated inferences.
+% We then devise \emph{Hermes}, a coinference-centric LLM serving system.
+% % also help to better capture inference-level resource demand, enabling a series of optimization techniques on intra-CoInference resource provisioning.
+% Hermes first modeling coinference as a series of stages with detailed demand distributions.
+% Second, leveraging the abstraction of coinference and its resource demands, Hermes implements a coinference-level scheduling algorithm, which is designed to ensure the multiple objectives of completing LLM applications efficiently.
+% Third, with the resource demands, Hermes proposed a series of intra-coinference resource provisioning strategies to ensure the rapid completion of a LLM application.
+% We have implemented Hermes atop vLLM with XX lines of code, and experimental results against diverse LLM applications show that Hermes can remarkably enhance the application-level service performance, e.g., reducing the average completion time by XX\%. 
+
+Applications based on Large Language Models (LLMs) have become increasingly popular in recent years. 
+To accomplish a high-level mission, LLM applications usually issue a series of correlated LLM inferences and non-LLM tasks, involving dynamic resource volumes, hybrid resource backends, as well as diverse performance objectives.
+Existing LLM systems are oblivious to such characteristics, being suboptimal when serving LLM applications. 
+In this paper, we abstract the resource demands of an LLM application into a \emph{coinference}, and further design \emph{Hermes}, a coinference-centric LLM serving system.
+Hermes models a coinference as a list of functional stages---with built-in properties depicting inter-stage dependencies and intra-stage demands. 
+Hermes further applies the Gittins policy to optimize inter-coinference scheduling performance against diverse objectives. % despite with demand dynamicity. 
+Moreover, for fast serving of individual LLM applications, Hermes leverages the coinference-level demand model to coordinately provision the desired resources in various aspects like KV cache and non-LLM tools. 
+We have implemented Hermes atop vLLM, and experiments with diverse LLM applications confirm that it can effectively improve the application serving efficiency, reducing the average completion time by up to 90\%. 
+
+\end{abstract}
+
+
+
+
+%% Keywords
+%% comma separated list
+% \keywords{keyword1, keyword2, keyword3}  %% \keywords are mandatory in final camera-ready submission
+
+
+%% \maketitle
+%% Note: \maketitle command must come after title commands, author
+%% commands, abstract environment, Computing Classification System
+%% environment and commands, and keywords command.
+
+\input{intro}
+\input{background}
+\input{motivation}
+\input{solution}
+%\input{implementation}
+\input{evaluation}
+%\input{related}
+\input{conclusion}
+
+\bibliographystyle{plain}
+\bibliography{main}
+%% Bibliography
+%\bibliography{bibfile}
+
+
+
+\end{document}

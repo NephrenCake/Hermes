@@ -1,0 +1,32 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+\begin{document}
+\begin{itemize}
+    \item Standard Normal Distribution: 
+    \begin{itemize}
+        \item probability density function: $$\phi(x)=\frac{1}{\sqrt{2\pi}}e^{-\frac{x^2}{2}}$$
+        \item cumulative distribution function: $$\Phi(x)=\int_{-\infty}^{x}\phi(t)\,dt$$
+    \end{itemize}
+    \item Skew Normal Distribution:
+    \begin{itemize}
+        \item probability density function: $$f(x)=\frac{2}{\sigma}\phi(\frac{x-\mu}{\sigma})\Phi(\lambda\frac{x-\mu}{\sigma})$$
+        \item cumulative distribution function: 
+        \begin{align*}
+            F(x) &= \int_{-\infty}^{x}f(t)\,dt \\
+                &= \int_{-\infty}^{x}\frac{2}{\sigma}\phi(\frac{t-\mu}{\sigma})\Phi(\lambda\frac{t-\mu}{\sigma})\,dt \\
+                &= \int_{t=-\infty}^{t=x}2\Phi(\lambda\frac{t-\mu}{\sigma})\,d\Phi(\frac{t-\mu}{\sigma})
+        \end{align*}
+    \end{itemize}
+    \item Comparison
+    If there are two random variables $X~f(x)$ and $Y~f(y)$, 
+    \begin{align*}
+        P(X<Y) &= \int^{+\infty}_{-\infty}f_y(y)\int^{y}_{-\infty}f_x(x)\,dx\,dy \\
+                &= \int^{+\infty}_{-\infty}f_y(y)F_x(y)\,dy \\
+                &= \int^{+\infty}_{-\infty}\frac{2}{\sigma_y}\phi(\frac{y-\mu_y}{\sigma_y})\Phi(\lambda_y\frac{y-\mu_y}{\sigma_y})\int^{y}_{-\infty}2\Phi(\lambda_x\frac{x-\mu_x}{\sigma_x})\,d\Phi(\frac{x-\mu_x}{\sigma_x})\,dy 
+    \end{align*}
+\end{itemize}
+
+
+\end{document}

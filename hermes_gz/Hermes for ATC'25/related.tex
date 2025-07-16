@@ -1,0 +1,39 @@
+%!TEX root = main.tex
+\section{Related Work}
+\label{sec:related}
+\chen{More optimization techniques to improve LLM inference}
+
+In the literature, a bewildering array of research works have appeared on improving LLM inference performance \ys{avoid using fancy words.. make it simple. it looks like AI-generated text.}.
+In \emph{operator implementation} aspect, the FlashAttention~\cite{dao2022flashattention} and FlashDecoding~\cite{hong2024flashdecoding} style algorithms are commonly adopted to realize efficient LLM inference by integrating IO awareness. 
+In \emph{model deployment} aspect, model-quantization~\cite{frantar2022gptq,kim2023squeezellm}, paged-attention~\cite{kwon2023efficient} and prefill-decode-separation~\cite{zhong_distserve_2024,agrawal_taming_2024} methods have been proposed to maximize backend utilization.
+In \emph{inference algorithm} aspect, continuous batching~\cite{yu_orca_2022} and speculative decoding methods~\cite{miao2023specinfer,cai2024medusa} are also applied to improve the inference throughput.
+In \emph{request scheduling} aspect, a series of request-level scheduling algorithms like FastServe~\cite{wu2023fast} and Llumnix~\cite{sun2024llumnix} have emerged to improve the overall serving performance. 
+
+\subsection{LLM Optimization Aware of Demand Dynamicity}
+Some studies also notice the demand dynamicity on individual request level.  
+In \emph{efficient inference} aspect, speculative decoding methods~\cite{miao2023specinfer,cai2024medusa} use a draft model to predict several subsequent tokens efficiently, enable the LLM to decode multiple tokens within the time frame if predictions are right. However, such works address demand dynamics within the constraints of a single request's upcoming outputs and carry the risk of increased overhead. the method of continuous batching~\cite{yu_orca_2022} has been proposed to mitigate uncertainties related to decoding length, allowing new requests to be added after the completion of an existing one. Although this work enhances efficiency, it does not address the underlying issues through prediction. 
+In \emph{scheduling} aspect, Fastserve~\cite{wu2023fast} employs a multi-level feedback queue for priority management and predicts the remaining length of requests, enabling shorter requests to be executed first and avoiding head-of-line blocking. Nonetheless, this approach neglects their stage-level characteristics, and fails to consider the ACT. VTC~\cite{sheng2024fairness} introduces a novel cost function based on virtual token count to fairness. While this work takes into account the execution history of requests across different clients, it fails to consider the structural information of the requests, thus remaining at the request level.
+
+Our approach not only considers the demand dynamicity at the request level but also accounts for parallelism and structural aspects, facilitating robust and accurate modeling and prediction for LLM applications.
+
+\chen{how to handle demand dynamicity of LLM inferences}
+
+\subsection{Response Length Prediction of LLM}
+
+To get a higher LLM serving efficiency\gz{these stratrgise are not all designed to solve this problem. You can say e.g. to get a higher LLM serving efficiency ...}, many work have been done to predict the length of LLM output, which could be divided into two kinds of ideas: perceiving through LLM itself or predicting by other fine-tuned models. For works \emph{perceiving} through LLM itself, Perception in Advance (PiA)~\cite{zheng2024response} ask LLM to perceive output length before answering by add a question about output length in front of origin prompt. This method could achieve satisfying perception result, but may lead to undesirable consequences because it changes user's prompt. Perception Only (PO)~\cite{zheng2024response} decouples the prediction and generation processes but can't achieve performance as good as PiA. It could makes things worse that training the LLM specially to fix this problem is impossible. The works predicting by other fine-tuned models could use more flexible techniques. $S^3$~\cite{jin2023s} fine-tune a a Distilbert model to classify which length bucket the output sequence length falls into and could retrain it to learn from mistakes. TetriInfer~\cite{hu2024inference} also offline fine-tune a small LLM model to predict the generation length of LLM inference requests. ~\cite{fu2024efficient} apply Kendall’s Tau to measure the similarity between an LLM schedule and the oracle SJF/SRTF schedule, and show the strong correlation between Kendall’s Tau and  latency and throughput performance in practice. Then it uses ListMLE, a listwise ranking loss, to encouraging the model to predict a ranking close to the truth, other than predicting the length bucket of each request. 
+
+Although these works have achieved promising results, they are limited to request level, with only limited information available for prediction. Our Hermes incorporates app-level structural information and contextual correlations, providing us with a richer set of information. This allows us to achieve better results with simpler methods.
+
+\chen{Coflow Scheduling}
+\subsection{Coflow Scheduling}
+Coflow scheduling~\cite{chowdhury2012coflow} is a network scheduling technique which treats a group of related data flows, called a coflow, as a single unit for scheduling purposes. Often a communication stage cannot finish until all its flows have completed, so coflow process all these parallel flows with similar resource demand together to optimize the completion time of the entire group of flows (the coflow). Varys~\cite{chowdhury2014efficient}  proposes a inter-coflow scheduling policy for arbitrary coflows and focus on minimizing coflow’s completion time (CCT) and guaranteeing predictable completions within coflow deadlines. Unlike above jobs, Aalo~\cite{chowdhury2015efficient} requires no prior knowledge of coflow characteristics, making it simple for all data-parallel applications to use it. Although this notion is similar to coinference, coinference has more complex structure(e.g. branches and loops)
+ and more uncertain demand quantity and involves more kinds of backend. So our work represents a fundamental innovation. Reducing dependence on prior knowledge, particularly in structure, is a key goal for our future efforts.
+ 
+\chen{various job scheduling algorithms, SJF as a special case}
+
+\subsection{Various Job Scheduling Algorithms}
+There are various job scheduling algorithms for efficiently managing tasks and resources. First Come First Served (FCFS) is widely used in LLM scheduling because we can't know the response length of LLM inference. But it could cause Head-of-Line blocking, which is harmful to averge job completion time. Shortest Job First (SJF) or Shortest Remaining Job First (SRJF), let jobs with the shortest (remaining) execution time be executed first. SJF/SRJF is widely used in works with response length predictor to minimizes average waiting time, but may lead to "starvation" of longer jobs. Earliest Deadline First (EDF) schedule based on jobs' deadline. The job with the earliest deadline is executed first, optimizing deadline satisfaction. Multilevel Feedback Queue Scheduling, in which jobs can move between priority queues, could adapt to different workloads and dynamically prioritizes jobs. It could trade-off between different optimation objective.
+
+
+
+

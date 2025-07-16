@@ -17,7 +17,7 @@ logger = init_logger(__name__)
 
 
 class Distribution:
-    def __init__(self, samples: dict = None, window_size: int = 1000):
+    def __init__(self, samples: List = None, window_size: int = 1000):
         self.window_size = window_size
         self.samples = samples if samples is not None else []
 

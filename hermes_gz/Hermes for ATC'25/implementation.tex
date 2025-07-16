@@ -1,0 +1,19 @@
+%!TEX root = main.tex
+\section{Implementation}
+\label{sec:implementation}
+
+\vspace{.3em}
+\noindent\textbf{Coinference-Centric Serving System.} We implemented Hermes atop vLLM~\cite{kwon2023efficient}, an engine that supports advanced features for LLM serving, including paged memory management~\cite{kwon2023efficient} and continuous batching~\cite{yu_orca_2022}. Hermes comprises three main components: the Coinference Demand Model, Coinference Scheduler, and Coinference Resource Provisioning, totaling 4,100 lines of Python code. Additionally, we developed a comprehensive benchmark suite consisting of 11,300 lines of Python code, including 10 different application workloads.
+
+\vspace{.3em}
+\noindent\textbf{Coinference Demand Model.} 
+We employ an \texttt{ApplicationPredictor} abstraction to model application-level information for coinferences, as shown in Fig.~\ref{fig:demand_model}. The \texttt{ApplicationPredictor} maintains a \texttt{Distribution} abstraction for each attribute of every stage, supporting the Gittins rank's cache update via \texttt{UpdateCache()} and query through \texttt{GetGittinsRank()}. Furthermore, the \texttt{ApplicationPredictor} also incorporates the \texttt{CorelationPredictor} described in \S\ref{subsec:demand_modeling}, using the pyAgrum~\cite{ducamp2020agrum} library for online predictions through \texttt{addEvidence()} and \texttt{makeInference()}.
+
+\vspace{.3em}
+\noindent\textbf{Coinference Scheduler.} 
+We replaced vLLM's \texttt{scheduler} with the \texttt{CoInferenceScheduler} as a core component to support our coinference-centric serving while maintaining the original interface to accommodate the inference workflow. The \texttt{CoInferenceScheduler} organizes incoming requests into \texttt{CoInference}s comprising multiple \texttt{CoInferenceStages}. In each scheduling cycle, it triggers \texttt{update\_priority()} to refresh the priority of each \texttt{CoInference}. Subsequently, the \texttt{CoInferenceScheduler} build the \texttt{ClairvoyantQueue} with \texttt{ClairvoyantFilter} and pass the eviction and prefetching actions to the \texttt{BlockManager} and \texttt{LoRAManager}. Additionally, it also passes the priority to external tool managers via the OpenAI API.
+
+\vspace{.3em}
+\noindent\textbf{Coinference Resource Provisioning.} For KV cache, we extended the \texttt{BlockManager} to support a three-tier storage system, allocating and deallocating storage blocks on demand at the coinference level. We implemented layer-wise transmission of KV cache between host memory and HBM, and integrated this into popular LLMs such as LLaMA~\cite{touvron2023llama}, and OPT~\cite{zhang2022opt}\gz{a little strange? ontop vllm sounds better}, which are based on Transformers~\cite{wolf2019huggingface}. Additionally, we enabled multi-threaded eviction and prefetching of KV caches and LoRA adapters between disk and host memory. 
+It is important to note that while Hermes supports storing KV caches on disk, read-back operations are only used for background thread prefetching. On-demand requests that attempt to read KV caches from the disk will instead directly reset to recompute, as the latency is measured more than two orders of magnitude greater in our test, and cannot be hidden even with layer-wise loading. To avoid excessive cache prefetching waste, we set the prefetch space to 60\% of the host memory. Given that the host memory size is $C$ and the average KV cache size of an application is $A$, the prefetch window length is $0.6 \cdot \frac{C}{A}$.
+\chen{Add priority propagation and multi-end selection}

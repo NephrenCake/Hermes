@@ -106,10 +106,11 @@ def run_benchmark(
         "got_docmerge": 2,  # 2922
 
         "langchain_mapreduce": 16,  # 324 -4
-        "hugginggpt": 10,  # 53  # dnn
 
+        "hugginggpt": 10,  # 53  # dnn
         "code_feedback": 16,  # 29  # docker
         "factool_code": 16,  # 33  # docker -12
+
         "factool_kbqa": 16,  # 36  # search
         "react_alfw": 16,  # 16
         "factool_math": 4,  # 9

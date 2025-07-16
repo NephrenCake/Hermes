@@ -1,0 +1,10 @@
+%!TEX root = main.tex
+    % \vspace{-0.2in}
+\section{Conclusion}
+\label{sec:conlucsion}
+
+In this paper, we propose Hermes, an efficient serving system for LLM applications based on the coinference abstraction.
+Hermes models a coinference as a list of stages, and depicts the dynamic resource demand in each aspect as a distribution.  
+It further adopts the Gittins policy to optimize inter-coinference scheduling performance supporting diverse objectives.
+For fast execution of each LLM application, Hermes adopts clairvoyant resource provisioning based on the profiled coinference demand on each backend.
+Experimental results on popular workloads show that Hermes can remarkably improve the serving efficiency of LLM applications.

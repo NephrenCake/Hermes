@@ -16,7 +16,7 @@ plt.rcParams['axes.labelcolor'] = 'black'
 plt.rcParams['xtick.color'] = 'black'
 plt.rcParams['ytick.color'] = 'black'
 
-font_size = 32
+font_size = 20
 
 # ----- config
 font = {
@@ -173,7 +173,7 @@ def plot_kvc_hr():
     ax.set_ylim(ylim)
     ax.set_yticks(yticks)
     ax.set_yticklabels(yticklabels, **ticklabelfont)
-    ax.set_ylabel(ylabel, fontsize=32)
+    ax.set_ylabel(ylabel, fontsize=font_size)
     # ax.set_xlim([-0.5, 2.5])
 
     # fig2
@@ -307,7 +307,7 @@ def plot_kvc_lora_hr():
     ax.set_ylim(ylim)
     ax.set_yticks(yticks)
     ax.set_yticklabels(yticklabels, **ticklabelfont)
-    ax.set_ylabel(ylabel, fontsize=32)
+    ax.set_ylabel(ylabel, fontsize=font_size)
     # ax.set_xlim([-0.5, 2.5])
 
     # fig2
@@ -415,7 +415,7 @@ def plot_kvc_lora_hr():
     # ax.set_ylabel(ylabel, fontsize=32)
     # ax.set_xlim([-0.5, 1.5])
 
-    bbox_to_anchor1 = (0.5, 1.05)
+    bbox_to_anchor1 = (0.5, 1.02)
     patches = [
         # mpatches.Patch(facecolor='white', edgecolor='black', hatch=hatch_list[0], label=hit_types[0]),
         # mpatches.Patch(facecolor='white', edgecolor='black', hatch=hatch_list[1], label=hit_types[1]),
@@ -427,7 +427,7 @@ def plot_kvc_lora_hr():
     fig.legend(handles=patches, ncol=6, loc='upper center', bbox_to_anchor=bbox_to_anchor1,
                fontsize=font_size, frameon=False)
     # fig.subplots_adjust(wspace=0.3)
-    fig.set_size_inches(18,6)
+    fig.set_size_inches(18,5.562)
 
     plt.tight_layout(rect=(0, -0.05, 1, 0.95))
     fig_path = os.path.join(cur_dir_path, f"figures/kvc_lora_chr.pdf")

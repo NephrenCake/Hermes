@@ -1,0 +1,152 @@
+%!TEX root = main.tex
+\section{Introduction}
+\label{sec:intro}
+
+% The recent years have witnessed the astonishing success of generative Large Language Models (LLMs)~\cite{brown2020language,floridi2020gpt,touvron2023llama} in revolutionizing various application domains~\cite{dosovitskiy2020image,stiennon2020learning,chen2021evaluating}.
+% With ever widening adoption, LLM inference workloads are increasingly dominant in computing infrastructures of large companies or institutions.
+% Serving an LLM inference request, which involves processing billion-scale model parameters for multiple generation iterations~\cite{yu_orca_2022},
+% % is composed of a prefilling and a decoding phase, 
+% usually demands plenty of memory and computing resources on GPUs~\cite{zhong_distserve_2024,agrawal_taming_2024}.
+% For better user experience and lower operational cost, it is of paramount importance to serve the LLM workloads with fast response time and high resource utilization.
+
+Large Language Models (LLMs)~\cite{brown2020language,floridi2020gpt,touvron2023llama} have been widely adopted in various domains~\cite{dosovitskiy2020image,stiennon2020learning,chen2021evaluating}.
+Given the prohibitively high cost to train newer-generation LLMs, it is now more reachable to boost the power of LLMs by \emph{scaling-out} (i.e., building LLM-based applications) instead of by \emph{scaling-up} (i.e., adopting more advanced models)~\cite{compound_ai}. 
+That is, by combining a set of LLM inference requests 
+%in chain or parallel structure 
+and also integrating with the non-LLM tools, users can improve the LLM performance in aspects like input length~\cite{jin2024comprehensive,lin2024infinite}, output reliability~\cite{chern2023factool,ji2023towards} and functional flexibility~\cite{shen2024hugginggpt,shen2024llm}.
+
+
+% \chen{LLM applications issue multiple inference requests} 
+% Specifically, with the emergence of various advanced LLM applications, there often exist obvious correlations among requests submitted to an LLM backend~\cite{lin2024parrot}.
+% For example, prompt chaining frameworks like LangChain~\cite{topsakal2023creating} can statically code multiple LLM requests into an execution graph, with the output tokens of upstream requests working as the inputs of  downstream ones. 
+% Meanwhile, chatbot verification applications like FacTool~\cite{chern2023factool} would launch multiple consecutive LLM inferences---respectively for question answering, claim extraction and search query generation---to accomplish a verification task.
+% Besides, coding agents like MetaGPT~\cite{hong2023metagpt} may repeatedly issue similar LLM requests for an arbitrary number of times to ensure the coding quality in a self-reflection manner.  
+% % Other applications like chain-style document summarization and 
+% Note that, when running applications with such correlated requests, users primarily care about the \emph{end-to-end} performance---i.e., the time when all the constituting inferences complete---instead of the performance of individual inferences. \chen{add more explanations}
+
+An LLM application refers to a group of LLM inferences, as well as the accompanying non-LLM tasks, that collaborate to accomplish a high-level mission for end users (\S\ref{sec:applications}).
+		% For example, to ensure output reliabity, in Knowledge-based-Query-Answering application, each claims
+%\chen{examples?}
+%\yfliu{For example, to optimize traditional development workflows, the Code-Generation\cite{autogen} application can continuously generate code with the LLM and execute it with Docker, iteratively fixing errors and optimizing performance. }
+Given the prevalence of such LLM applications, it becomes critical to serve them efficiently in clusters.
+In particular, compared with traditional workloads, LLM applications have three distinct characteristics. 
+First, the resource demand of LLM applications---like the text generation length and the total inference number---are dependent on the runtime inputs and uncertain a priori.
+Second, serving LLM applications often requires coordinated provisioning of diverse resource backends (to support both LLM and non-LLM computations)~\cite{lewis2020retrieval,factool_code}. 
+Third, LLM applications may have heterogeneous service objectives---some focus on end-to-end mission completion time~\cite{autogen,jin2024comprehensive}, yet some others care about instantaneous token generation speed~\cite{liu2024andes}.
+
+% A series of research works have already been proposed in the literature to enhance the efficiency of serving LLM inference requests.
+% For example, model quantization techniques~\cite{frantar2022gptq,kim2023squeezellm} can effectively mitigate per-iteration computation overhead; some other works like SpecInfer~\cite{miao2023specinfer} and Medusa~\cite{cai2024medusa} adopt speculative decoding to enhance token generation efficiency without compromising the output fidelity.
+% Besides, \chen{change to attention-sparsification; add ORCA?} Zhong~et~al.~\cite{zhong_distserve_2024} and Agrawal~et~al.~\cite{agrawal_taming_2024} both proposed to separately host prefill and decoding computations on different GPUs to avoid prefill-decoding interference. \chen{examples can be compressed; main parts placed in Related Work section}
+% However, the above works focus on accelerating individual LLM inferences yet ignore inter-request correlations, being suboptimal in end-to-end LLM serving performance. 
+% \chen{add a toy example? describe the handover delay: wait for others in FIFO-based methods; even worse if with increasing parallelism}
+% % However, all above works focus at the granularity of individual request---not aware of the correlations among different requests and thus suffering suboptimal performance. 
+% % which we find, however, leaves a large uncharted torritory to further enhance the service effciiency of LLM workloads. 
+% \ys{This paragraph is crucial as it presents this work's key problem / motivation. I suggest presenting concrete challenges as LLM-based apps move from simple chat to compound AI systems.
+% The major issue is that the existing LLM serving systems only exploit inter-request dependency for KV cache reuse (various context caching works) but do not exploit scheduling optimizations.}
+
+When serving LLM applications, existing works fail to work well in both inter-application scheduling and intra-application execution.
+Most works in the literature focus on accelerating individual LLM inferences without awareness of the inter-request correlations~\cite{cai2024medusa,kim2023squeezellm,miao2023specinfer,frantar2022gptq,dao2022flashattention}, suffering suboptimal end-to-end performance due to inter-request delay. 
+While some recent works can improve the performance of LLM applications~\cite{lin2024parrot,tan2024teola,liu2024andes,gao2024cost}, they focus on specific application types (e.g., chatbot) or optimization aspects (e.g., KV cache reuse), without dealing with the common characteristics of LLM applications.
+Consequently, due to demand dynamicity, advanced scheduling algorithms like Shortest-Remaining-Processing-Time (SRPT) cannot be adopted when scheduling multiple LLM applications, nor can it be feasible to support diverse objectives. 
+Meanwhile, without coordinated resource provisioning, an LLM application may be impeded on any resource backend due to contention or improper configuration. 
+
+
+
+% In this paper, our goal is to improve LLM serving performance with awareness to request correlations.
+% In particular, we abstract the correlated inferences into a \emph{CoInference}, and treat it as first-class citizen when scheduling LLM inference workloads. %when designing the LLM serving backend. 
+% By leveraging \emph{built-in} (like with \emph{thread ID} in OpenAI Assistants APIs~\cite{assistants_api}) or \emph{customized} (like with \emph{Semantic Variables} designed by Lin~et~al.~\cite{lin2024parrot}) notations in LLM request message, it is easy for the LLM backend to identify---at runtime---the correlated inferences which constitute a CoInference. 
+% Moreover, for a given LLM application, our empirical study show that
+% % , albeit with diverse inputs, 
+% its CoInference structure and resource demand is relatively stable across different trial runs, indicating strong predictability at the CoInference level.
+% In general, the benefit of correlation-aware LLM serving is \emph{two-fold}. 
+% % First, CoInference-centric serving can avoid potential inter-inference handover delay and grant fastpass to all the requests of a CoInference. %facilitate fast CoInference completion. %
+% First, CoInference-centric serving can enable optimizing application-level scheduling objectives (e.g., minimizing the average \emph{application completion time}), which is the true concern of users.
+% % avoid potential inter-inference handover delay and grant fastpass to all the requests of a CoInference. %facilitate fast CoInference completion. %
+% Second, with CoInference-level modeling, the LLM service backend can capture the demand pattern of each request more precisely, and such information can facilitate proactive resource provisioning to speed up the completion of individual CoInferences. 
+% \ys{The paper should clearly define what exactly is CoInfer, why it is called CoInfer (inspired by CoFlow), and list 1 or 2 examples to help readers understand. This is closely related to the use cases that are presented in earlier paragraphs.}
+
+In this paper, we seek to enhance the scheduling and execution efficiency of LLM applications, and the key is to leverage request correlations.
+To be specific, 
+we propose an abstract called \emph{coinference}, 
+%we abstract the correlated inferences of an application into a coinference, 
+which organizes the correlated inferences of an LLM application in proper structure, and also records the non-LLM resource demands between LLM inferences.
+% and treat it as the first-class citizen in LLM serving.
+We note that with the built-in~\cite{assistants_api} or customized~\cite{OpenAI_extra_body} notations in LLM requests, it is easy for the LLM backend to identify the correlated inferences belonging to the same application.
+The coinference abstraction can help to directly optimize 
+%Coinference-centric serving can facilitate the optimization of 
+the application-level scheduling objectives.
+Moreover, for a given LLM application, our empirical study shows that its resource demand is relatively stable across different trial runs with diverse inputs; therefore, with coinference-level demand modeling, we can more precisely predict the demand information of the entire application as well as of each request, which can further facilitate application scheduling and resource provisioning. 
+
+
+Based on the coinference abstraction, we design \emph{Hermes}, a coinference-centric serving system for LLM applications, with the objective of achieving improved efficiency in both inter-application scheduling and intra-application execution.
+In our Hermes design, we address the challenging characteristics of LLM applications (i.e., demand dynamicity, objective diversity, and resource hybridity) with three modules: coinference demand modeling, inter-coinference scheduling, and intra-coinference resource provisioning. 
+
+% Based on the CoInference abstraction, we further design Hermes, a CoInference-centric LLM serving system that can improve LLM application performance and resource utilization.
+% Our Hermes design is composed of three main parts: CoInference demand modeling, inter-CoInference scheduling, and intra-CoInference resource provisioning. 
+% \ys{It's unclear to me what is Hermes, what are challenges building it, and how it works in general. My understanding is that Hermes has two parts, an offline profiler and an online runtime. The offline profiler profiles a given LLM-based applications and outputs a set of specs. During runtime, the Hermes online runtime will take the output and schedule requests from this app accordingly. The Hermes online runtime is likely a self-contained LLM serving system with a global scheduler and multiple vLLM instances. It is also crucial to highlight how each proposed technique overcome new challenges enabled by compound LLM-based apps.}
+
+% First, we design a general multi-stage paradigm to model the CoInference resource demands for general LLM applications, laying the foundation for CoInference-level optimizations. 
+% In that paradigm, each stage corresponds to a functioning phase of the LLM application (e.g., for claim extraction in FacTool~\cite{chern2023factool}), which contains one or multiple parallel inference requests. 
+% Within a stage, we profile an extensible set of demand aspects---like the number of LLM requests or \emph{stage parallelism}, output token length, kv-cache size, time gap to the downstream stage (all necessary for our later optimizations). 
+% Moreover, despite application-specific demand similarity, we note that a CoInference's runtime resource demand may still exhibit salient uncertainty in multiple levels---even the number of stages in a CoInference may be dynamic;
+% to handle such uncertainty, we add special primitives to indicate looping stages, and adopt Normal distribution to describe such fluctuating demand quantity. 
+% To summarize, with CoInference awareness, we can make more precise demand modeling for LLM inference requests in a structured and probabilistic manner. 
+
+First, we devise a general and precise method for coinference demand modeling.
+			%To describe the diverse request relationships, we model a coinference as a list of stages, w
+For generality, we model a coinference as a list of \emph{stages}, where each stage represents a functional unit with one or multiple parallel requests.
+In each stage, we record a series of properties to express request dependencies, looping status and even non-LLM demands. %\yfliu{Is this sentence necessary?}
+For preciseness, we choose to record the resource demands in each aspect (e.g., input/output token length, request parallelism) as a distribution rather than a single constant, trying to preserve the panoramic demand information; we also notice the demand correlations between dependent requests and further adopt correlation analysis to enhance the demand prediction accuracy at runtime. 
+
+% \chen{To be largely rewritten}
+% Second, in resource contention, we seek to emulate Shortest-CoInference-First with the conventional inference-level scheduling primitives.
+% Specifically, Hermes assign different scheduling priorities to the pending CoInferences based on their overall service cost previously profiled; each inference---which is the actual scheduling unit in existing LLM serving frameworks like vLLM~\cite{vllm}---inherits the priority from the CoInference it belongs to. 
+% This way, we can ensure that all the constituting requests of a small (high-priority) CoInference can be executed smoothly without being backlogged. 
+% We also introduce special designs for the cases where a request's CoInference affiliation is absent or the profiled CoInference serving cost turns out inaccurate at execution time.  \chen{shortest remaining job first with the context switching overhead considered?}
+
+Second, we design a scheduling algorithm that can minimize the average completion time of LLM applications, and further extend it to support diverse objectives. 
+%Our previous coinference modeling cannot eliminate the resource dynamicity, 
+Confronting uncertain demands with distribution-like description, the classical SRPT algorithm is no longer optimal. 
+For scheduling LLM applications, Hermes instead applies Gittins policy~\cite{aalto2009gittins, scully2021gittins}, which has been proven optimal for jobs with unknown demand but known demand distributions. 
+Moreover, when concurrently serving applications with SLO objectives (e.g., on deadline or instantaneous generation speed), Hermes keeps identifying and prioritizing the ones with a high risk of SLO violation, and the remaining applications are scheduled under the default SRPT-like policy.
+
+% \chen{To be rewritten} Third, to efficiently serve individual CoInferences, Hermes is equipped with speculative resource provisioning.
+% % LLM inference serving is resource-intensive in both computation and memory; 
+% Under intense resource contention, reactive resource provisioning (i.e., acting only after LLM requests arrive) would yield non-negligible startup delay.
+% For example, to provision enough memory space for the incoming high-priority requests, the LLM engine may have to evict some running inferences with their KV-cache swapped out, which is time consuming~\cite{wu2023fast}.
+% That problem would be even more severe when the request parallelism drastically increases in downstream stages (common in applications like FacTool~\cite{chern2023factool}).
+% In Hermes, we leverage the CoInference modeling to estimate the arrival time and parallelism of downstream stages, thereby realizing proactive resource provisioning. 
+% % Meanwhile, after a CoInference stage completes, the LLM engine often witnesses nongliegible time gap prior to the request arrival of the downstream stage---due to factors like round-trip time or non-LLM computations in-between.
+% In addition, frequently interrupting the execution of low priority inferences would cause large KV-cache swapping overhead; to attain high resource utilization, after a high-priority inference finishes, Hermes preferentially executes the low-priority inferences that are likely to complete before the arrival of downstream high-priority requests.
+			
+%Third, for intra-application resource provisioning, we apply the demand information from coinference modeling for the management of the diverse resource backends.
+Third, for the efficient execution of individual applications, we propose coinference-aware clairvoyant resource provisioning, applying the demand information from coinference modeling for management of the diverse resource backends.
+%  (all could be the service bottlenecks for LLM applications).
+%When managing the GPU memory storing KV cache~\cite{kwon2023efficient} and LoRA adaptors~\cite{hu2021lora}, we propose to determine the cache eviction order based on the coinference priority and the cache prefetching moments based on the profiled distribution of inter-stage gaps. 
+When managing the storage space of KV cache~\cite{kwon2023efficient} and LoRA adaptors~\cite{hu2021lora}, we propose clairvoyant cache management to determine the cache eviction order based on the coinference priority and the prefetching moments based on the profiled distribution of inter-stage gaps. 
+When managing non-LLM backends like CPU (to launch docker container) and network (to conduct RAG), we propose clairvoyant queueing that propagates the coninference priority to each resource backend.
+In cases with multiple LLM backends with heterogeneous batch size configurations, we propose clairvoyant backend selection, which means adaptively selecting the backend for each stage based on the profiled request parallelism. 
+These methods can ensure that an LLM application can have fast completion without being impeded on any resource backends.
+
+We have implemented Hermes with over 4,100 lines of Python code atop vLLM, a popular LLM serving framework.
+%We replace the default vLLM scheduler to \texttt{CoinferenceScheduler}, which leverages the demand information from the \texttt{CoInferenceAnnotator} for scheduling and also propagates the resource provisioning hints to lower-level resource managers. 
+%\yfliu{I'm not sure. Do we need to show the implementation details in introduction? }
+We evaluate Hermes performance against mainstream schedulers with a diverse set of modern LLM applications. 
+Experimental results show that Hermes can improve the average application completion time by up to 90.1\% while providing a near-optimal SLO guarantee. 
+Ablation studies also confirm the effectiveness of our approaches in tacking demand dynamicity as well as in efficient resource provisioning on diverse backends. %for individual coinferences.   
+
+% We have implemented Hermes with two components: a Coinference-aware request annotator and a Coinference-aware LLM service engine.
+% The request annotator maintains a profiled knowledge base which depicts the Coinference structure and demand pattern for each application.
+% Based on the Coinference modeling knowledge, the annotator diagnoses the stage affiliation of each incoming request, and associates it with the auxiliary annotations (e.g., scheduling priority, kv-cache consumption). 
+% \chen{add stage-handler? trigger and supervise the execution of a stage? or annotator is a stage-brain? two modules or three modules?}
+% The Coinference-aware LLM service engine is customized to understand such annotations; 
+% %it will schedule the request and 
+% it will make request scheduling and resource provisioning decisions accordingly after annotated requests arrive. % each request.
+% %the LLM service engine makes request scheduling and resource provisioning decisions according to the auxiliary annotation. 
+ 
+% To evaluate the performance of Hermes, we build a benchmark workload suite containing XXX. 
+% In end-to-end evaluation, Hermes can reduce the average Coinference completion time by XX\%.
+% Moreover, even when the Coinference knowledge is inaccurate or absent, Hermes can still attain a performance enhancement of XX\%.
+% Extensibility and future work...  
+
+% \ys{Please also list this paper's main contributions.}

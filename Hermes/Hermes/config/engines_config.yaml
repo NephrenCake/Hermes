@@ -19,7 +19,7 @@ engines:
       vllm_port: 8001
       vllm_gpus: "0"
       attn_backend: "FLASH_ATTN"
-      chat_template: /root/Hermes/examples/template_alpaca.jinja
+      chat_template: /root/Hermes/vllm/examples/template_alpaca.jinja
       enable_prefix_caching: true
 
 #  a40-02.1:

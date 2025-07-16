@@ -1,3 +1,10 @@
+"""
+export SAMPLE_ALL=0 && export LOG_LEVEL=info && ulimit -n 4096 && export ALL_PROXY='' && clear && \
+python3 -m Hermes.run --policy Hermes && \
+python3 -m Hermes.run --policy vLLM && \
+python3 -m Hermes.run --policy VTC && \
+python3 -m Hermes.run --policy Parrot
+"""
 import argparse
 import asyncio
 import datetime
@@ -20,7 +27,7 @@ def parse_args():
                         default="Hermes",
                         help="The scheduling algorithms.")
     parser.add_argument("--submission_window", type=float,
-                        default=1,
+                        default=10,
                         help="The span of task submission (min).")
     parser.add_argument("--num_tasks", type=int,
                         default=300,
@@ -29,21 +36,22 @@ def parse_args():
                         default=0,
                         help="The max number of LoRAs.")
     parser.add_argument("--slo_p", type=float,
-                        default=0.2,
+                        default=0,
                         help="The ratio of slo-sensitive jobs.")
     parser.add_argument("--tasks", type=str,
                         default=json.dumps({
-                            "got_docmerge": 1,  # 1139.7
-                            "langchain_mapreduce": 1,  # 193.8 -4
+                            "got_docmerge": 2,  # 2922
 
-                            "code_feedback": 13,  # 116.4  # docker
-                            "hugginggpt": 13,  # 35.5  # dnn
+                            "langchain_mapreduce": 16,  # 324 -4
 
-                            "factool_code": 22,  # 9.2  # docker -12
-                            "factool_kbqa": 22,  # 10.7  # search
-                            "factool_math": 3,  # 4.8
-                            "react_fever": 3,  # 5.7  # search
-                            "react_alfw": 22,  # 12.8
+                            "hugginggpt": 10,  # 53  # dnn
+                            "code_feedback": 16,  # 29  # docker
+                            "factool_code": 16,  # 33  # docker -12
+
+                            "factool_kbqa": 16,  # 36  # search
+                            "react_alfw": 16,  # 16
+                            "factool_math": 4,  # 9
+                            "react_fever": 4,  # 5  # search
                         }),
                         help="The tasks and their weights.")
     parser.add_argument("--engines_config", type=str,
@@ -70,11 +78,11 @@ def init_trace(args):
         lora_num=args.num_lora,
     )
     # return generator.generate_trace_test()
-    return generator.generate_trace_all()
-    # if SAMPLE_ALL:
-    #     return generator.generate_trace_all()
-    # else:
-    #     return generator.generate_trace_exp()
+    # return generator.generate_trace_all()
+    if SAMPLE_ALL:
+        return generator.generate_trace_all()
+    else:
+        return generator.generate_trace_exp()
 
 
 async def replay_trace(
@@ -114,5 +122,4 @@ async def main():
 
 
 if __name__ == '__main__':
-    # export SAMPLE_ALL=0 && export LOG_LEVEL=info && python3 -m Hermes.run --policy Hermes && python3 -m Hermes.run --policy vLLM
     asyncio.run(main())

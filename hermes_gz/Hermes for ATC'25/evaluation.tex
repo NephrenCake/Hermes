@@ -1,0 +1,303 @@
+%!TEX root = main.tex
+\section{Evaluation}
+\label{sec:eval}
+
+
+%\subsection{General Setups}
+\begin{figure*}[t]
+    \centering
+    \begin{minipage}[t]{0.74\linewidth}
+        \centering
+        \includegraphics[width=1\linewidth]{figures/evaluation_e2e.pdf}
+            \vspace{-0.3in}
+
+        \caption{
+        % Average application completion times, dead-line satisfactory ratios, and time-per-token satisfactory ratios with various workload intensities in the End-to-end experiment.
+        End-to-end LLM application performance of different schedulers against diverse service objectives (under different application arrival intensities).
+        }
+            \vspace{-0.1in}
+        \label{fig:evaluation_e2e}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.24\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/evaluation_sched.pdf}
+            \vspace{-0.3in}
+
+        \caption{Ablation study on the methods tackling demand dynamicity.} %Comparison between Hermes, its variants, and Hermes-Oracle.}
+            \vspace{-0.1in}
+        \label{fig:evaluation_sched}
+
+    \end{minipage}
+\end{figure*}
+
+\phm{Implementations.}
+We have implemented Hermes atop vLLM with over 4,100 lines of Python codes.
+The functionalities of CoInference-aware Request Annotator in Fig.~\ref{fig:overview} are implemented in \texttt{CoinferenceAnnotator}, and we replaces the default vLLM scheduler to our \texttt{CoinferenceScheduler}.
+Regarding intra-application resource provisioning, the \texttt{CoinferenceScheduler} passes the queue information to a series of lower-level resource managers---\texttt{BlockManager} and \texttt{LoRAManager} for cache management, \texttt{DockerManager}, \texttt{RetrievalManager} and \texttt{ModelManager} for non-LLM resource management, and \texttt{ServerSelector} for LLM backend selection. 
+Additionally, we build a comprehensive benchmark suite consisting of 11,300 lines of Python code, which includes all of the ten application types depicted in Fig.~\ref{fig:app_structure}. 
+
+\phm{Hardware Platform.}
+We evaluate Hermes respectively with two different setups of single-GPU and multi-GPU experiments.
+The large language models we use are LLaMA-7B and LLaMA-13B.
+The single-GPU evaluations use a server with four 16-core AMD-EPYC-7302 CPUs, 128GB RAM, 4TB SSD and one NVIDIA A100-PCIE-40GB GPU. 
+The multi-GPU evaluations use a server with four 20-core Intel-Xeon-Gold-6133 CPUs, 258GB RAM, 2TB SSD and four Tesla V100-PCIE-16GB GPUs. 
+Both servers run CUDA 12.4.
+
+% \phm{Hardware Platform.}
+% We evaluate Hermes with the LLaMA-7B model respectively hosted on two backend servers: a single GPU server and a multi-GPU server. 
+% The single-GPU server has four 16-core AMD-EPYC-7302 CPUs, 128GB DRAM, 4TB SSDs and one NVIDIA A100-PCIE-40GB GPU. 
+% The multi-GPU server has four 20-core Intel-Xeon-Gold-6133 CPUs, 258GB DRAM, 2TB SSDs and four Tesla V100-PCIE-16GB GPUs. 
+% Both servers run CUDA 12.4.
+
+\phm{Workloads.}
+For our experiments, we create a mixed workload suite with totally 500 LLM applications (each with distinct inputs from the original datasets). % from diverse categories.
+In that workload suite, 20\% applications are multi-turn conversations requiring guaranteed TPT performance (TPT-sensitive), 20\% require meeting a preset deadline (DDL-sensitive), and the remaining 60\% target for short ACT (ACT-sensitive). 
+To get the applications not involving TPT objectives, we randomly sample from the 9 non-conversation application families in Fig.~\ref{fig:app_structure}.
+In particular, similar to prior work~\cite{qiao2021pollux, jayaram2023sia, zheng2023shockwave}, we set the sampling probability of small (EV, FEV, CC, ALFWI and KBQAV---usually less than 1 min), medium (CG and PE---usually between 1 and 10 min) and large (DM and MRS---usually longer than 10 min) applications to be 72\%, 26\%, and 2\%, respectively.
+Meanwhile, for the TPT-sensitive applications, we set the TPT target as 0.1 s/token (given that typical human reading speed is less than 600 token per minute~\cite{reading_speed}).
+For the DDL-sensitive applications, we set the deadlines by multiplying the original execution length by a random factor between 1.2 and 2, resembling some previous studies~\cite{narayanan2020heterogeneity, gu2023elasticflow}.
+Regarding application submission, given a submission window of T, we let the submission interval follow a Poison distribution with the expectation be T/N (N is the total application number submitted in experiments). 
+
+% \noindent\textbf{Workloads.}
+% We developed a benchmark suite that includes the 10 workloads shown in Fig.~\ref{fig:app_structure}. 
+% In our constructed end-to-end mixed workload, 20\% of the total submitted tasks in the trace are TPT-sensitive applications (specifically multi\_conversation), 20\% are DDL-sensitive applications, and 60\% are ACT-sensitive applications.
+% Among non-TPT-sensitive applications, we categorized applications based on their execution time, and similar to prior work~\cite{qiao2021pollux, jayaram2023sia, zheng2023shockwave}, we set the probability of generating Small (0-1 min), Medium (1-10 min), and Large ($>$10 min) applications to be 72\%, 26\%, and 2\%, respectively.
+% Small applications include Factool\_Generate-Code-Solution, Factool\_Knowledge-Based-QA, Factool\_Check-Math-Solution, ReAct\_Fact-Extraction-and-Verification, and ReAct\_ALFWorld; Medium applications include AutoGen\_CodeFeedback and HuggingGPT; and Large applications include LangChain\_MapReduce and GoT\_MergeDocuments. 
+% The DDL values are determined by multiplying the original execution length by a random factor between 1.2 and 2, as done in previous studies~\cite{narayanan2020heterogeneity, gu2023elasticflow}.
+% Following previous work~\cite{sheng2023s}, We generated application arrival times using a power-law distribution, with varying arrival rates represented by the exponent $\alpha$.
+
+
+\subsection{End-to-end Scheduling Performance}
+
+
+
+
+\phm{Setups.}
+We first evaluate the scheduling performance of Hermes. 
+We run an LLM inference engine on a single A100 GPU as the backend server, and submit all the 500 applications with the submission window respectively set to 10, 15 and 30 minutes (i.e., the workload intensity respectively be $3\times$, $2\times$ and $1\times$). 
+%\noindent\textbf{Baselines.}
+% We compare Hermes with three scheduling strategies: Request-FCFS, CoInference-FCFS, and Hermes-ACT, highlighting our approach to diverse application demands. 
+% Request-FCFS schedules at the request level with an FCFS policy without awareness of higher-level applications, representing most existing LLM inference frameworks, such as vLLM~\cite{kwon2023efficient}. 
+% CoInference-FCFS, on the other hand, is aware of higher-level applications and performs FCFS scheduling at the coinference level, exemplifying application-aware approaches like Parrot~\cite{lin2024parrot}. 
+% Lastly, Hermes-ACT is an application-aware scheduler that optimizes for the best Application Completion Time (ACT) without considering other heterogeneous service objectives.
+We compare Hermes with three scheduling strategies: Request-FCFS, Coinference-FCFS, and Hermes-ACT.
+Request-FCFS schedules the request in the First-Come-First-Serve manner, which is the default scheduling policy in mainstream LLM serving frameworks like vLLM~\cite{vllm}.
+Coinference-FCFS performs FCFS scheduling at the application level (as adopted in Parrot~\cite{lin2024parrot}), meaning that each request is scheduled based on the arrival time of the coinference it belongs to.
+Hermes-ACT is a variant of Hermes which focuses only on minimizing average ACT. 
+Regarding the metrics, for ACT-sensitive applications we measure the average ACT; for DDL-sensitive applications we measure the DDL Satisfactory Ratio, which is the proportion of DDL-sensitive applications that successfully meet their deadlines; for TPT-sensitive applications, we measure the TPT Satisfactory Ratio, which is the average proportion of checking points (once for every 10s) at which the TPT performance during the preceding interval (10s) satisfies the requirement.
+%(each application has 30 time checking points that are evenly dispersed in its lifetime)\yfliu{How do we know the lifetime in runtime? Or we can set one checkpoint for each 5s, and any TPT violation in the interval between two adjacent checkpoints will set the TPT Satisfactory false. Then we calculate the TPT Satisfactory Ratio?}.
+
+% \noindent\textbf{Metrics.}
+% Hermes is designed to meet a wide range of application needs. Therefore, we primarily compare average application completion times, deadline satisfaction ratios, and time-per-token satisfaction ratios. The application completion time measures the duration from submission to completion for ACT-preferred applications. The deadline satisfaction ratio is defined as the proportion of DDL-sensitive applications that meet their deadlines. Similarly, the time-per-token satisfaction ratio reflects the percentage of TPT-sensitive applications that fulfill their TPT requirements.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\linewidth]{figures/kvc_exp.pdf}
+            \vspace{-0.3in}
+    \caption{%(a) KV Cache Hit Ratio per Algorithm with different sizes of host memory, and (b) performance improvement on avg. ACT and makespan.
+    Cache hit ratio (with different host memory sizes) and execution efficiency (measured with both average ACT and makespan) under Hermes, EPWQ and LRU.
+    }
+    \vspace{-0.1in}
+    \label{fig:kvc_exp}
+\end{figure}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.9\linewidth]{figures/evaluation_lora_load_miss_8rank.pdf}
+            \vspace{-0.12in}
+    \caption{Cumulative load delay and total miss count to load LoRA adapters from disk to memory.}
+            \vspace{-0.1in}
+    \label{fig:evaluation_lora}
+\end{figure}
+
+\begin{figure*}[t]
+    \centering
+            \vspace{-0.1in}
+    
+    \begin{minipage}[t]{0.707\linewidth}
+        \centering
+        \includegraphics[width=1\linewidth]{figures/share_legend.pdf}
+            \vspace{-0.3in}
+        \caption{%Avg. ACT w/ or w/o resource provisioning for CPU, Network, and GPU resources with various workload intensities.
+        Performance with and without clairvoyant queuing respectively on three different non-LLM backends in cases with resource contention.
+        }
+            \vspace{-0.1in}
+
+        \label{fig:non-llm_resource_provisioning}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.269\linewidth}
+        \centering
+        \includegraphics[width=1\linewidth]{figures/dynamic_routing.pdf}
+            \vspace{-0.3in}
+        \caption{%Avg. ACT under different backend routing strategies with various workload intensities.
+        Performance under different backend selection methods.
+        }
+            \vspace{-0.1in}
+
+        \label{fig:multi-backend}
+    \end{minipage}
+\end{figure*}
+
+
+% In the end-to-end experiments, we run an LLM inference engine (LLaMA 7B) on a single A100 GPU as the backend server, while a frontend benchmark suite simulates application arrivals. We use a mixed workload consisting of 500 application submissions and vary the submission window (with a baseline of 30 minutes, reduced by 1-3x) to evaluate the average application completion times, deadline satisfaction ratios, and time-per-token satisfaction ratios under different workload intensities. Fig.~\ref{fig:evaluation_e2e} presents the overall performance between Hermes and baseline strategies. 
+
+\phm{Results.}
+As shown in Fig.~\ref{fig:evaluation_e2e}, Hermes can perform much better than Request-FCFS and Coinference-FCFS in each case.
+For example, when workload intensity is 1$\times$, the ACT performance of Hermes is 90.1\% (88.3\%) better than  Request-FCFS (Coinference-FCFS). 
+% This demonstrate the effectiveness of our SRPT-style inter-scheduling schedulin
+% We also note that in cases with intense contention, Request-FCFS performs in fact better than Coinference-FCFS, which is consistent with our toy example of Fig.
+Meanwhile, by comparing the performance of Hermes and Hermes-ACT, we can learn that multi-objective compatibility is indeed quite necessary---especially in cases with intense contention: 
+when the workload intensity is 3x, Hermes-ACT remarkably sacrifices the SLO performance in both DDL and TPT (by respectively 71.2\% and 93.6\% if compared with Hermes). 
+Additionally, we also take notice of the scheduling overhead of Hermes, which remains below 1 ms in our measurements of each case, negligible compared to the time-consuming LLM computations. %, which is sufficient to provide a high throughput.
+%This demonstrates the necessity to concurrently support diverse performance objectives in LLM application serving.
+%\yfliu{In fact, for the Gittins policy scheduling part alone, our overheads in the evaluation test cases are all below 1 ms (even in the busiest trace, the submission rate does not exceed 2 app/s), which is sufficient to support high throughput.}
+% \gz{5ms is not negligible when serving llama-7b on A100.}
+
+% Regarding ACT performance, we observe that as the workload intensity increases from 1x to 3x, Hermes reduces the ACT by 90\% to 51\% compared to Request-FCFS and by 88\% to 57\% compared to CoInference-FCFS. 
+% This is because a few large applications occupy a significant portion of the computational resources, and failing to be aware of and properly schedule these applications can result in severe head-of-line blocking.
+% Under low workloads, Hermes achieves the same ACT as Hermes-ACT, while it improves by 2.9x, at 3x workloads. This is because Hermes not only optimizes ACT-sensitive applications but also prioritizes tasks with urgent SLO requirements. Sacrificing a portion of performance to enhance the satisfaction of SLO-sensitive applications is still an acceptable trade-off in terms of overall cluster user satisfaction.
+
+% Regarding DDL performance, as the workload intensity increases from 1x to 3x, Hermes improves the DDL satisfaction ratio by 1.6x to 1.3x compared to Request-FCFS and by 4.5x to 3.7x compared to CoInference-FCFS. While Hermes-ACT achieves the same DDL performance to Hermes under low workload conditions, its DDL satisfaction ratio rapidly drops to only 29\% of that of Hermes as the load increases. This is because Hermes-ACT does not account for DDLs, optimizing the ACT for ACT-sensitive applications in the cluster at the expense of DDL-sensitive applications' performance.
+
+% Regarding TPT performance, Hermes consistently maintains the highest TPT satisfaction ratio, as it treats TPT-sensitive applications with TPT violation risk as the highest priority. As the workload intensity increases from 1x to 3x, Hermes improves the TPT satisfaction ratio by 2.8x to 5.6x compared to Request-FCFS and by 2.4x to 1.9x compared to CoInference-FCFS. Hermes-ACT achieves similar TPT performance to Hermes under low load conditions. However, as the load increases, its TPT satisfaction ratio rapidly drops to just 6\% of that of Hermes, resulting in intolerable delays for multi-turn conversation users.
+
+\subsection{$\!\!$Ablation Studies on Tackling Demand Dynamicity$\!\!$}
+
+% \begin{figure}[t]
+%     \centering
+%     \includegraphics[width=1\linewidth]{figures/evaluation_sched.pdf}
+%     \caption{CDF of ACTs under Hermes, Hermes-Oracle, Hermes w/o Corelation Analysis, and Hermes w/o Gittins.}
+%     \label{fig:evaluation_sched}
+% \end{figure}
+
+\phm{Setup.}
+Recall that to handle demand dynamicity, we have adopted both correlation analysis (\S\ref{subsubsec:correlation_analysis}) and the Gittins policy (\S\ref{subsubsec:gittins}). 
+To verify their effectiveness, we resort to a series of ablation experiments. 
+We first disable the correlation analysis module and get \emph{Hermes-v1}.
+Then we disable the Gittins policy (i.e., using the mean value of a distribution in SPRT scheduling), and further get \emph{Hermes-v2}. 
+For reference, we also add an idealized baseline, Hermes-Oracle, which knows exactly the resource demand of each LLM application (by conducting a trial run with \texttt{temperature} set to 0).
+%In our experiments, we submit 300 applications to the A100 server within a time window of 10 minutes, and measure the average ACT (normalized by that under standard Hermes).
+In our experiments, we conduct two tests using LLaMA-7B and LLaMA-13B, respectively. 
+LLaMA-7B uses two V100 GPUs with tensor parallel deployment, and LLaMA-13B uses four. 
+We submit 300 applications to the V100 server within a time window of 10 minutes and measure the average ACT (normalized by that under standard Hermes).
+
+\phm{Results.}
+As shown in Fig.~\ref{fig:evaluation_sched}, without correlation analysis, the average ACT would be inflated by 15.3\% with the LLaMA-7B model. 
+When the Gittins policy is further disabled, that performance degradation would increase to 47.5\%.
+Such results confirm the indispensability of both the correlation analysis and the Gittins policy in tackling demand uncertainty.
+Meanwhile, the performance gap between Hermes and Hermes-Oracle is less than 10\%, suggesting that Hermes can deliver near-optimal scheduling performance for LLM applications. %albeit confronting the dynamic demands of LLM applications.
+We also notice that in each case, the performance of LLaMA-7B and LLaMA-13B are quite similar.
+%\yfliu{Both LLaMA-7B and 13B behave similarly. In the case of LLaMA-13B, the average ACT would be inflated by 24.3\% without correlation analysis, and further increase to 54.2\% when the Gittins policy is disabled. }
+
+% \noindent\textbf{Setup.}
+% To evaluate the effectiveness of accurate conditional probability modeling and the Gittins index policy, we compare three variants of Hermes: Hermes w/o CA, where the corelation analysis is disabled; Hermes w/o Gittins, where Gittins index is replaced with mean-based remaining length prediction; and Hermes-Oracle, which has perfect knowledge of the application length upon submission. The experiments are conducted on an V100 GPU running an LLM inference engine (LLaMA 7B), using a workload of 300 application submissions within a 10-minute window.
+
+% \noindent\textbf{Results.}
+% According to Fig.~\ref{fig:evaluation_sched}, Hermes w/o CA increases ACT by 15\% compared to Hermes, while Hermes w/o Gittins increases ACT by 47\%. The correlation analysis provides Hermes with accurate distribution modeling, while the Gittins index policy guides Hermes in effectively utilizing this distribution—both are indispensable. The average ACT difference between Hermes and Hermes-Oracle is within 10\%, demonstrating that Hermes delivers near-optimal performance under scheduling uncertainties.
+
+
+\subsection{Effectiveness of Clairvoyant Cache Management}
+
+
+
+\phm{KV cache management.} 
+To evaluate the effectiveness of Hermes in KV cache management, we submit 500 applications to the A100 server within 15 minutes.
+We enable the KV cache to be evicted from GPU DRAM to CPU memory and also from the CPU memory to disk (whenever a layer is full), and loaded vice versa. 
+In particular, we introduce two baselines: LRU and Evict/Prefetch-on-Waiting-Queue (EPWQ). 
+EPWQ means to prioritize the KV cache based on the pending request queue (adopted in CachedAttention~\cite{gao2024cost}); yet, during the inter-stage gap of a coinference, since the downstream request is not in the queue, its desired KV cache would be of the lowest priority.
+Under each method, we measure the total cache hit ratio (including both GPU and CPU cache hits) against different CPU memory sizes (8GB, 16GB and 32GB). 
+As shown in Fig.~\ref{fig:kvc_exp}(a), Hermes consistently achieves the highest cache efficiency in each case, improving the overall cache hit ratio by up to $1.11\times$ ($0.33\times$) compared to LRU (EPWQ).
+Fig.~\ref{fig:kvc_exp}(b) further depicts the average ACT and makespan under each scheme in the case with 32GB CPU memory.
+It shows that Hermes can reduce the average ACT by 18\% (6\%) compared to LRU (EPWQ).
+
+% \begin{figure}[h]
+%     \centering
+%     \includegraphics[width=\linewidth]{figures/evaluation_kvc_jct_makespan.pdf}
+%     \caption{The avg. JCT and makespan for each algorithm of KV cache provisioning.}
+%     % \label{fig:bayes effect}
+% \end{figure}
+
+\phm{LoRA cache management.} 
+% In terms of KV cache and LoRA, we conducted a comprehensive load testing on an A100 to validate the performance of Clairvoyant cache management. We compared Hermes with three representative cache management strategies: vLLM, LRU, and Evict/Prefetch on Waiting Queue (EPWQ). As one of the most popular LLM inference frameworks, vLLM only stores free prefix KV cache in the remaining GPU space and does not utilize memory and disk as temporary storage. In contrast, we expand storage to include memory and disk, managing it with LRU, which we denote as one of our baselines. EPWQ is an enhanced cache management strategy based on information from the upper scheduler, actively evicting and prefetching the corresponding KV cache and LoRA adapters based on the requests waiting in the queue, reflecting the caching management concepts from the latest works, S-LoRA~\cite{sheng2023s} and CacheAttention~\cite{gao2024cost}. 
+To evaluate Hermes performance in LoRA caching, we compare Hermes with EPWQ, LRU, and No-Cache (i.e., not storing LoRA in host memory, which is also the default setting of vLLM). 
+We set \texttt{max-loras} (the maximum number of parallel processes per iteration) to 10, \texttt{max-cpu-loras} (the number of LoRA caches that can be stored in CPU memory) to 20, and use totally 200 LoRA adapters for LLaMA 7B with a rank of 8. 
+We submit a 25-minute workload containing 1,000 applications, with each application randomly assigned to one of the LoRA adapters (all requests of an application use the same LoRA).
+Fig.~\ref{fig:evaluation_lora} shows the load latency and miss count under each scheme.
+According to Fig.~\ref{fig:evaluation_lora}, compared to the second best (EPWQ), Hermes can reduce the LoRA load latency by 45\%, and reduce the number of LoRA misses by 55.2\%.
+
+% \noindent\textbf{Results.}
+% To evaluate the total cache hit ratio (including both GPU and CPU cache hits), we run a LLaMA 7B under different cache management strategies and varying sizes of host memory. As shown on the left side of Fig.~\ref{fig:kvc_exp}, we observe that Hermes consistently achieves the highest cache efficiency across all cache sizes. With 8 GB of host memory, Hermes improves the overall cache hit rate by 1.76x, 1.11x, and 0.33x compared to vLLM, LRU, and EPWQ, respectively. With 32 GB of host memory, Hermes achieves a 5.38x, 1.18x, and 0.33x improvement in the overall cache hit rate compared to vLLM, LRU, and EPWQ, respectively. The right side of Fig. 10 shows the performance improvement provided by Hermes with 32 GB of host memory: it reduces the average ACT by 20\%, 18\%, and 6\% compared to vLLM, LRU, and EPWQ, respectively.
+
+
+% \subsection{Performance of LoRA Management}
+
+% \noindent\textbf{Setup.}
+% In the LoRA evaluation, we mainly compare Hermes with EPWQ, LRU, and No-Cache (i.e., not storing LoRA in host memory, which is also the default setting of vLLM). We set \texttt{max-loras} (the maximum number of parallel processes per iteration) to 10, \texttt{max-cpu-loras} (the number of LoRA caches that can be stored in CPU memory) to 20, and use a total of 200 LoRA adapters of LLaMA 7B with a rank of 8. We submit a 25-minute workload containing 1,000 applications, with each application randomly assigned to one of 200 LoRA adapters, and all requests for each application using the same LoRA.
+
+% \noindent\textbf{Results.}
+% From Fig.~\ref{fig:evaluation_lora}, we can see that Hermes reduces the number of LoRA cache misses by 55\%, 71\%, and 87\% compared to EPWQ, LRU, and No-Cache, respectively, and reduces the synchronous read time by 45\%, 65\%, and 84\%.
+
+\subsection{$\!\!\!\!\!$Effect of Clairvoyant Queuing on Non-LLM Backends$\!\!\!\!\!\!\!\!$}
+
+% \noindent\textbf{Resource Provisioning for Non-LLM task.}
+% To assess the efficiency of non-LLM resource provisioning, we conducted three experiments focused on CPU, network, and GPU resources individually. We selected Code Feedback (AutoGen), KBQA (Factool), and HuggingGPT as workloads for these experiments, as each has distinct demands on these respective resources. We compared the average ACT scheduled by Hermes with and without resource provisioning under varying application arrival rates. The test environment consisted of a cluster with two V100 (16G) GPUs, and we hosted an LLM inference engine (LLaMA 7B) as the LLM backend. In the CPU resource experiment, we limited the total number of CPU cores to 40, with each Docker container allocated 2 cores. For the network, we restricted concurrent search requests to 4. In the GPU resource experiment, we limited concurrent requests to 15 based on the available GPU memory. The results, shown in ~Fig.\ref{fig:non-llm_resource_provisioning}, demonstrate that our resource provisioning mechanism can reduce the average ACT by up to 13\%. The improvement becomes more pronounced as the workload increases.
+
+To assess the effectiveness of clairvoyant queuing on non-LLM backends (\S\ref{subsubsec:queuing}), we select three LLM applications, CG, KBQAV and PE, which respectively demands docker (to test code in a virtual environment), network (to search knowledge from the web) and GPU (to run the small models) resources.
+The test environment contains two V100 (16G) GPUs serving the LlaMA-7B model.
+% Yi-6B\yfliu{LLaMA-13B if four V100 GPUs}\gz{two V100 GPUs serving LlaMA-7B actually} model deployed in tensor parallel paradigm.
+We build a prototype where each of the above resource backends is managed by an independent scheduler with limited service concurrency (for simplicity we manually set such limitation). 
+For Docker backend, we limit the total number of CPU cores to 40, with each Docker container allocated 2 cores; for the network backend, we restrict the remote searching concurrency to 4; for the GPU backend (for small models), we limit the maximal concurrency to 15\%. % based on the available GPU memory.
+In each case, we submit the selected applications under different arrival rates, 
+%We vary the submission speed of each application, 
+and Fig.\ref{fig:non-llm_resource_provisioning} depicts the average ACT.
+%As shown in Fig.\ref{fig:non-llm_resource_provisioning}, 
+Compared with the default case where each backend queues the request independently in FCFS order, Hermes can reduce the average ACT by up to 13\%.
+
+
+% \begin{table}[htbp]
+%     \centering
+%     \begin{tabular}{cccc}
+%     \hline
+%     provision resource  & w/o Provision & w Provision \\
+%     \hline
+%     CPU & 232.9s & 209.8s \\
+%     Network & 44.9s & 39.8s \\
+%     GPU & 141.3s & 130.4s \\
+%     \hline
+%     \end{tabular}
+%     \caption{Average ACT with or without Resource Provisioning}
+%     \label{tab:tool_provisioning}
+% \end{table}
+
+
+
+\subsection{Effectiveness of Clairvoyant Backend Selection}
+% In~Fig.\ref{fig:multi-backend}, we further evaluated the effectiveness of our multiple backends routing mechanism. We deployed two LLM engines (LLaMA 7B) in a cluster with four V100 (16G) GPUs, utilizing tensor parallelism with two GPUs per engine. The batch size for one backend was configured to 32 to achieve higher throughput, while the other backend had a batch size set to 8 for lower latency. We submitted map-reduce summarization applications as the primary workload and code generation applications (Factool) at varying rates as the background workload. We compared the average ACT when using our dynamic routing strategy against two other routing strategies that direct target applications to a single backend.
+
+% When the background workload is light, routing applications directly to the backend with a large batch size achieves a low ACT. It can efficiently handle numerous map requests concurrently with a high throughput. Additionally, since only a few other requests are batched alongside the single reduce request, it does not significantly increase delay. In contrast, the backend with a small batch size struggles to manage the high volume of parallel requests during the map stage, leading to the worst performance. As the background workload increased, directly routing a single reduce request to the backend with a large batch size leads to longer completion times due to the batching with other requests. Thanks to our Coinference modeling, we can accurately perceive the parallelism of each stage. This enables a dynamic routing strategy that effectively assigns stages with low parallelism to the small backend and stages with high parallelism to the large backend. This approach consistently delivers optimal performance.
+
+We further evaluate the effectiveness of our automatic backend selection method.
+To that end, we deploy two LLaMA-7B backends with four V100 GPUs (each model deployed with two GPUs):
+% two A100\yfliu{2 $*$ V100?}\gz{4 V100, in the platform part, we don't have 2 A100.} GPUs: 
+the batch size for one backend is configured to 32 for high throughput, and the other to 8 for low latency.
+The schemes compared are our clairvoyant backend selection strategy (i.e., try using throughput-first backend for stages with parallelism larger than 8, and try using the latency-first backend otherwise) and two naïve strategy that always choose a fixed backend (either 8 or 32).
+We submit 500 LLM applications for multiple runs (in different runs we use different schemes but the application submission trajectory are fixed), and study the average ACT of those applications with non-trivial stage parallelisms (i.e., larger than 1). %\gz{result is strange in this way}
+% the MapReduce Summarization applications (a typical application type containing stages with multiple requests).
+Such experiments are repeated under different application arrival rates.
+As shown in Fig.~\ref{fig:multi-backend}, in any case, our clairvoyant backend selection strategy can always make the best performance.
+
+
+
+
+% \subsection{Overheads}
+
+% \begin{figure}[t]
+%     \centering
+%     \includegraphics[width=0.5 \linewidth]{figures/evaluation_overhead.pdf}
+%     \caption{The median policy runtime for Hermes scheduler across different application arrive rates. The error bars indicate the 25$^{th}$ and 75$^{th}$ percentiles.}
+%     \label{fig:overhead}
+% \end{figure}
+
+% To evaluate the complexity of Hermes, we measure its overhead across various application arrival rates. It is important to note that each application generates a series of requests, so the request arrival rate is often several times higher. As shown in Fig.~\ref{fig:overhead}, Hermes' computational overhead remains below 5 ms, which is sufficient to provide a high throughput.
