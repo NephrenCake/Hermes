@@ -23,14 +23,11 @@ def run_benchmark(
 
     bayesian = "--bayes-prediction"
     scheduling_policy = algo_name
-    non_preempt = ""
     if algo_name == "Hermes-without-Bayesian":
         bayesian = ""
         scheduling_policy = "Hermes"
     if algo_name == "profile":
         scheduling_policy = "Hermes"
-    if algo_name == "VTC":
-        non_preempt = "--non-preempt"
 
     # Step 1:
     with open(os.path.join(exp_dir, f"vllm_{algo_name}.log"), "w") as f:
@@ -53,7 +50,6 @@ def run_benchmark(
                 f"--scheduling-policy {scheduling_policy} "
                 f"{bayesian} "
                 f"--max-num-seqs 10 "
-                f"{non_preempt} "
             ],
             stdout=f,
             stderr=f,

@@ -6,8 +6,29 @@ import time
 import signal
 import sys
 
-from start_sched_e2e_evaluation import model_list
+from pydantic import BaseModel
+
 from utils import retry
+
+
+class Model(BaseModel):
+    parallel: int
+    delay: int
+    name: str
+    gpu_util: float
+
+
+model_list = {
+    "/dataset/llm_models/llama/Llama-2-7b-chat-hf": Model(parallel=2, delay=120, name="Llama2-7B", gpu_util=0.9),
+
+    "/state/partition/yfliu/llama-7b-hf": Model(parallel=1, delay=120, name="Llama2-7B", gpu_util=0.9),
+    "/state/partition/yfliu/Llama-3.1-8B": Model(parallel=1, delay=120, name="Llama3-8B", gpu_util=0.5),
+    "/state/partition/yfliu/Yi-9B": Model(parallel=1, delay=120, name="Yi-9B", gpu_util=0.5),
+    "/state/partition/yfliu/Yi-34B": Model(parallel=4, delay=300, name="Yi-34B", gpu_util=0.5),
+    "/state/partition/yfliu/Llama-3.1-70B": Model(parallel=4, delay=600, name="Llama3-70B", gpu_util=0.9),
+    "/state/partition/yfliu/opt-13b": Model(parallel=1, delay=120, name="Opt-13B", gpu_util=0.9),
+    "/state/partition/yfliu/opt-6.7b": Model(parallel=1, delay=120, name="Opt-6.7B", gpu_util=0.9),
+}
 
 
 @retry(max_attempts=3, delay=2)
@@ -33,7 +54,7 @@ def run_benchmark(
             [
                 "bash", "-c",
                 # f"echo 3 > /proc/sys/vm/drop_caches && "
-                f"export CUDA_VISIBLE_DEVICES=0 && "
+                f"export CUDA_VISIBLE_DEVICES=0,1 && "
                 # f"export CUDA_VISIBLE_DEVICES=2,3 && "
                 f"{sys.executable} -m vllm.entrypoints.openai.api_server "
                 f"--uvicorn-log-level warning "
@@ -48,6 +69,19 @@ def run_benchmark(
                 f"--coinference-scheduler "
                 f"--scheduling-policy {scheduling_policy} "
                 f"{bayesian} "
+
+                # f"{enable_prefix_caching} "
+                # f"--disk-dir-path /state1/yfliu/kv_cache "
+                # f"--num-disk-blocks {disk_cache} "
+                # f"--preemption-mode recompute "
+                # f"--cache-policy {cache_policy} "
+
+                # f"--enable-lora "
+                # f"--lora-policy {lora_policy} "
+                # f"--max-loras {max_loras} "
+                # f"--max-lora-rank {max_lora_rank} "
+                # f"--max-cpu-loras {max_cpu_loras} "
+                # f"--lora-modules {lora_modules} "
             ],
             stdout=f,
             stderr=f,
@@ -87,7 +121,7 @@ def run_benchmark(
                 f"--exp_dir {exp_dir} "
                 f"--task '{task}' "
                 f"--enable_external_queue "
-                f"--slo_p 1 "
+                f"--slo_p 0 "
             ],
             stdout=f,
             stderr=f,
@@ -107,27 +141,27 @@ def run_benchmark(
 
 
 if __name__ == '__main__':
-    # cd evaluation && nohup python3 -u start_sched_ddl_evaluation.py > ./out.log 2>&1 &
+    # cd evaluation && nohup python3 -u start_sample_evaluation.py > ./out.log 2>&1 &
 
-    base_window = 15
-    for intensity in [1]:
+    base_window = 30
+    for intensity in [2]:
         for num_tasks in [300]:
             for model_path in [
                 "/state/partition/yfliu/Llama-3.1-8B",
             ]:
                 for algo in [
-                    "Hermes",
-                    "Hermes-EDF",
-                    "Request-Level-FIFO",
-                    "VTC",
-                    "CoInference-Level-FIFO",
-                    "LTR",
-                    "SSJF",
-                    "QLM",
+                    'Hermes-1000',
+                    'Hermes-800',
+                    'Hermes-600',
+                    'Hermes-400',
+                    'Hermes-200',
                 ]:
                     submission_window = int(base_window / intensity)
-                    path = (f"results/sched_ddl_window{submission_window}_"
+                    path = (f"results/sample_window{submission_window}_"
                             f"task{num_tasks}_intensity{intensity}_{model_list[model_path].name}")
+                    # if os.path.exists(os.path.join(path, f"{algo}.json")):
+                    #     print(f'skip {os.path.exists(os.path.join(path, f"{algo}.json"))}.')
+                    #     continue
                     run_benchmark(algo_name=algo,
                                   submission_window=submission_window,
                                   num_tasks=num_tasks,

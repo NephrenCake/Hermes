@@ -312,6 +312,34 @@ class CoInference:
         # logger.info(f"coinf_id: {self.coinf_id}, stages {self.current_stage_id + 1}/{len(self.stages)}, "
         #             f"prefill_token {prompt_tokens}, decode_token {decode_tokens}.")
 
+    def estimate_remaining_time_V2(self, APPLICATION_V2):
+        if self.current_stage_id == len(self.stages) and self.following_stages_info["prompt_tokens"] == 0:
+            self.remaining_time = 0  # ms
+            self.worst_case_remaining_time = 0
+            return
+
+        time1 = time.time()
+
+        prompt_tokens, decode_tokens = 0, 0
+        for stage in self.stages:
+            stage_prompt_tokens = sum([len(i.prompt_token_ids) for i in stage.parallel_requests])
+            stage_decode_tokens = sum([len(i.output_token_ids) for i in stage.parallel_requests])
+            prompt_tokens += stage_prompt_tokens
+            decode_tokens += stage_decode_tokens
+
+        time2 = time.time()
+
+        predictor = APPLICATION_V2[self.app_name]
+        serv = predictor.calculate_duration(prompt_tokens, decode_tokens, 0)
+        dist = predictor.get_duration_distribution()
+        self.remaining_time = dist.get_gittins_rank(serv)
+
+        time3 = time.time()
+
+        # logger.info(f"sum {(time2 - time1) * 1000:.2f}, gittins {(time3 - time2) * 1000:.2f}ms.")
+
+        self.worst_case_remaining_time = max(dist) - serv
+
     def update_online_profiling(self):
         # timer = time.time()
         for stage in self.stages:

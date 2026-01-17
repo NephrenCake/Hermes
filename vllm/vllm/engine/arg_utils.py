@@ -97,7 +97,6 @@ class EngineArgs:
     
     # coinference
     coinference_scheduler: bool = False
-    non_preempt: bool = False
     scheduling_policy: str = "Hermes"
     bayes_prediction: bool = False
     lora_policy: str = "Hermes"
@@ -686,7 +685,6 @@ class EngineArgs:
             enable_chunked_prefill=self.enable_chunked_prefill,
             embedding_mode=model_config.embedding_mode,
             coinference_scheduler=self.coinference_scheduler,
-            non_preempt=self.non_preempt,
             scheduling_policy=self.scheduling_policy,
             bayes_prediction=self.bayes_prediction,
             lora_policy=self.lora_policy,

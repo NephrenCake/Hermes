@@ -92,7 +92,7 @@ class CodeFeedbackTask(BaseTask):
         )
         from CTaskBench.platform.llm.pdgraph import APPLICATION
         app_name = self.task_id.split("--")[0]
-        predictor = APPLICATION[app_name].predictor
+        predictor = APPLICATION[app_name]
         v = predictor.compute_quantile(0, predictor.get_duration_distribution(), p=100) * 0.7
         print(f"app_name: {app_name} standard jct {v} oracle jct {jct}")
         self.slo = self.slo * v if self.slo else None

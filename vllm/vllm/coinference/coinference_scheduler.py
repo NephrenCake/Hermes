@@ -13,7 +13,7 @@ import numpy as np
 from vllm.config import CacheConfig, LoRAConfig, SchedulerConfig
 from vllm.core.interfaces import AllocStatus, BlockSpaceManager
 from vllm.core.policy import CoInferencePolicy, PolicyFactory, Hermes, CoInferenceVTC, CoInferenceIdeal, RequestFCFS, \
-    CoInferenceMeanSRCF
+    CoInferenceMeanSRCF, HermesV2
 from vllm.core.scheduler import (SchedulerOutputs, ScheduledSequenceGroup,
                                  PreemptionMode)
 from vllm.logger import init_logger
@@ -183,7 +183,6 @@ class CoInferenceScheduler:
         self.num_waiting_seq_groups = 0
         self.num_swapped_seq_groups = 0
 
-        self.non_preempt = scheduler_config.non_preempt
         self.scheduling_policy = scheduler_config.scheduling_policy
         self.bayes_prediction = scheduler_config.bayes_prediction
         if self.bayes_prediction:
@@ -197,8 +196,7 @@ class CoInferenceScheduler:
         self.next_log_prefix = 0
 
         self.policy: CoInferencePolicy = PolicyFactory.get_policy(policy_name=self.scheduling_policy)
-        if isinstance(self.policy, CoInferenceVTC):
-            self.scheduler_config.non_preempt = True
+        print(f">>> You are using {self.scheduling_policy}")
 
         self.last_running = []
         self.cur_running_coinf = set()
@@ -373,7 +371,7 @@ class CoInferenceScheduler:
         scheduling_time = time.time() - now
 
         self.log_round += 1
-        if self.log_round > self.next_log_round * 100 and self.scheduling_policy == "Hermes":
+        if self.log_round > self.next_log_round * 100 and "Hermes" in self.scheduling_policy:
             self.next_log_round += 1
             queue = [(coinf.coinf_id, f"({coinf.priority[0]}, {coinf.priority[1]:.4f})",
                       f"{coinf.ddl_violation_risk:.2f}" if coinf.ddl_violation_risk else None,
@@ -614,7 +612,7 @@ class CoInferenceScheduler:
         waiting_queue: Set[SequenceGroup] = set()
         curr_loras = set()
 
-        if self.non_preempt:
+        if not self.policy.preemptive:
             for seq_group in self.last_running:
                 if seq_group.is_finished():
                     continue
@@ -731,7 +729,8 @@ class CoInferenceScheduler:
             seq_group.coinf_id = seq_group.request_id
 
         # logger.info(f"Add seq_group {seq_group.request_id}, coinference_info_dict: {coinference_info_dict}")
-        if seq_group.coinf_id not in self.coinferences_dict:
+        is_new_coinf = seq_group.coinf_id not in self.coinferences_dict
+        if is_new_coinf:
             new_coinf = create_coinference(seq_group.app_name,
                                            seq_group.coinf_id,
                                            seq_group.metrics.arrival_time,
@@ -748,6 +747,9 @@ class CoInferenceScheduler:
         for seq in seq_group.seqs_dict.values():
             seq.coinf_id = seq_group.coinf_id
 
+        if is_new_coinf:
+            self.policy.preprocess(self.coinferences_dict[seq_group.coinf_id])
+
     def abort_seq_group(self, request_id: Union[str, Iterable[str]]):
         # TODO: implement
         if isinstance(request_id, str):
@@ -763,6 +765,7 @@ class CoInferenceScheduler:
             if coinf_id not in self.coinferences_dict:
                 continue
             coinf = self.coinferences_dict.pop(coinf_id)
+            self.policy.postprocess(coinf)
             self.coinferences_queue.remove(coinf)
             self.block_manager.destroy_cache(coinf_id)
             aborted_groups += coinf.current_stage.parallel_requests
@@ -799,8 +802,17 @@ class CoInferenceScheduler:
 
             for coinf_id in finished_coinf:
                 coinf = self.coinferences_dict.pop(coinf_id)
-                if self.scheduling_policy not in ["Idealized-SRJF", "Request-Level-FIFO", "CoInference-Level-FIFO"]:
+                self.policy.postprocess(coinf)
+                if self.scheduling_policy in ["Hermes", "Hermes-EDF", "Hermes-Gittins"]:
+                    t1 = time.time()
                     coinf.update_online_profiling()
+                    t2 = time.time()
+                    print(f"[Hermes updating] cost {(t2 - t1) * 1000 * 1000} us")
+                if isinstance(self.scheduling_policy, HermesV2):
+                    t1 = time.time()
+                    self.scheduling_policy.update(coinf)
+                    t2 = time.time()
+                    print(f"[Hermes updating] cost {(t2 - t1) * 1000 * 1000} us")
                 self.coinferences_queue.remove(coinf)
 
                 statistic = {

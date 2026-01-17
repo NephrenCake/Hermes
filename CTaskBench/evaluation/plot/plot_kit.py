@@ -37,7 +37,7 @@ def get_improve_reduce(df):
     return all_data, improve, reduce
 
 
-def plot_cdf(ax, data, xlabel, fontsize=32, legend_fontsize=19, linewidth=2):
+def plot_cdf(ax, data, xlabel, fontsize=32, legend_fontsize=19, linewidth=2, is_log=True):
     max_ftf, min_ftf = 0, 1 << 32
     for algorithm, job in data.items():
         sorted_ftf_values = np.sort(list(job.values()))
@@ -51,20 +51,23 @@ def plot_cdf(ax, data, xlabel, fontsize=32, legend_fontsize=19, linewidth=2):
     ax.set_xlim(min_ftf, max_ftf)  # Set y-axis limits
     ax.set_ylim(0, 1)  # Set y-axis limits
 
-    ax.set_xscale('log')
-    # ax.set_xticks(ax.get_xticks())
-    print([f"{tick:.2}" for tick in ax.get_xticks()])
-    m = {
-        '0.001': '0.001',
-        '0.01': '0.01',
-        '0.1': '0.1',
-        '1.0': '1.0',
-        '1e+01': '10',
-        '1e+02': '100',
-        '1e+03': '1000',
-        '1e+04': '10000',
-    }
-    xticklabels = [m[f"{tick:.2}"] for tick in ax.get_xticks()]
+    if is_log:
+        ax.set_xscale('log')
+        # ax.set_xticks(ax.get_xticks())
+        print([f"{tick:.2}" for tick in ax.get_xticks()])
+        m = {
+            '0.001': '0.001',
+            '0.01': '0.01',
+            '0.1': '0.1',
+            '1.0': '1.0',
+            '1e+01': '10',
+            '1e+02': '100',
+            '1e+03': '1000',
+            '1e+04': '10000',
+        }
+        xticklabels = [m[f"{tick:.2}"] for tick in ax.get_xticks()]
+    else:
+        xticklabels = [int(tick) for tick in ax.get_xticks()]
     ax.set_xticklabels(xticklabels, fontsize=fontsize, color='black')
     ax.set_yticks(ax.get_yticks())
     ax.set_yticklabels([f"{tick:.2}" for tick in ax.get_yticks()], fontsize=fontsize, color='black')

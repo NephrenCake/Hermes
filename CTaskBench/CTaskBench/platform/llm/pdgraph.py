@@ -191,20 +191,24 @@ class AppPredictorV2:
         logger.info(f"[AppPredictor] AppPredictorV2 {app_name} initialized.")
 
         self.app_name = app_name
-        with open(os.path.join(os.path.dirname(__file__), "all_samples.json"), 'r') as f:
+        with open(os.path.join(os.path.dirname(__file__), "inspection.json"), 'r') as f:
             self.all_samples: list = json.load(f)[app_name]
 
         self.prefill_time_per_token = PREFILL_TIME_PER_TOKEN
         self.decode_time_per_token = DECODE_TIME_PER_TOKEN
 
+        self.duration_distribution = None
+
     def calculate_duration(self, input_len, output_len, exec_time):
         return input_len * self.prefill_time_per_token + output_len * self.decode_time_per_token + exec_time
 
     def get_duration_distribution(self):
-        return [
-            self.calculate_duration(sample["input_len"], sample["output_len"], sample["exec_time"])
-            for sample in self.all_samples
-        ]
+        if self.duration_distribution is None:
+            self.duration_distribution = [
+                self.calculate_duration(sample["input_len"], sample["output_len"], sample["exec_time"])
+                for sample in self.all_samples
+            ]  # you can recompute the duration distribution by setting it to None
+        return self.duration_distribution
 
     def plot_histogram(self):
         num_bins = 20

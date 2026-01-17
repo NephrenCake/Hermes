@@ -10,17 +10,16 @@ from plot_kit import plot_cdf, plot_grouped_bar, get_improve_reduce
 
 os.chdir(os.path.dirname(__file__))
 
+colors = ['#e24a33', '#348abd', '#988ed5', '#777777', "#fbc15e", "#8eba41", "#ffb4b8", '#846358']
+
 
 def plot_e2e_combined(paths):
     fontsize = 28
-    legend_fontsize = 22
-    inside_fontsize = 22
-    linewidth = 2
-    markersize = 10
+    legend_fontsize = 18
     rect = (0, 0, 1, 0.85)
-    width = 0.15
+    width = 0.1
     figsize = (8, 5)
-    bbox_to_anchor = (0.5, 1.04)
+    bbox_to_anchor = (0.5, 1.02)
     plt.style.use('ggplot')
 
     algos = {
@@ -29,18 +28,20 @@ def plot_e2e_combined(paths):
         "VTC": "VTC",
         "Request-Level-FIFO": "vLLM",
         "CoInference-Level-FIFO": "Parrot",
+        "LTR": "LTR",
+        "SSJF": "SSJF",
+        "QLM": "QLM",
     }
     # metrics = ["Avg. ACT (min)", "DDL Satisfactory Ratio"]
     metrics = ["Avg. ACT (min)"]
-    # intensities = ["1.0x", "2.0x", "3.0x"]
-    intensities = ["1.0x", "1.5x", "2.0x", "2.5x", "3.0x"]
+    intensities = ["1.0x", "2.0x", "3.0x"]
 
     # Prepare a list to hold results for all intensities
     all_results = {metric: [] for metric in metrics}
 
     # Iterate over the provided paths to gather statistics for each intensity level
     for path in paths:
-        exp_dir = f"../results/archive/{path}/"
+        exp_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), f"results/archive/{path}")
         results = []
         for algo in algos:
             result = {
@@ -77,7 +78,7 @@ def plot_e2e_combined(paths):
         for i, algo in enumerate(algos):
             # Extract data for each algorithm across different intensity levels
             algo_data = [all_results[metric][j][i] for j in range(len(intensities))]
-            ax.bar(x + i * width - 1.5 * width, algo_data, width=width,
+            ax.bar(x + i * width - (len(algos) - 1) / 2 * width, algo_data, width=width,
                    label=algos[algo])  # Adjust width for grouped bars
 
         ax.set_xticks(x)
@@ -88,14 +89,10 @@ def plot_e2e_combined(paths):
 
         if metric == "DDL Ratio" or metric == "TPT Ratio":
             ax.set_ylim(0, 1)
-        # else:
-        #     ax.set_ylim(0, max(ax.get_yticks()) + np.mean(ax.get_yticks()) * 0.08)
-
-    # axs[1].set_xlabel("Relative Workload Intensity", fontsize=fontsize, color='black')
 
     # Customize the legend for the combined plot
     handles, labels = axs[0].get_legend_handles_labels()
-    fig.legend(handles, labels, ncol=2, loc='upper center', bbox_to_anchor=bbox_to_anchor,
+    fig.legend(handles, labels, ncol=4, loc='upper center', bbox_to_anchor=bbox_to_anchor,
                fontsize=legend_fontsize, frameon=False)
 
     # Adjust layout and save the combined figure
@@ -250,12 +247,12 @@ def plot_ddl():
 
 def plot_ddl2(exp_dir):
     fontsize = 28
-    legend_fontsize = 22
+    legend_fontsize = 18
     inside_fontsize = 22
     linewidth = 2
     markersize = 10
     rect = (0, 0, 1, 0.85)
-    width = 0.15
+    width = 0.1
     figsize = (8, 5)
     bbox_to_anchor = (0.5, 1.04)
     plt.style.use('ggplot')
@@ -266,6 +263,9 @@ def plot_ddl2(exp_dir):
         "Request-Level-FIFO": "vLLM",
         "CoInference-Level-FIFO": "Parrot",
         "Hermes-EDF": "EDF",
+        "LTR": "LTR",
+        "SSJF": "SSJF",
+        "QLM": "QLM",
     }
     # metrics = ["Avg. ACT (min)", "DSR"]
     metrics = ["DSR"]
@@ -313,14 +313,15 @@ def plot_ddl2(exp_dir):
         for i, algo in enumerate(algos):
             # Extract data for each algorithm across different intensity levels
             algo_data = [all_results[metric][j][i] for j in range(len(intensities))]
-            ax.bar(x + i * width - 1.5 * width, algo_data, width=width,
-                   label=algos[algo])  # Adjust width for grouped bars
+            ax.bar(x + i * width - (len(algos) - 1) / 2 * width, algo_data, width=width,
+                   label=algos[algo], color=colors[i])  # Adjust width for grouped bars
 
         ax.set_xticks(x)
         ax.set_xticklabels(intensities, fontsize=fontsize)
         ax.set_ylabel(metric, fontsize=fontsize, color='black')
         ax.tick_params(axis='x', labelsize=fontsize, colors='black')
         ax.tick_params(axis='y', labelsize=fontsize, colors='black')
+
 
         if metric == "DSR":
             ax.set_ylim(0, 1)
@@ -331,7 +332,7 @@ def plot_ddl2(exp_dir):
 
     # Customize the legend for the combined plot
     handles, labels = axs[0].get_legend_handles_labels()
-    fig.legend(handles, labels, ncol=3, loc='upper center', bbox_to_anchor=bbox_to_anchor,
+    fig.legend(handles, labels, ncol=4, loc='upper center', bbox_to_anchor=bbox_to_anchor,
                fontsize=legend_fontsize, frameon=False)
 
     # Adjust layout and save the combined figure
@@ -341,33 +342,84 @@ def plot_ddl2(exp_dir):
     plt.clf()
 
 
+def e2e_cdf(path, device):
+    fontsize = 34
+    legend_fontsize = 32
+    inside_fontsize = 22
+    linewidth = 3
+    markersize = 10
+    rect = (0, 0, 1, 0.9)
+    width = 0.15
+    figsize = (13, 8.034)
+    bbox_to_anchor = (0.5, 1.0)
+    plt.style.use('ggplot')
+
+    fontsize = 28
+    legend_fontsize = 18
+    rect = (0, 0, 1, 0.85)
+    width = 0.1
+    figsize = (8, 5)
+    bbox_to_anchor = (0.5, 1.02)
+    plt.style.use('ggplot')
+
+    exp_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), f"results/archive/{path}")
+    algos = {
+        "Hermes": "Hermes",
+        # "Hermes-EDF": "EDF",
+        "VTC": "VTC",
+        "Request-Level-FIFO": "vLLM",
+        "CoInference-Level-FIFO": "Parrot",
+        "LTR": "LTR",
+        "SSJF": "SSJF",
+        "QLM": "QLM",
+    }
+
+    # 创建绘图窗口，包含两个子图
+    fig, axs = plt.subplots(1, 1, figsize=figsize)
+    # axs = [axs]
+
+    # jct cdf
+    jct_data = {
+        algos[algo]: {
+            job_name: jct / 60
+            for job_name, jct in
+            get_all_jct(os.path.join(exp_dir, f"{algo}.json")).items()
+        }
+        for algo in algos
+    }
+
+    print(jct_data)
+
+    print(json.dumps({
+        algo: {
+            "Avg. ACT (min)": np.mean(list(values.values())),
+            "P90 ACT (min)": np.percentile(list(values.values()), 60),
+            "P99 ACT (min)": np.percentile(list(values.values()), 99),
+        }
+        for algo, values in jct_data.items()
+    }, indent=4))
+
+    plot_cdf(axs, jct_data, "ACT (min)", fontsize=fontsize, linewidth=linewidth, is_log=False)
+
+    # Customize the legend (不需要图例在子图上显示)
+    handles, labels = axs.get_legend_handles_labels()
+    fig.legend(handles, labels, ncol=4, loc='upper center', bbox_to_anchor=bbox_to_anchor,
+               fontsize=legend_fontsize, frameon=False)
+    # 调整布局并保存图像
+    plt.tight_layout(rect=rect)
+    plt.savefig(f"figures/evaluation_cdf_{device}.pdf")
+    plt.show()
+    plt.clf()
+
+
 if __name__ == '__main__':
-    # plot_e2e_combined([
-    #     # "sched_sjf_window30_task500_try0_intensity1",
-    #     # "sched_sjf_window20_task500_try0_intensity1.5",
-    #     # "sched_sjf_window15_task500_try0_intensity2",
-    #     # "sched_sjf_window12_task500_try0_intensity2.5",
-    #     # "sched_sjf_window10_task500_try0_intensity3",
-    #
-    #     # "sched_sjf_window30_task200_intensity1_Yi-9B",
-    #     # "sched_sjf_window15_task200_intensity2_Yi-9B",
-    #     # "sched_sjf_window10_task200_intensity3_Yi-9B",
-    #
-    #     "sched_sjf_window30_task200_intensity1_Llama2-7B",
-    #     "sched_sjf_window20_task200_intensity1.5_Llama2-7B",
-    #     "sched_sjf_window15_task200_intensity2_Llama2-7B",
-    #     "sched_sjf_window12_task200_intensity2.5_Llama2-7B",
-    #     "sched_sjf_window10_task200_intensity3_Llama2-7B",
-    # ])
+    plot_e2e_combined([
+        "sched_sjf_window30_task300_intensity1_Llama3-8B",
+        "sched_sjf_window15_task300_intensity2_Llama3-8B",
+        "sched_sjf_window10_task300_intensity3_Llama3-8B",
+    ])
 
-    # plot_ddl_combined([
-    #     "sched_ddl_window30_task200_intensity1_Llama2-7B",
-    #     "sched_ddl_window20_task200_intensity1.5_Llama2-7B",
-    #     "sched_ddl_window15_task200_intensity2_Llama2-7B",
-    #     "sched_ddl_window12_task200_intensity2.5_Llama2-7B",
-    #     "sched_ddl_window10_task200_intensity3_Llama2-7B",
-    # ])
+    plot_ddl2("/Users/nephren/code/llm_inference/Hermes_over_vLLM/CTaskBench/evaluation/"
+              "results/archive/sched_ddl_window15_task300_intensity1_Llama3-8B")
 
-    plot_ddl2("/home/yfliu/llm_inference/CTaskBench/evaluation/results/"
-              # "archive/sched_ddl_window15_task200_intensity2_Llama2-7B")
-              "archive/e2e_ddl/sched_ddl_window15_task200_intensity2_Llama2-7B")
+    e2e_cdf("sched_sjf_window10_task300_intensity3_Llama3-8B", "a100")

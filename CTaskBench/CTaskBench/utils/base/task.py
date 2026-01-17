@@ -31,7 +31,7 @@ class BaseTask:
             'model_name': model_name,
             'temperature': temperature,
             'top_p': top_p,
-            'timeout': timeout,
+            'timeout': 3600,
         }
         self.extra_body = {
             "ignore_eos": True

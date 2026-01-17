@@ -669,8 +669,7 @@ class SchedulerConfig:
         delay_factor: float = 0.0,
         enable_chunked_prefill: bool = False,
         embedding_mode: Optional[bool] = False,
-        coinference_scheduler: bool = False, 
-        non_preempt: bool = False,
+        coinference_scheduler: bool = False,
         scheduling_policy: str = "Hermes",
         bayes_prediction: bool = False,
         lora_policy: str = "Hermes",
@@ -703,7 +702,6 @@ class SchedulerConfig:
         
         # coinference
         self.coinference_scheduler = coinference_scheduler
-        self.non_preempt = non_preempt
         self.bayes_prediction = bayes_prediction
         self.scheduling_policy = scheduling_policy
         self.lora_policy = lora_policy

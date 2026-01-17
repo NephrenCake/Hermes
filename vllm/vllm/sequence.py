@@ -489,6 +489,10 @@ class SequenceGroup:
         return next(iter(self.seqs_dict.values())).prompt_token_ids
 
     @property
+    def output_token_ids(self) -> List[int]:
+        return next(iter(self.seqs_dict.values())).get_output_token_ids()
+
+    @property
     def multi_modal_data(self) -> Optional[MultiModalData]:
         # All sequences in the group should have the same multi-modal data.
         # We use the multi-modal data of an arbitrary sequence.

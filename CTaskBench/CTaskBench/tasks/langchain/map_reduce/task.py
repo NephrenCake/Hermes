@@ -44,11 +44,11 @@ class LangchainMapReduceTask(BaseTask):
         # self.tokenizer = AutoTokenizer.from_pretrained("/home/zgan/Models/Llama-2-7b-chat-hf")
 
         # os.environ["LANGCHAIN_TRACING_V2"] = "true"
-        # os.environ["LANGCHAIN_API_KEY"] = "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"
+        # os.environ["LANGCHAIN_API_KEY"] = ""
 
         # self.llm = ChatOpenAI(temperature=0, 
         #                 model_name=self.model_name,
-        #                 api_key="sk-3792751bf6634f20bd8925701c4ae64e",
+        #                 api_key="",
         #                 base_url="http://localhost:8000/v1",
         #                 )
 
@@ -122,7 +122,7 @@ class LangchainMapReduceTask(BaseTask):
         )
         from CTaskBench.platform.llm.pdgraph import APPLICATION
         app_name = self.task_id.split("--")[0]
-        predictor = APPLICATION[app_name].predictor
+        predictor = APPLICATION[app_name]
         v = predictor.compute_quantile(0, predictor.get_duration_distribution(), p=100) / 5 * 0.7
         print(f"app_name: {app_name} standard jct {v} oracle jct {jct}")
         self.slo = self.slo * v if self.slo else None

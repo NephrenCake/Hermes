@@ -65,7 +65,7 @@ class TraceGenerator:
                                                    for task_name in Task_Dict.keys()}
 
         self.task_list = []
-        set_seed(0)
+        set_seed(1000)
 
         self.generate_trace_real()
 

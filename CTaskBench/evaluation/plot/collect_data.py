@@ -35,7 +35,7 @@ def get_kvc_hr(file_name):
     GPU_hr = float(match.group(1))
     CPU_hr = float(match.group(2))
     DISK_hr = float(match.group(3))
-    match = re.search(f'= (\d+\.\d+)', text1)
+    match = re.search(r'= (\d+\.\d+)', text1)
     valid_hr = float(match.group(1))
     return {
         "Valid Hit": valid_hr,
@@ -67,17 +67,8 @@ def get_vllm_stat(file_name):
     res = {}
     with open(file_name, 'r') as f:
         for line in f:
-            if "coinference_scheduler.py:779" in line:
-                data: Dict = json.loads(line.split("coinference_scheduler.py:779] ")[-1].strip())
-                res.update(data)
-            if "coinference_scheduler.py:767" in line:
-                data: Dict = json.loads(line.split("coinference_scheduler.py:767] ")[-1].strip())
-                res.update(data)
-            if "coinference_scheduler.py:823" in line:
-                data: Dict = json.loads(line.split("coinference_scheduler.py:823] ")[-1].strip())
-                res.update(data)
-            if "coinference_scheduler.py:824" in line:
-                data: Dict = json.loads(line.split("coinference_scheduler.py:824] ")[-1].strip())
+            if "app finished:" in line:
+                data: Dict = json.loads(line.split("app finished:")[-1].strip())
                 res.update(data)
     # {"factool_math--0": {"queue_time": 0, "slo_ratio": [0.3721247965345315, -4.293282508850098], "tpt_ratio": null}}
     return res
@@ -249,7 +240,7 @@ def get_all_job(bench_log):
     with open(bench_log, 'r') as f:
         for line in f:
             if '{"task_id": ' in line:
-                info = json.loads(line)
+                info = json.loads(line.split("trace_generator.py:146] ")[-1])
                 res.update({info["task_id"]: info})
     return res
 

@@ -46,10 +46,7 @@ def run_benchmark(
         os.system(f"chmod -R 777 {exp_dir}")
 
     bayesian = "--bayes-prediction"
-    non_preempt = "--non-preempt"
     scheduling_policy = algo_name
-    if algo_name == "VTC":
-        non_preempt = "--non-preempt"
 
     # Step 1:
     with open(os.path.join(exp_dir, f"vllm_{algo_name}.log"), "w") as f:
@@ -65,14 +62,13 @@ def run_benchmark(
                 f"--served-model-name gpt-3.5-turbo "
                 f"--gpu-memory-utilization {model_list[model_path].gpu_util} "
                 f"--tensor-parallel-size {model_list[model_path].parallel} "
-                f"--swap-space {32 // model_list[model_path].parallel} "
+                f"--swap-space {64 // model_list[model_path].parallel} "
                 f"--max-model-len 12000 "
                 f"--block-size 32 "
-                f"--chat-template /home/yfliu/llm_inference/Hermes_over_vLLM/examples/template_alpaca.jinja "
+                f"--chat-template /root/Hermes/vllm/examples/template_alpaca.jinja "
                 f"--coinference-scheduler "
                 f"--scheduling-policy {scheduling_policy} "
                 f"{bayesian} "
-                f"{non_preempt} "
 
                 # f"{enable_prefix_caching} "
                 # f"--disk-dir-path /state1/yfliu/kv_cache "
@@ -125,7 +121,7 @@ def run_benchmark(
                 f"--exp_dir {exp_dir} "
                 f"--task '{task}' "
                 f"--enable_external_queue "
-                f"--slo_p 0.2 "
+                f"--slo_p 0 "
             ],
             stdout=f,
             stderr=f,
@@ -147,12 +143,12 @@ def run_benchmark(
 if __name__ == '__main__':
     # cd evaluation && nohup python3 -u start_sched_e2e_evaluation.py > ./out.log 2>&1 &
 
-    base_window = 15
+    base_window = 30
     for intensity in [1]:
         for num_tasks in [300]:
             for model_path in [
-                "/state/partition/yfliu/llama-7b-hf",
-                # "/state/partition/yfliu/Llama-3.1-8B",
+                # "/state/partition/yfliu/llama-7b-hf",
+                "/state/partition/yfliu/Llama-3.1-8B",
 
                 # "/state/partition/yfliu/Yi-9B",
                 # "/state/partition/yfliu/Yi-34B",
@@ -165,8 +161,11 @@ if __name__ == '__main__':
                     "VTC",
                     "Request-Level-FIFO",
                     "CoInference-Level-FIFO",
+                    "LTR",
+                    "SSJF",
+                    "QLM",
 
-                    "Hermes-EDF",
+                    # "Hermes-EDF",
 
                     # "Hermes-Gittins",
                     # "Idealized-SRJF",
